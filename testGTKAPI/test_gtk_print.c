@@ -64,6 +64,7 @@ int main(int argc, char **argv)
 
     return 0;
 }
+
 /* Print the selected file with a font of "Monospace 10". */
 static void
 print_file(GtkButton *button,
