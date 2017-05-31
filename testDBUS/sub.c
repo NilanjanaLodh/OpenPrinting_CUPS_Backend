@@ -24,8 +24,12 @@ int main(int argc , char **argv)
 
     error = NULL;
     my_dbus_calculator_call_sub_sync(proxy , a, b, &retval, NULL , &error );
-
-    g_print("%d - %d = %d\n",a,b,retval);
+    
+    if(error==NULL)
+        g_print("%d - %d = %d\n",a,b,retval);
+    else
+        printf("ERROR!\n");
+        
     g_object_unref(proxy);
 
     return 0;

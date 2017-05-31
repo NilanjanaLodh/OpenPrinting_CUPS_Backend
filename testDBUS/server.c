@@ -47,10 +47,14 @@ on_handle_add(MyDBusCalculator *interface,
               gpointer user_data)
 {
     gint ans = num1 + num2;
-    my_dbus_calculator_complete_add(interface,invocation,ans);
     g_print("Added %d and %d.\n", num1 , num2);
+    g_print("Press enter to send messaage to client .. ");
+    getchar();
+    my_dbus_calculator_complete_add(interface,invocation,ans);
+    g_print("       Message sent!\n");
+   
 
-    return TRUE;
+    return FALSE;
 }
 
 static gboolean

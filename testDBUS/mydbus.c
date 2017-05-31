@@ -281,10 +281,58 @@ static const _ExtendedGDBusMethodInfo _my_dbus_calculator_method_info_sub =
   FALSE
 };
 
+static const _ExtendedGDBusArgInfo _my_dbus_calculator_method_info_ping_me_IN_ARG_sleeptime =
+{
+  {
+    -1,
+    (gchar *) "sleeptime",
+    (gchar *) "i",
+    NULL
+  },
+  FALSE
+};
+
+static const _ExtendedGDBusArgInfo * const _my_dbus_calculator_method_info_ping_me_IN_ARG_pointers[] =
+{
+  &_my_dbus_calculator_method_info_ping_me_IN_ARG_sleeptime,
+  NULL
+};
+
+static const _ExtendedGDBusArgInfo _my_dbus_calculator_method_info_ping_me_OUT_ARG_rand =
+{
+  {
+    -1,
+    (gchar *) "rand",
+    (gchar *) "i",
+    NULL
+  },
+  FALSE
+};
+
+static const _ExtendedGDBusArgInfo * const _my_dbus_calculator_method_info_ping_me_OUT_ARG_pointers[] =
+{
+  &_my_dbus_calculator_method_info_ping_me_OUT_ARG_rand,
+  NULL
+};
+
+static const _ExtendedGDBusMethodInfo _my_dbus_calculator_method_info_ping_me =
+{
+  {
+    -1,
+    (gchar *) "ping_me",
+    (GDBusArgInfo **) &_my_dbus_calculator_method_info_ping_me_IN_ARG_pointers,
+    (GDBusArgInfo **) &_my_dbus_calculator_method_info_ping_me_OUT_ARG_pointers,
+    NULL
+  },
+  "handle-ping-me",
+  FALSE
+};
+
 static const _ExtendedGDBusMethodInfo * const _my_dbus_calculator_method_info_pointers[] =
 {
   &_my_dbus_calculator_method_info_add,
   &_my_dbus_calculator_method_info_sub,
+  &_my_dbus_calculator_method_info_ping_me,
   NULL
 };
 
@@ -343,6 +391,7 @@ my_dbus_calculator_override_properties (GObjectClass *klass, guint property_id_b
  * MyDBusCalculatorIface:
  * @parent_iface: The parent interface.
  * @handle_add: Handler for the #MyDBusCalculator::handle-add signal.
+ * @handle_ping_me: Handler for the #MyDBusCalculator::handle-ping-me signal.
  * @handle_sub: Handler for the #MyDBusCalculator::handle-sub signal.
  *
  * Virtual table for the D-Bus interface <link linkend="gdbus-interface-com-Nilanjana-Calculator.top_of_page">com.Nilanjana.Calculator</link>.
@@ -402,6 +451,29 @@ my_dbus_calculator_default_init (MyDBusCalculatorIface *iface)
     G_TYPE_BOOLEAN,
     3,
     G_TYPE_DBUS_METHOD_INVOCATION, G_TYPE_INT, G_TYPE_INT);
+
+  /**
+   * MyDBusCalculator::handle-ping-me:
+   * @object: A #MyDBusCalculator.
+   * @invocation: A #GDBusMethodInvocation.
+   * @arg_sleeptime: Argument passed by remote caller.
+   *
+   * Signal emitted when a remote caller is invoking the <link linkend="gdbus-method-com-Nilanjana-Calculator.ping_me">ping_me()</link> D-Bus method.
+   *
+   * If a signal handler returns %TRUE, it means the signal handler will handle the invocation (e.g. take a reference to @invocation and eventually call my_dbus_calculator_complete_ping_me() or e.g. g_dbus_method_invocation_return_error() on it) and no order signal handlers will run. If no signal handler handles the invocation, the %G_DBUS_ERROR_UNKNOWN_METHOD error is returned.
+   *
+   * Returns: %TRUE if the invocation was handled, %FALSE to let other signal handlers run.
+   */
+  g_signal_new ("handle-ping-me",
+    G_TYPE_FROM_INTERFACE (iface),
+    G_SIGNAL_RUN_LAST,
+    G_STRUCT_OFFSET (MyDBusCalculatorIface, handle_ping_me),
+    g_signal_accumulator_true_handled,
+    NULL,
+    g_cclosure_marshal_generic,
+    G_TYPE_BOOLEAN,
+    2,
+    G_TYPE_DBUS_METHOD_INVOCATION, G_TYPE_INT);
 
 }
 
@@ -626,6 +698,110 @@ _out:
 }
 
 /**
+ * my_dbus_calculator_call_ping_me:
+ * @proxy: A #MyDBusCalculatorProxy.
+ * @arg_sleeptime: Argument to pass with the method invocation.
+ * @cancellable: (allow-none): A #GCancellable or %NULL.
+ * @callback: A #GAsyncReadyCallback to call when the request is satisfied or %NULL.
+ * @user_data: User data to pass to @callback.
+ *
+ * Asynchronously invokes the <link linkend="gdbus-method-com-Nilanjana-Calculator.ping_me">ping_me()</link> D-Bus method on @proxy.
+ * When the operation is finished, @callback will be invoked in the <link linkend="g-main-context-push-thread-default">thread-default main loop</link> of the thread you are calling this method from.
+ * You can then call my_dbus_calculator_call_ping_me_finish() to get the result of the operation.
+ *
+ * See my_dbus_calculator_call_ping_me_sync() for the synchronous, blocking version of this method.
+ */
+void
+my_dbus_calculator_call_ping_me (
+    MyDBusCalculator *proxy,
+    gint arg_sleeptime,
+    GCancellable *cancellable,
+    GAsyncReadyCallback callback,
+    gpointer user_data)
+{
+  g_dbus_proxy_call (G_DBUS_PROXY (proxy),
+    "ping_me",
+    g_variant_new ("(i)",
+                   arg_sleeptime),
+    G_DBUS_CALL_FLAGS_NONE,
+    -1,
+    cancellable,
+    callback,
+    user_data);
+}
+
+/**
+ * my_dbus_calculator_call_ping_me_finish:
+ * @proxy: A #MyDBusCalculatorProxy.
+ * @out_rand: (out): Return location for return parameter or %NULL to ignore.
+ * @res: The #GAsyncResult obtained from the #GAsyncReadyCallback passed to my_dbus_calculator_call_ping_me().
+ * @error: Return location for error or %NULL.
+ *
+ * Finishes an operation started with my_dbus_calculator_call_ping_me().
+ *
+ * Returns: (skip): %TRUE if the call succeded, %FALSE if @error is set.
+ */
+gboolean
+my_dbus_calculator_call_ping_me_finish (
+    MyDBusCalculator *proxy,
+    gint *out_rand,
+    GAsyncResult *res,
+    GError **error)
+{
+  GVariant *_ret;
+  _ret = g_dbus_proxy_call_finish (G_DBUS_PROXY (proxy), res, error);
+  if (_ret == NULL)
+    goto _out;
+  g_variant_get (_ret,
+                 "(i)",
+                 out_rand);
+  g_variant_unref (_ret);
+_out:
+  return _ret != NULL;
+}
+
+/**
+ * my_dbus_calculator_call_ping_me_sync:
+ * @proxy: A #MyDBusCalculatorProxy.
+ * @arg_sleeptime: Argument to pass with the method invocation.
+ * @out_rand: (out): Return location for return parameter or %NULL to ignore.
+ * @cancellable: (allow-none): A #GCancellable or %NULL.
+ * @error: Return location for error or %NULL.
+ *
+ * Synchronously invokes the <link linkend="gdbus-method-com-Nilanjana-Calculator.ping_me">ping_me()</link> D-Bus method on @proxy. The calling thread is blocked until a reply is received.
+ *
+ * See my_dbus_calculator_call_ping_me() for the asynchronous version of this method.
+ *
+ * Returns: (skip): %TRUE if the call succeded, %FALSE if @error is set.
+ */
+gboolean
+my_dbus_calculator_call_ping_me_sync (
+    MyDBusCalculator *proxy,
+    gint arg_sleeptime,
+    gint *out_rand,
+    GCancellable *cancellable,
+    GError **error)
+{
+  GVariant *_ret;
+  _ret = g_dbus_proxy_call_sync (G_DBUS_PROXY (proxy),
+    "ping_me",
+    g_variant_new ("(i)",
+                   arg_sleeptime),
+    G_DBUS_CALL_FLAGS_NONE,
+    -1,
+    cancellable,
+    error);
+  if (_ret == NULL)
+    goto _out;
+  g_variant_get (_ret,
+                 "(i)",
+                 out_rand);
+  g_variant_unref (_ret);
+_out:
+  return _ret != NULL;
+}
+
+/**
  * my_dbus_calculator_complete_add:
  * @object: A #MyDBusCalculator.
  * @invocation: (transfer full): A #GDBusMethodInvocation.
@@ -665,6 +841,27 @@ my_dbus_calculator_complete_sub (
   g_dbus_method_invocation_return_value (invocation,
     g_variant_new ("(i)",
                    ans));
+}
+
+/**
+ * my_dbus_calculator_complete_ping_me:
+ * @object: A #MyDBusCalculator.
+ * @invocation: (transfer full): A #GDBusMethodInvocation.
+ * @rand: Parameter to return.
+ *
+ * Helper function used in service implementations to finish handling invocations of the <link linkend="gdbus-method-com-Nilanjana-Calculator.ping_me">ping_me()</link> D-Bus method. If you instead want to finish handling an invocation by returning an error, use g_dbus_method_invocation_return_error() or similar.
+ *
+ * This method will free @invocation, you cannot use it afterwards.
+ */
+void
+my_dbus_calculator_complete_ping_me (
+    MyDBusCalculator *object,
+    GDBusMethodInvocation *invocation,
+    gint rand)
+{
+  g_dbus_method_invocation_return_value (invocation,
+    g_variant_new ("(i)",
+                   rand));
 }
 
 /* ------------------------------------------------------------------------ */

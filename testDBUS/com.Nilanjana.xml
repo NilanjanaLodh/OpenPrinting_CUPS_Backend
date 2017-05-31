@@ -13,5 +13,10 @@
 
             <arg name="ans" direction="out" type="i" />
         </method>
+
+        <method name="ping_me">
+            <arg name="sleeptime" direction="in" type="i" />
+            <arg name="rand" direction="out" type="i" />
+        </method>
     </interface>
 </node>

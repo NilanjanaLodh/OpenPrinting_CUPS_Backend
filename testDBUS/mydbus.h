@@ -34,6 +34,11 @@ struct _MyDBusCalculatorIface
     gint arg_num1,
     gint arg_num2);
 
+  gboolean (*handle_ping_me) (
+    MyDBusCalculator *object,
+    GDBusMethodInvocation *invocation,
+    gint arg_sleeptime);
+
   gboolean (*handle_sub) (
     MyDBusCalculator *object,
     GDBusMethodInvocation *invocation,
@@ -58,6 +63,11 @@ void my_dbus_calculator_complete_sub (
     MyDBusCalculator *object,
     GDBusMethodInvocation *invocation,
     gint ans);
+
+void my_dbus_calculator_complete_ping_me (
+    MyDBusCalculator *object,
+    GDBusMethodInvocation *invocation,
+    gint rand);
 
 
 
@@ -103,6 +113,26 @@ gboolean my_dbus_calculator_call_sub_sync (
     gint arg_num1,
     gint arg_num2,
     gint *out_ans,
+    GCancellable *cancellable,
+    GError **error);
+
+void my_dbus_calculator_call_ping_me (
+    MyDBusCalculator *proxy,
+    gint arg_sleeptime,
+    GCancellable *cancellable,
+    GAsyncReadyCallback callback,
+    gpointer user_data);
+
+gboolean my_dbus_calculator_call_ping_me_finish (
+    MyDBusCalculator *proxy,
+    gint *out_rand,
+    GAsyncResult *res,
+    GError **error);
+
+gboolean my_dbus_calculator_call_ping_me_sync (
+    MyDBusCalculator *proxy,
+    gint arg_sleeptime,
+    gint *out_rand,
     GCancellable *cancellable,
     GError **error);
 
