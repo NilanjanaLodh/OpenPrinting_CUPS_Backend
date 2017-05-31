@@ -19,7 +19,7 @@ int main(int argc, char **argv)
     gint retval;
 
     error = NULL;
-    proxy = my_dbus_calculator_proxy_new_for_bus_sync(G_BUS_TYPE_SESSION, 0, "com.Nilanjana", "/com/Nilanjana/Calculator", NULL, &error);
+    proxy = my_dbus_calculator_proxy_new_for_bus_sync(G_BUS_TYPE_SESSION, 0, "com.Nilanjana", "/", NULL, &error);
 
     gint a, b;
     a = atoi(argv[1]);

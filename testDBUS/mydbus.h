@@ -34,11 +34,6 @@ struct _MyDBusCalculatorIface
     gint arg_num1,
     gint arg_num2);
 
-  gboolean (*handle_ping_me) (
-    MyDBusCalculator *object,
-    GDBusMethodInvocation *invocation,
-    gint arg_sleeptime);
-
   gboolean (*handle_sub) (
     MyDBusCalculator *object,
     GDBusMethodInvocation *invocation,
@@ -63,11 +58,6 @@ void my_dbus_calculator_complete_sub (
     MyDBusCalculator *object,
     GDBusMethodInvocation *invocation,
     gint ans);
-
-void my_dbus_calculator_complete_ping_me (
-    MyDBusCalculator *object,
-    GDBusMethodInvocation *invocation,
-    gint rand);
 
 
 
@@ -113,26 +103,6 @@ gboolean my_dbus_calculator_call_sub_sync (
     gint arg_num1,
     gint arg_num2,
     gint *out_ans,
-    GCancellable *cancellable,
-    GError **error);
-
-void my_dbus_calculator_call_ping_me (
-    MyDBusCalculator *proxy,
-    gint arg_sleeptime,
-    GCancellable *cancellable,
-    GAsyncReadyCallback callback,
-    gpointer user_data);
-
-gboolean my_dbus_calculator_call_ping_me_finish (
-    MyDBusCalculator *proxy,
-    gint *out_rand,
-    GAsyncResult *res,
-    GError **error);
-
-gboolean my_dbus_calculator_call_ping_me_sync (
-    MyDBusCalculator *proxy,
-    gint arg_sleeptime,
-    gint *out_rand,
     GCancellable *cancellable,
     GError **error);
 
@@ -240,6 +210,185 @@ G_DEFINE_AUTOPTR_CLEANUP_FUNC (MyDBusCalculatorSkeleton, g_object_unref)
 #endif
 
 MyDBusCalculator *my_dbus_calculator_skeleton_new (void);
+
+
+/* ------------------------------------------------------------------------ */
+/* Declarations for com.Nilanjana.Alarm */
+
+#define MY_DBUS_TYPE_ALARM (my_dbus_alarm_get_type ())
+#define MY_DBUS_ALARM(o) (G_TYPE_CHECK_INSTANCE_CAST ((o), MY_DBUS_TYPE_ALARM, MyDBusAlarm))
+#define MY_DBUS_IS_ALARM(o) (G_TYPE_CHECK_INSTANCE_TYPE ((o), MY_DBUS_TYPE_ALARM))
+#define MY_DBUS_ALARM_GET_IFACE(o) (G_TYPE_INSTANCE_GET_INTERFACE ((o), MY_DBUS_TYPE_ALARM, MyDBusAlarmIface))
+
+struct _MyDBusAlarm;
+typedef struct _MyDBusAlarm MyDBusAlarm;
+typedef struct _MyDBusAlarmIface MyDBusAlarmIface;
+
+struct _MyDBusAlarmIface
+{
+  GTypeInterface parent_iface;
+
+
+
+  gboolean (*handle_configure_alarm) (
+    MyDBusAlarm *object,
+    GDBusMethodInvocation *invocation,
+    gint arg_seconds);
+
+  gboolean  (*get_activated) (MyDBusAlarm *object);
+
+  void (*beep) (
+    MyDBusAlarm *object);
+
+};
+
+GType my_dbus_alarm_get_type (void) G_GNUC_CONST;
+
+GDBusInterfaceInfo *my_dbus_alarm_interface_info (void);
+guint my_dbus_alarm_override_properties (GObjectClass *klass, guint property_id_begin);
+
+
+/* D-Bus method call completion functions: */
+void my_dbus_alarm_complete_configure_alarm (
+    MyDBusAlarm *object,
+    GDBusMethodInvocation *invocation);
+
+
+
+/* D-Bus signal emissions functions: */
+void my_dbus_alarm_emit_beep (
+    MyDBusAlarm *object);
+
+
+
+/* D-Bus method calls: */
+void my_dbus_alarm_call_configure_alarm (
+    MyDBusAlarm *proxy,
+    gint arg_seconds,
+    GCancellable *cancellable,
+    GAsyncReadyCallback callback,
+    gpointer user_data);
+
+gboolean my_dbus_alarm_call_configure_alarm_finish (
+    MyDBusAlarm *proxy,
+    GAsyncResult *res,
+    GError **error);
+
+gboolean my_dbus_alarm_call_configure_alarm_sync (
+    MyDBusAlarm *proxy,
+    gint arg_seconds,
+    GCancellable *cancellable,
+    GError **error);
+
+
+
+/* D-Bus property accessors: */
+gboolean my_dbus_alarm_get_activated (MyDBusAlarm *object);
+void my_dbus_alarm_set_activated (MyDBusAlarm *object, gboolean value);
+
+
+/* ---- */
+
+#define MY_DBUS_TYPE_ALARM_PROXY (my_dbus_alarm_proxy_get_type ())
+#define MY_DBUS_ALARM_PROXY(o) (G_TYPE_CHECK_INSTANCE_CAST ((o), MY_DBUS_TYPE_ALARM_PROXY, MyDBusAlarmProxy))
+#define MY_DBUS_ALARM_PROXY_CLASS(k) (G_TYPE_CHECK_CLASS_CAST ((k), MY_DBUS_TYPE_ALARM_PROXY, MyDBusAlarmProxyClass))
+#define MY_DBUS_ALARM_PROXY_GET_CLASS(o) (G_TYPE_INSTANCE_GET_CLASS ((o), MY_DBUS_TYPE_ALARM_PROXY, MyDBusAlarmProxyClass))
+#define MY_DBUS_IS_ALARM_PROXY(o) (G_TYPE_CHECK_INSTANCE_TYPE ((o), MY_DBUS_TYPE_ALARM_PROXY))
+#define MY_DBUS_IS_ALARM_PROXY_CLASS(k) (G_TYPE_CHECK_CLASS_TYPE ((k), MY_DBUS_TYPE_ALARM_PROXY))
+
+typedef struct _MyDBusAlarmProxy MyDBusAlarmProxy;
+typedef struct _MyDBusAlarmProxyClass MyDBusAlarmProxyClass;
+typedef struct _MyDBusAlarmProxyPrivate MyDBusAlarmProxyPrivate;
+
+struct _MyDBusAlarmProxy
+{
+  /*< private >*/
+  GDBusProxy parent_instance;
+  MyDBusAlarmProxyPrivate *priv;
+};
+
+struct _MyDBusAlarmProxyClass
+{
+  GDBusProxyClass parent_class;
+};
+
+GType my_dbus_alarm_proxy_get_type (void) G_GNUC_CONST;
+
+#if GLIB_CHECK_VERSION(2, 44, 0)
+G_DEFINE_AUTOPTR_CLEANUP_FUNC (MyDBusAlarmProxy, g_object_unref)
+#endif
+
+void my_dbus_alarm_proxy_new (
+    GDBusConnection     *connection,
+    GDBusProxyFlags      flags,
+    const gchar         *name,
+    const gchar         *object_path,
+    GCancellable        *cancellable,
+    GAsyncReadyCallback  callback,
+    gpointer             user_data);
+MyDBusAlarm *my_dbus_alarm_proxy_new_finish (
+    GAsyncResult        *res,
+    GError             **error);
+MyDBusAlarm *my_dbus_alarm_proxy_new_sync (
+    GDBusConnection     *connection,
+    GDBusProxyFlags      flags,
+    const gchar         *name,
+    const gchar         *object_path,
+    GCancellable        *cancellable,
+    GError             **error);
+
+void my_dbus_alarm_proxy_new_for_bus (
+    GBusType             bus_type,
+    GDBusProxyFlags      flags,
+    const gchar         *name,
+    const gchar         *object_path,
+    GCancellable        *cancellable,
+    GAsyncReadyCallback  callback,
+    gpointer             user_data);
+MyDBusAlarm *my_dbus_alarm_proxy_new_for_bus_finish (
+    GAsyncResult        *res,
+    GError             **error);
+MyDBusAlarm *my_dbus_alarm_proxy_new_for_bus_sync (
+    GBusType             bus_type,
+    GDBusProxyFlags      flags,
+    const gchar         *name,
+    const gchar         *object_path,
+    GCancellable        *cancellable,
+    GError             **error);
+
+
+/* ---- */
+
+#define MY_DBUS_TYPE_ALARM_SKELETON (my_dbus_alarm_skeleton_get_type ())
+#define MY_DBUS_ALARM_SKELETON(o) (G_TYPE_CHECK_INSTANCE_CAST ((o), MY_DBUS_TYPE_ALARM_SKELETON, MyDBusAlarmSkeleton))
+#define MY_DBUS_ALARM_SKELETON_CLASS(k) (G_TYPE_CHECK_CLASS_CAST ((k), MY_DBUS_TYPE_ALARM_SKELETON, MyDBusAlarmSkeletonClass))
+#define MY_DBUS_ALARM_SKELETON_GET_CLASS(o) (G_TYPE_INSTANCE_GET_CLASS ((o), MY_DBUS_TYPE_ALARM_SKELETON, MyDBusAlarmSkeletonClass))
+#define MY_DBUS_IS_ALARM_SKELETON(o) (G_TYPE_CHECK_INSTANCE_TYPE ((o), MY_DBUS_TYPE_ALARM_SKELETON))
+#define MY_DBUS_IS_ALARM_SKELETON_CLASS(k) (G_TYPE_CHECK_CLASS_TYPE ((k), MY_DBUS_TYPE_ALARM_SKELETON))
+
+typedef struct _MyDBusAlarmSkeleton MyDBusAlarmSkeleton;
+typedef struct _MyDBusAlarmSkeletonClass MyDBusAlarmSkeletonClass;
+typedef struct _MyDBusAlarmSkeletonPrivate MyDBusAlarmSkeletonPrivate;
+
+struct _MyDBusAlarmSkeleton
+{
+  /*< private >*/
+  GDBusInterfaceSkeleton parent_instance;
+  MyDBusAlarmSkeletonPrivate *priv;
+};
+
+struct _MyDBusAlarmSkeletonClass
+{
+  GDBusInterfaceSkeletonClass parent_class;
+};
+
+GType my_dbus_alarm_skeleton_get_type (void) G_GNUC_CONST;
+
+#if GLIB_CHECK_VERSION(2, 44, 0)
+G_DEFINE_AUTOPTR_CLEANUP_FUNC (MyDBusAlarmSkeleton, g_object_unref)
+#endif
+
+MyDBusAlarm *my_dbus_alarm_skeleton_new (void);
 
 
 G_END_DECLS

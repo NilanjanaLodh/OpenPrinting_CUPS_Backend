@@ -1,7 +1,7 @@
 .PHONY: all
 FLAGS=$(shell pkg-config --libs --cflags gio-2.0 gio-unix-2.0 glib-2.0)
 
-all: server add sub 
+all: server add sub pingme
 
 gen:
 	gdbus-codegen --generate-c-code mydbus --c-namespace MyDBus --interface-prefix com.Nilanjana. com.Nilanjana.xml
@@ -17,6 +17,9 @@ add: add.o mydbus.o
 	gcc -o $@ $^ $(FLAGS)
 
 sub: sub.o mydbus.o 
+	gcc -o $@ $^ $(FLAGS)
+
+pingme: pingme.o mydbus.o 
 	gcc -o $@ $^ $(FLAGS)
 
 clean:
