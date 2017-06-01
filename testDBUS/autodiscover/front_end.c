@@ -13,6 +13,7 @@ struct _PrintBackendObj
 {
     PrintBackend *proxy;
     char *bus_name;
+    char *obj_path;
 };
 
 struct _Dialog
@@ -39,6 +40,14 @@ Dialog *get_new_Dialog()
 /**********Function prototypes**************************/
 static void on_name_acquired(GDBusConnection *connection, const gchar *name, gpointer user_data);
 
+static void on_backend_reply(GDBusConnection *connection,
+                             const gchar *sender_name,
+                             const gchar *object_path,
+                             const gchar *interface_name,
+                             const gchar *signal_name,
+                             GVariant *parameters,
+                             gpointer user_data);
+
 /*******************************************************/
 
 int main()
@@ -46,7 +55,7 @@ int main()
     Dialog *d;
     d = get_new_Dialog();
 
-    g_bus_own_name(G_BUS_TYPE_SESSION, DIALOG_BUS_NAME, 0, NULL, on_name_acquired, NULL, NULL, NULL);
+    g_bus_own_name(G_BUS_TYPE_SESSION, DIALOG_BUS_NAME, 0, NULL, on_name_acquired, NULL, d, NULL);
 
     GMainLoop *loop = g_main_loop_new(NULL, FALSE);
     g_main_loop_run(loop);
@@ -57,19 +66,40 @@ on_name_acquired(GDBusConnection *connection,
                  const gchar *name,
                  gpointer user_data)
 {
+    Dialog *d = (Dialog *)user_data;
+
     PrintFrontend *interface;
     interface = print_frontend_skeleton_new();
     GError *error;
+
+    g_dbus_connection_signal_subscribe(connection,
+                                       NULL,         /**listen to all senders**/
+                                       NULL,         /**match on all interfaces**/
+                                       REPLY_SIGNAL, ///////
+                                       NULL,         /**match on all object paths**/
+                                       NULL,         /**match on all arguments**/
+                                       0,
+                                       on_backend_reply,
+                                       interface, /**user_data** argument passed to the callback function **/
+                                       NULL);
+
     error = NULL;
     g_dbus_interface_skeleton_export(G_DBUS_INTERFACE_SKELETON(interface), connection, "/", &error);
     g_assert_no_error(error);
 
     print_frontend_emit_activate_backend(PRINT_FRONTEND(interface));
-    //print_frontend_emit_activate_print_backend(PRINT_FRONTEND(interface));
-    //my_dbus_alarm_emit_beep(MY_DBUS_ALARM(interface));
 }
 
-
+static void on_backend_reply(GDBusConnection *connection,
+                             const gchar *sender_name,
+                             const gchar *object_path,
+                             const gchar *interface_name,
+                             const gchar *signal_name,
+                             GVariant *parameters,
+                             gpointer user_data)
+{
+    g_print("Sender name %s\nObject Path %s\nInterface name %s\n",sender_name, object_path, interface_name);
+}
 int main_old(int argc, char **argv)
 {
 

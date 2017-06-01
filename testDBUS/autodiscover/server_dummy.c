@@ -5,6 +5,7 @@
 #include "commondefs.h"
 
 #define BUS_NAME "com.DUMMY"
+#define OBJ_PATH "/"
 
 static void on_name_acquired(GDBusConnection *connection, const gchar *name, gpointer user_data);
 
@@ -13,12 +14,12 @@ static gboolean on_handle_hello_world(PrintBackend *interface,
                                       gpointer user_data);
 
 static void on_beep_beep(GDBusConnection *connection,
-                                      const gchar *sender_name,
-                                      const gchar *object_path,
-                                      const gchar *interface_name,
-                                      const gchar *signal_name,
-                                      GVariant *parameters,
-                                      gpointer user_data);
+                         const gchar *sender_name,
+                         const gchar *object_path,
+                         const gchar *interface_name,
+                         const gchar *signal_name,
+                         GVariant *parameters,
+                         gpointer user_data);
 
 int main()
 {
@@ -42,16 +43,17 @@ on_name_acquired(GDBusConnection *connection,
     g_signal_connect(interface, "handle-hello-world", G_CALLBACK(on_handle_hello_world), NULL);
 
     g_dbus_connection_signal_subscribe(connection,
-                                       NULL /**listen to all senders**/,
-                                       NULL /**match on all interfaces**/,
+                                       NULL, /**listen to all senders**/
+                                       NULL, /**match on all interfaces**/
                                        ACTIVATE_SIGNAL, ///////
-                                       NULL /**match on all object paths**/,
-                                       NULL /**match on all arguments**/,
+                                       NULL, /**match on all object paths**/
+                                       NULL, /**match on all arguments**/
                                        0,
                                        on_beep_beep,
-                                       NULL, NULL );
-        error = NULL;
-    g_dbus_interface_skeleton_export(G_DBUS_INTERFACE_SKELETON(interface), connection, "/", &error);
+                                       interface, /**user_data** argument passed to the callback function **/
+                                       NULL);
+    error = NULL;
+    g_dbus_interface_skeleton_export(G_DBUS_INTERFACE_SKELETON(interface), connection, OBJ_PATH, &error);
 }
 
 static gboolean on_handle_hello_world(PrintBackend *interface,
@@ -65,13 +67,14 @@ static gboolean on_handle_hello_world(PrintBackend *interface,
 }
 
 static void on_beep_beep(GDBusConnection *connection,
-                                      const gchar *sender_name,
-                                      const gchar *object_path,
-                                      const gchar *interface_name,
-                                      const gchar *signal_name,
-                                      GVariant *parameters,
-                                      gpointer user_data)
+                         const gchar *sender_name,
+                         const gchar *object_path,
+                         const gchar *interface_name,
+                         const gchar *signal_name,
+                         GVariant *parameters,
+                         gpointer user_data)
 {
-    
-    g_print("Yaaaaaaaaaaaaaaay! :) %s \n", signal_name);
+
+    g_print("Yaaaaaaaaaaaaaaay signal caught! :) %s \n", signal_name);
+    print_backend_emit_backend_reply(PRINT_BACKEND(user_data));
 }

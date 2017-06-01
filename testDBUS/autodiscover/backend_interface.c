@@ -182,13 +182,30 @@ static const _ExtendedGDBusMethodInfo * const _print_backend_method_info_pointer
   NULL
 };
 
+static const _ExtendedGDBusSignalInfo _print_backend_signal_info_backend_reply =
+{
+  {
+    -1,
+    (gchar *) "BackendReply",
+    NULL,
+    NULL
+  },
+  "backend-reply"
+};
+
+static const _ExtendedGDBusSignalInfo * const _print_backend_signal_info_pointers[] =
+{
+  &_print_backend_signal_info_backend_reply,
+  NULL
+};
+
 static const _ExtendedGDBusInterfaceInfo _print_backend_interface_info =
 {
   {
     -1,
     (gchar *) "com.Print.Backend",
     (GDBusMethodInfo **) &_print_backend_method_info_pointers,
-    NULL,
+    (GDBusSignalInfo **) &_print_backend_signal_info_pointers,
     NULL,
     NULL
   },
@@ -237,6 +254,7 @@ print_backend_override_properties (GObjectClass *klass, guint property_id_begin)
  * PrintBackendIface:
  * @parent_iface: The parent interface.
  * @handle_hello_world: Handler for the #PrintBackend::handle-hello-world signal.
+ * @backend_reply: Handler for the #PrintBackend::backend-reply signal.
  *
  * Virtual table for the D-Bus interface <link linkend="gdbus-interface-com-Print-Backend.top_of_page">com.Print.Backend</link>.
  */
@@ -270,6 +288,38 @@ print_backend_default_init (PrintBackendIface *iface)
     1,
     G_TYPE_DBUS_METHOD_INVOCATION);
 
+  /* GObject signals for received D-Bus signals: */
+  /**
+   * PrintBackend::backend-reply:
+   * @object: A #PrintBackend.
+   *
+   * On the client-side, this signal is emitted whenever the D-Bus signal <link linkend="gdbus-signal-com-Print-Backend.BackendReply">"BackendReply"</link> is received.
+   *
+   * On the service-side, this signal can be used with e.g. g_signal_emit_by_name() to make the object emit the D-Bus signal.
+   */
+  g_signal_new ("backend-reply",
+    G_TYPE_FROM_INTERFACE (iface),
+    G_SIGNAL_RUN_LAST,
+    G_STRUCT_OFFSET (PrintBackendIface, backend_reply),
+    NULL,
+    NULL,
+    g_cclosure_marshal_generic,
+    G_TYPE_NONE,
+    0);
+
+}
+
+/**
+ * print_backend_emit_backend_reply:
+ * @object: A #PrintBackend.
+ *
+ * Emits the <link linkend="gdbus-signal-com-Print-Backend.BackendReply">"BackendReply"</link> D-Bus signal.
+ */
+void
+print_backend_emit_backend_reply (
+    PrintBackend *object)
+{
+  g_signal_emit_by_name (object, "backend-reply");
 }
 
 /**
@@ -937,6 +987,28 @@ print_backend_skeleton_dbus_interface_flush (GDBusInterfaceSkeleton *_skeleton)
 {
 }
 
+static void
+_print_backend_on_signal_backend_reply (
+    PrintBackend *object)
+{
+  PrintBackendSkeleton *skeleton = PRINT_BACKEND_SKELETON (object);
+
+  GList      *connections, *l;
+  GVariant   *signal_variant;
+  connections = g_dbus_interface_skeleton_get_connections (G_DBUS_INTERFACE_SKELETON (skeleton));
+
+  signal_variant = g_variant_ref_sink (g_variant_new ("()"));
+  for (l = connections; l != NULL; l = l->next)
+    {
+      GDBusConnection *connection = l->data;
+      g_dbus_connection_emit_signal (connection,
+        NULL, g_dbus_interface_skeleton_get_object_path (G_DBUS_INTERFACE_SKELETON (skeleton)), "com.Print.Backend", "BackendReply",
+        signal_variant, NULL);
+    }
+  g_variant_unref (signal_variant);
+  g_list_free_full (connections, g_object_unref);
+}
+
 static void print_backend_skeleton_iface_init (PrintBackendIface *iface);
 #if GLIB_VERSION_MAX_ALLOWED >= GLIB_VERSION_2_38
 G_DEFINE_TYPE_WITH_CODE (PrintBackendSkeleton, print_backend_skeleton, G_TYPE_DBUS_INTERFACE_SKELETON,
@@ -996,6 +1068,7 @@ print_backend_skeleton_class_init (PrintBackendSkeletonClass *klass)
 static void
 print_backend_skeleton_iface_init (PrintBackendIface *iface)
 {
+  iface->backend_reply = _print_backend_on_signal_backend_reply;
 }
 
 /**

@@ -28,9 +28,13 @@ struct _PrintBackendIface
 {
   GTypeInterface parent_iface;
 
+
   gboolean (*handle_hello_world) (
     PrintBackend *object,
     GDBusMethodInvocation *invocation);
+
+  void (*backend_reply) (
+    PrintBackend *object);
 
 };
 
@@ -44,6 +48,12 @@ guint print_backend_override_properties (GObjectClass *klass, guint property_id_
 void print_backend_complete_hello_world (
     PrintBackend *object,
     GDBusMethodInvocation *invocation);
+
+
+
+/* D-Bus signal emissions functions: */
+void print_backend_emit_backend_reply (
+    PrintBackend *object);
 
 
 
