@@ -1,0 +1,6 @@
+Interface name : com.Print.Backend
+Interface prefix: com.Print
+Generated files : backend_interface.[ch]
+C Namespace(The structures's name's prefixes) : Print
+            - PrintBackend(...)
+
