@@ -35,6 +35,25 @@ Dialog *get_new_Dialog()
     d->backends = g_array_new(FALSE, FALSE, sizeof(PrintBackendObj *));
 }
 
+void add_backend(Dialog *d, const char *bus_name, const char *obj_path)
+{
+    PrintBackendObj *pb_obj = malloc(sizeof(PrintBackendObj));
+    pb_obj->bus_name = malloc(sizeof(bus_name) + 1);
+    strcpy(pb_obj->bus_name, bus_name);
+
+    pb_obj->obj_path = malloc(sizeof(obj_path) + 1);
+    strcpy(pb_obj->obj_path, obj_path);
+
+    GError *error = NULL;
+    pb_obj->proxy = print_backend_proxy_new_for_bus_sync(G_BUS_TYPE_SESSION, 0,
+                                                         bus_name, obj_path,
+                                                         NULL, &error);
+    g_assert_no_error(error);
+
+    g_array_append_val(d->backends, pb_obj);
+    d->num_backends = d->num_backends + 1;
+}
+
 /*******************************************************/
 
 /**********Function prototypes**************************/
@@ -48,6 +67,7 @@ static void on_backend_reply(GDBusConnection *connection,
                              GVariant *parameters,
                              gpointer user_data);
 
+static gboolean idle_function(gpointer user_data);
 /*******************************************************/
 
 int main()
@@ -57,6 +77,7 @@ int main()
 
     g_bus_own_name(G_BUS_TYPE_SESSION, DIALOG_BUS_NAME, 0, NULL, on_name_acquired, NULL, d, NULL);
 
+    //g_idle_add(idle_function,d);
     GMainLoop *loop = g_main_loop_new(NULL, FALSE);
     g_main_loop_run(loop);
 }
@@ -67,7 +88,6 @@ on_name_acquired(GDBusConnection *connection,
                  gpointer user_data)
 {
     Dialog *d = (Dialog *)user_data;
-
     PrintFrontend *interface;
     interface = print_frontend_skeleton_new();
     GError *error;
@@ -80,7 +100,7 @@ on_name_acquired(GDBusConnection *connection,
                                        NULL,         /**match on all arguments**/
                                        0,
                                        on_backend_reply,
-                                       interface, /**user_data** argument passed to the callback function **/
+                                       user_data, /**user_data** argument passed to the callback function **/
                                        NULL);
 
     error = NULL;
@@ -98,7 +118,25 @@ static void on_backend_reply(GDBusConnection *connection,
                              GVariant *parameters,
                              gpointer user_data)
 {
-    g_print("Sender name %s\nObject Path %s\nInterface name %s\n",sender_name, object_path, interface_name);
+    Dialog *d = (Dialog *)user_data;
+    g_print("Sender name %s\nObject Path %s\nInterface name %s\n", sender_name, object_path, interface_name);
+    add_backend(d, sender_name, object_path);
+    g_print("%d Backends available now\n", d->num_backends);
+}
+
+static gboolean idle_function(gpointer user_data)
+{
+    Dialog *d = (Dialog *)user_data;
+    int i;
+    g_print("%d backends available.\n", d->num_backends);
+    PrintBackendObj *pb_obj;
+    for (i = 0; i < (d->num_backends); i++)
+    {
+        pb_obj = g_array_index(d->backends, PrintBackendObj *, i);
+        print_backend_call_hello_world_sync(pb_obj->proxy, NULL, NULL);
+    }
+
+    return  G_SOURCE_CONTINUE ;
 }
 int main_old(int argc, char **argv)
 {
