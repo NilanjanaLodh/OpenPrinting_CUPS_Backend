@@ -44,7 +44,7 @@ on_name_acquired(GDBusConnection *connection,
     g_dbus_connection_signal_subscribe(connection,
                                        NULL /**listen to all senders**/,
                                        NULL /**match on all interfaces**/,
-                                       "beep_beep", ///////
+                                       ACTIVATE_SIGNAL, ///////
                                        NULL /**match on all object paths**/,
                                        NULL /**match on all arguments**/,
                                        0,

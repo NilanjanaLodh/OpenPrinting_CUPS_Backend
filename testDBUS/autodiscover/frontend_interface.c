@@ -163,32 +163,20 @@ _g_value_equal (const GValue *a, const GValue *b)
 
 /* ---- Introspection data for com.Print.Frontend ---- */
 
-static const _ExtendedGDBusSignalInfo _print_frontend_signal_info_activate_print_backend =
+static const _ExtendedGDBusSignalInfo _print_frontend_signal_info_activate_backend =
 {
   {
     -1,
-    (gchar *) "activate-print-backend",
+    (gchar *) "ActivateBackend",
     NULL,
     NULL
   },
-  "activate-print-backend"
-};
-
-static const _ExtendedGDBusSignalInfo _print_frontend_signal_info_beep_beep =
-{
-  {
-    -1,
-    (gchar *) "beep_beep",
-    NULL,
-    NULL
-  },
-  "beep-beep"
+  "activate-backend"
 };
 
 static const _ExtendedGDBusSignalInfo * const _print_frontend_signal_info_pointers[] =
 {
-  &_print_frontend_signal_info_activate_print_backend,
-  &_print_frontend_signal_info_beep_beep,
+  &_print_frontend_signal_info_activate_backend,
   NULL
 };
 
@@ -246,8 +234,7 @@ print_frontend_override_properties (GObjectClass *klass, guint property_id_begin
 /**
  * PrintFrontendIface:
  * @parent_iface: The parent interface.
- * @activate_print_backend: Handler for the #PrintFrontend::activate-print-backend signal.
- * @beep_beep: Handler for the #PrintFrontend::beep-beep signal.
+ * @activate_backend: Handler for the #PrintFrontend::activate-backend signal.
  *
  * Virtual table for the D-Bus interface <link linkend="gdbus-interface-com-Print-Frontend.top_of_page">com.Print.Frontend</link>.
  */
@@ -260,35 +247,17 @@ print_frontend_default_init (PrintFrontendIface *iface)
 {
   /* GObject signals for received D-Bus signals: */
   /**
-   * PrintFrontend::activate-print-backend:
+   * PrintFrontend::activate-backend:
    * @object: A #PrintFrontend.
    *
-   * On the client-side, this signal is emitted whenever the D-Bus signal <link linkend="gdbus-signal-com-Print-Frontend.activate-print-backend">"activate-print-backend"</link> is received.
+   * On the client-side, this signal is emitted whenever the D-Bus signal <link linkend="gdbus-signal-com-Print-Frontend.ActivateBackend">"ActivateBackend"</link> is received.
    *
    * On the service-side, this signal can be used with e.g. g_signal_emit_by_name() to make the object emit the D-Bus signal.
    */
-  g_signal_new ("activate-print-backend",
+  g_signal_new ("activate-backend",
     G_TYPE_FROM_INTERFACE (iface),
     G_SIGNAL_RUN_LAST,
-    G_STRUCT_OFFSET (PrintFrontendIface, activate_print_backend),
-    NULL,
-    NULL,
-    g_cclosure_marshal_generic,
-    G_TYPE_NONE,
-    0);
-
-  /**
-   * PrintFrontend::beep-beep:
-   * @object: A #PrintFrontend.
-   *
-   * On the client-side, this signal is emitted whenever the D-Bus signal <link linkend="gdbus-signal-com-Print-Frontend.beep_beep">"beep_beep"</link> is received.
-   *
-   * On the service-side, this signal can be used with e.g. g_signal_emit_by_name() to make the object emit the D-Bus signal.
-   */
-  g_signal_new ("beep-beep",
-    G_TYPE_FROM_INTERFACE (iface),
-    G_SIGNAL_RUN_LAST,
-    G_STRUCT_OFFSET (PrintFrontendIface, beep_beep),
+    G_STRUCT_OFFSET (PrintFrontendIface, activate_backend),
     NULL,
     NULL,
     g_cclosure_marshal_generic,
@@ -298,29 +267,16 @@ print_frontend_default_init (PrintFrontendIface *iface)
 }
 
 /**
- * print_frontend_emit_activate_print_backend:
+ * print_frontend_emit_activate_backend:
  * @object: A #PrintFrontend.
  *
- * Emits the <link linkend="gdbus-signal-com-Print-Frontend.activate-print-backend">"activate-print-backend"</link> D-Bus signal.
+ * Emits the <link linkend="gdbus-signal-com-Print-Frontend.ActivateBackend">"ActivateBackend"</link> D-Bus signal.
  */
 void
-print_frontend_emit_activate_print_backend (
+print_frontend_emit_activate_backend (
     PrintFrontend *object)
 {
-  g_signal_emit_by_name (object, "activate-print-backend");
-}
-
-/**
- * print_frontend_emit_beep_beep:
- * @object: A #PrintFrontend.
- *
- * Emits the <link linkend="gdbus-signal-com-Print-Frontend.beep_beep">"beep_beep"</link> D-Bus signal.
- */
-void
-print_frontend_emit_beep_beep (
-    PrintFrontend *object)
-{
-  g_signal_emit_by_name (object, "beep-beep");
+  g_signal_emit_by_name (object, "activate-backend");
 }
 
 /* ------------------------------------------------------------------------ */
@@ -879,7 +835,7 @@ print_frontend_skeleton_dbus_interface_flush (GDBusInterfaceSkeleton *_skeleton)
 }
 
 static void
-_print_frontend_on_signal_activate_print_backend (
+_print_frontend_on_signal_activate_backend (
     PrintFrontend *object)
 {
   PrintFrontendSkeleton *skeleton = PRINT_FRONTEND_SKELETON (object);
@@ -893,29 +849,7 @@ _print_frontend_on_signal_activate_print_backend (
     {
       GDBusConnection *connection = l->data;
       g_dbus_connection_emit_signal (connection,
-        NULL, g_dbus_interface_skeleton_get_object_path (G_DBUS_INTERFACE_SKELETON (skeleton)), "com.Print.Frontend", "activate-print-backend",
-        signal_variant, NULL);
-    }
-  g_variant_unref (signal_variant);
-  g_list_free_full (connections, g_object_unref);
-}
-
-static void
-_print_frontend_on_signal_beep_beep (
-    PrintFrontend *object)
-{
-  PrintFrontendSkeleton *skeleton = PRINT_FRONTEND_SKELETON (object);
-
-  GList      *connections, *l;
-  GVariant   *signal_variant;
-  connections = g_dbus_interface_skeleton_get_connections (G_DBUS_INTERFACE_SKELETON (skeleton));
-
-  signal_variant = g_variant_ref_sink (g_variant_new ("()"));
-  for (l = connections; l != NULL; l = l->next)
-    {
-      GDBusConnection *connection = l->data;
-      g_dbus_connection_emit_signal (connection,
-        NULL, g_dbus_interface_skeleton_get_object_path (G_DBUS_INTERFACE_SKELETON (skeleton)), "com.Print.Frontend", "beep_beep",
+        NULL, g_dbus_interface_skeleton_get_object_path (G_DBUS_INTERFACE_SKELETON (skeleton)), "com.Print.Frontend", "ActivateBackend",
         signal_variant, NULL);
     }
   g_variant_unref (signal_variant);
@@ -981,8 +915,7 @@ print_frontend_skeleton_class_init (PrintFrontendSkeletonClass *klass)
 static void
 print_frontend_skeleton_iface_init (PrintFrontendIface *iface)
 {
-  iface->activate_print_backend = _print_frontend_on_signal_activate_print_backend;
-  iface->beep_beep = _print_frontend_on_signal_beep_beep;
+  iface->activate_backend = _print_frontend_on_signal_activate_backend;
 }
 
 /**

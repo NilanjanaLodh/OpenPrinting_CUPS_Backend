@@ -64,7 +64,7 @@ on_name_acquired(GDBusConnection *connection,
     g_dbus_interface_skeleton_export(G_DBUS_INTERFACE_SKELETON(interface), connection, "/", &error);
     g_assert_no_error(error);
 
-    print_frontend_emit_beep_beep(PRINT_FRONTEND(interface));
+    print_frontend_emit_activate_backend(PRINT_FRONTEND(interface));
     //print_frontend_emit_activate_print_backend(PRINT_FRONTEND(interface));
     //my_dbus_alarm_emit_beep(MY_DBUS_ALARM(interface));
 }

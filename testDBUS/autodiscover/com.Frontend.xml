@@ -1,6 +1,5 @@
 <node>
     <interface name="com.Print.Frontend">
-        <signal name="activate-print-backend" />
-        <signal name="beep_beep" />
+        <signal name="ActivateBackend" />
     </interface>
 </node>

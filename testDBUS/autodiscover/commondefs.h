@@ -1,2 +1,2 @@
-#define ACTIVATE_SIGNAL "hey_you"
+#define ACTIVATE_SIGNAL "ActivateBackend"
 typedef void (*DialogCallBackFunc)(char *);

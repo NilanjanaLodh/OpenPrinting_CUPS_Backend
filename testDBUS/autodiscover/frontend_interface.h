@@ -28,10 +28,7 @@ struct _PrintFrontendIface
 {
   GTypeInterface parent_iface;
 
-  void (*activate_print_backend) (
-    PrintFrontend *object);
-
-  void (*beep_beep) (
+  void (*activate_backend) (
     PrintFrontend *object);
 
 };
@@ -43,10 +40,7 @@ guint print_frontend_override_properties (GObjectClass *klass, guint property_id
 
 
 /* D-Bus signal emissions functions: */
-void print_frontend_emit_activate_print_backend (
-    PrintFrontend *object);
-
-void print_frontend_emit_beep_beep (
+void print_frontend_emit_activate_backend (
     PrintFrontend *object);
 
 
