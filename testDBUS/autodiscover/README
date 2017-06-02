@@ -1,6 +1,17 @@
-Interface name : com.Print.Backend
-Interface prefix: com.Print
-Generated files : backend_interface.[ch]
-C Namespace(The structures's name's prefixes) : Print
-            - PrintBackend(...)
+Compilation:
 
+$ make gen
+$ make
+
+
+__________________
+
+Running
+
+$ ./server_cups &
+$ ./server_dummy &
+$ ./front_end
+
+_________________
+Cleaning up
+$ make clean
