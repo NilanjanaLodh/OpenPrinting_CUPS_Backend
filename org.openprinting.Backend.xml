@@ -1,0 +1,22 @@
+<node>
+    <interface name="org.openprinting.PrintBackend">
+        <signal name="PrinterAdded">
+            <arg name="printer_name" type="s" />
+        </signal>
+        <signal name="PrinterRemoved">
+            <arg name="printer_name" type="s" />
+        </signal>
+        <signal name="PrinterStatusChanged">
+            <arg name="printer_name" type="s" />
+        </signal>
+        <method name="listPrinterOptions">
+            <arg name="printer_name" direction="in" type="s"/>
+            <arg name="printer_options" direction="out" type="v"/>
+        </method>
+        <method name="getPrinterOptionValue">
+            <arg name="printer_name" direction="in" type="s" />
+            <arg name="option_name" direction="in" type="s"/>
+            <arg name="option_value" direction="out" type="s" />
+        </method>
+    </interface>
+</node>
