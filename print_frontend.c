@@ -91,7 +91,7 @@ static void on_printer_added(GDBusConnection *connection,
                              GVariant *parameters,
                              gpointer user_data)
 {
-    char *printer_name = malloc(100);
+    char *printer_name;
     g_variant_get(parameters, "(s)", &printer_name);
     g_message("Received Printer %s!\n", printer_name);
 }
@@ -103,16 +103,19 @@ static void on_printer_removed(GDBusConnection *connection,
                                GVariant *parameters,
                                gpointer user_data)
 {
+    char *printer_name;
+    g_variant_get(parameters, "(s)", &printer_name);
+    g_message("Removed Printer %s!\n", printer_name);
 }
 
 gpointer parse_commands(gpointer user_data)
 {
-    PrintFrontend *skeleton= (PrintFrontend *)user_data;
+    PrintFrontend *skeleton = (PrintFrontend *)user_data;
     char buf[100];
-    while(1)
+    while (1)
     {
-        scanf("%s",buf);
-        if(strcmp(buf,"stop")==0)
+        scanf("%s", buf);
+        if (strcmp(buf, "stop") == 0)
         {
             print_frontend_emit_stop_listing(skeleton);
             g_message("Stopping front end..\n");
