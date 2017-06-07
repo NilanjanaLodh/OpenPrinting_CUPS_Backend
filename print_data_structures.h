@@ -1,6 +1,7 @@
 #ifndef _PRINT_DATA_STRUCTURES_H_
 #define _PRINT_DATA_STRUCTURES_H_
 
+#define STOP_BACKEND_SIGNAL "StopListing"
 #define ACTIVATE_BACKEND_SIGNAL "GetBackend"
 #define PRINTER_ADDED_SIGNAL "PrinterAdded"
 #define PRINTER_REMOVED_SIGNAL "PrinterRemoved"

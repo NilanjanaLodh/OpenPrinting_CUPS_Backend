@@ -23,6 +23,7 @@ static void on_printer_removed(GDBusConnection *connection,
                                const gchar *signal_name,
                                GVariant *parameters,
                                gpointer user_data);
+gpointer parse_commands(gpointer user_data);
 
 int main()
 {
@@ -75,6 +76,12 @@ on_name_acquired(GDBusConnection *connection,
     g_assert_no_error(error);
 
     print_frontend_emit_get_backend(skeleton);
+
+    /**
+    I have created the following thread just for testing purpose.
+    In reality you don't need a separate thread to parse commands because you already have a GUI. 
+    **/
+    g_thread_new("parse_commands_thread", parse_commands, skeleton);
 }
 static void on_printer_added(GDBusConnection *connection,
                              const gchar *sender_name,
@@ -84,8 +91,8 @@ static void on_printer_added(GDBusConnection *connection,
                              GVariant *parameters,
                              gpointer user_data)
 {
-    char *printer_name=malloc(100);
-    g_variant_get(parameters,"(s)",&printer_name);
+    char *printer_name = malloc(100);
+    g_variant_get(parameters, "(s)", &printer_name);
     g_message("Received Printer %s!\n", printer_name);
 }
 static void on_printer_removed(GDBusConnection *connection,
@@ -96,4 +103,20 @@ static void on_printer_removed(GDBusConnection *connection,
                                GVariant *parameters,
                                gpointer user_data)
 {
+}
+
+gpointer parse_commands(gpointer user_data)
+{
+    PrintFrontend *skeleton= (PrintFrontend *)user_data;
+    char buf[100];
+    while(1)
+    {
+        scanf("%s",buf);
+        if(strcmp(buf,"stop")==0)
+        {
+            print_frontend_emit_stop_listing(skeleton);
+            g_message("Stopping front end..\n");
+            exit(0);
+        }
+    }
 }
