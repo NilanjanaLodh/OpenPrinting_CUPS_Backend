@@ -84,6 +84,9 @@ static void on_printer_added(GDBusConnection *connection,
                              GVariant *parameters,
                              gpointer user_data)
 {
+    char *printer_name=malloc(100);
+    g_variant_get(parameters,"(s)",&printer_name);
+    g_message("Received Printer %s!\n", printer_name);
 }
 static void on_printer_removed(GDBusConnection *connection,
                                const gchar *sender_name,

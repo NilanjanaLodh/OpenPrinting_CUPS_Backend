@@ -81,9 +81,10 @@ static void on_activate_backend(GDBusConnection *connection,
                                 GVariant *parameters,
                                 gpointer user_data)
 {
-    g_message("Sender %s\n",sender_name);
+    
 
-    g_message("Enumerating!\n");
+    g_message("Enumerating printers for %s\n", sender_name);
+
     char *t = malloc(sizeof(gchar)*(strlen(sender_name)+ 1));
     strcpy(t,sender_name);
     //to do here .. later add this frontend entry to hashtable
@@ -92,7 +93,7 @@ static void on_activate_backend(GDBusConnection *connection,
 
 gpointer list_printers(gpointer sender_name)
 {
-    g_message("%s\n", (gchar*)sender_name);
+    g_message("New thread for dialog at %s\n", (gchar*)sender_name);
     cancel = 0;
     cupsEnumDests(CUPS_DEST_FLAGS_NONE,
                   -1, //NO timeout
@@ -107,18 +108,18 @@ int send_printer_added(void *user_data, unsigned flags, cups_dest_t *dest)
 {
 
     char *sender_name = (char *)user_data;
-    g_message("Sender is  %s\n",sender_name);
-    GVariant *gv = g_variant_new_string(dest->name);
+    //g_message("Dialog  is  %s\n",sender_name);
+    GVariant *gv = g_variant_new("(s)",dest->name);
     GError *error = NULL;
     g_dbus_connection_emit_signal(dbus_connection,
                                   sender_name,
                                   OBJECT_PATH,
                                   "org.openprinting.PrintBackend",
                                   PRINTER_ADDED_SIGNAL,
-                                  NULL,
+                                  gv,
                                   &error);
     g_assert_no_error(error);
-    g_message("Sent notification for printer %s\n" , dest->name);
+    g_message("     Sent notification for printer %s\n" , dest->name);
 
     return 1; //continue enumeration
 }
