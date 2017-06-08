@@ -10,33 +10,38 @@
 #define BUS_NAME "org.openprinting.Backend.CUPS"
 #define OBJECT_PATH "/"
 
-static void on_name_acquired(GDBusConnection *connection, const gchar *name, gpointer user_data);
+GDBusConnection *dbus_connection;
+PrintBackend *skeleton;
+GHashTable *dialog_cancel;
+GHashTable *dialog_printers;
+int num_frontends; // the number of frontends that are currently connected
+
+static void on_name_acquired(GDBusConnection *connection, const gchar *name, gpointer not_used);
 static void on_activate_backend(GDBusConnection *connection,
                                 const gchar *sender_name,
                                 const gchar *object_path,
                                 const gchar *interface_name,
                                 const gchar *signal_name,
                                 GVariant *parameters,
-                                gpointer user_data);
+                                gpointer not_used);
 static void on_stop_backend(GDBusConnection *connection,
                             const gchar *sender_name,
                             const gchar *object_path,
                             const gchar *interface_name,
                             const gchar *signal_name,
                             GVariant *parameters,
-                            gpointer user_data);
-gpointer list_printers(gpointer sender_name);
-int send_printer_added(void *user_data, unsigned flags, cups_dest_t *dest);
-gpointer find_removed_printers(gpointer data);
+                            gpointer not_used);
+gpointer list_printers(gpointer _dialog_name);
+int send_printer_added(void *_dialog_name, unsigned flags, cups_dest_t *dest);
+gpointer find_removed_printers(gpointer not_used);
 int add_printer_to_list(void *user_data, unsigned flags, cups_dest_t *dest);
 
-GDBusConnection *dbus_connection;
-GHashTable *dialog_table;
-int num_frontends; // the number of frontends that are currently connected
 int main()
 {
     dbus_connection = NULL;
-    dialog_table = g_hash_table_new(g_str_hash, g_str_equal); /// to do : add destroy functions
+    skeleton = NULL;
+    dialog_cancel = g_hash_table_new(g_str_hash, g_str_equal); /// to do : add destroy functions
+    dialog_printers = g_hash_table_new(g_str_hash, g_str_equal);
     num_frontends = 0;
 
     GMainLoop *loop = g_main_loop_new(NULL, FALSE);
@@ -54,10 +59,10 @@ int main()
 static void
 on_name_acquired(GDBusConnection *connection,
                  const gchar *name,
-                 gpointer user_data)
+                 gpointer not_used)
 {
     dbus_connection = connection;
-    PrintBackend *skeleton;
+
     GError *error = NULL;
 
     skeleton = print_backend_skeleton_new();
@@ -79,7 +84,7 @@ on_name_acquired(GDBusConnection *connection,
                                        NULL,                             /**match on all arguments**/
                                        0,                                //Flags
                                        on_activate_backend,              //callback
-                                       skeleton,                        //user_data
+                                       NULL,                             //user_data
                                        NULL);
     g_dbus_connection_signal_subscribe(connection,
                                        NULL,                             //Sender name
@@ -89,7 +94,7 @@ on_name_acquired(GDBusConnection *connection,
                                        NULL,                             /**match on all arguments**/
                                        0,                                //Flags
                                        on_stop_backend,                  //callback
-                                       skeleton,                        //user_data
+                                       NULL,                             //user_data
                                        NULL);
 
     g_dbus_interface_skeleton_export(G_DBUS_INTERFACE_SKELETON(skeleton), connection, OBJECT_PATH, &error);
@@ -102,49 +107,69 @@ static void on_activate_backend(GDBusConnection *connection,
                                 const gchar *interface_name,
                                 const gchar *signal_name,
                                 GVariant *parameters,
-                                gpointer skeleton)
+                                gpointer not_used)
 {
 
     g_message("Enumerating printers for %s\n", sender_name);
 
     char *t = malloc(sizeof(gchar) * (strlen(sender_name) + 1));
+    strcpy(t, sender_name);
+
     int *cancel = malloc(sizeof(int));
     *cancel = 0;
-    strcpy(t, sender_name);
-    g_hash_table_insert(dialog_table, t, cancel);
+    g_hash_table_insert(dialog_cancel, t, cancel);
+
+    GHashTable *g = g_hash_table_new(g_str_hash, g_str_equal);
+    g_hash_table_insert(dialog_printers, t, g);
     num_frontends++;
     g_thread_new("list_printers_thread", list_printers, t);
-    if(num_frontends == 1) // you need to wake this thread up! 
+    if (num_frontends == 1) // you need to wake this thread up!
     {
-        g_thread_new("find_removed_printers_thread", find_removed_printers, skeleton);
+        g_thread_new("find_removed_printers_thread", find_removed_printers, NULL);
     }
 }
 
-gpointer list_printers(gpointer sender_name)
+gpointer list_printers(gpointer _dialog_name)
 {
-    g_message("New thread for dialog at %s\n", (gchar *)sender_name);
-    int *cancel = (int *)(g_hash_table_lookup(dialog_table, (gchar *)sender_name));
+    gchar *dialog_name = (gchar *)_dialog_name;
+    g_message("New thread for dialog at %s\n", dialog_name);
+    int *cancel = (int *)(g_hash_table_lookup(dialog_cancel, dialog_name));
+    *cancel = 0;
+
     cupsEnumDests(CUPS_DEST_FLAGS_NONE,
                   -1, //NO timeout
                   cancel,
                   0, //TYPE
                   0, //MASK
                   send_printer_added,
-                  sender_name);
+                  _dialog_name);
 
-    g_hash_table_remove(dialog_table, (gchar *)sender_name);
-    g_message("Exiting thread for dialog at %s\n", (gchar *)sender_name);
+    g_hash_table_remove(dialog_cancel, dialog_name);
+    //g_hash_table_destroy(g_hash_table_lookup(dialog_printers, dialog_name));
+    g_hash_table_remove(dialog_printers, dialog_name); //huge memory leak
+    g_message("Exiting thread for dialog at %s\n", dialog_name);
 }
 
-int send_printer_added(void *user_data, unsigned flags, cups_dest_t *dest)
+int send_printer_added(void *_dialog_name, unsigned flags, cups_dest_t *dest)
 {
 
-    char *sender_name = (char *)user_data;
-    //g_message("Dialog  is  %s\n",sender_name);
+    char *dialog_name = (char *)_dialog_name;
+    GHashTable *g = g_hash_table_lookup(dialog_printers, dialog_name);
+    g_assert_nonnull(g);
+    //  g_message("Dialog  is  %s\n",sender_name);
+    if (g_hash_table_contains(g, dest->name))
+    {
+        g_message("%s already sent.\n", dest->name);
+        return 1;
+    }
+
+    char *t = malloc(sizeof(gchar) * (strlen(dest->name) + 1));
+    strcpy(t, dest->name);
+    g_hash_table_add(g, dest->name);
     GVariant *gv = g_variant_new("(s)", dest->name);
     GError *error = NULL;
     g_dbus_connection_emit_signal(dbus_connection,
-                                  sender_name,
+                                  dialog_name,
                                   OBJECT_PATH,
                                   "org.openprinting.PrintBackend",
                                   PRINTER_ADDED_SIGNAL,
@@ -161,31 +186,30 @@ static void on_stop_backend(GDBusConnection *connection,
                             const gchar *interface_name,
                             const gchar *signal_name,
                             GVariant *parameters,
-                            gpointer user_data)
+                            gpointer not_used)
 {
     g_message("Stop backend signal from %s\n", sender_name);
-    int *cancel = (int *)(g_hash_table_lookup(dialog_table, sender_name));
+    int *cancel = (int *)(g_hash_table_lookup(dialog_cancel, sender_name));
     *cancel = 1;
     num_frontends--;
 }
 
-gpointer find_removed_printers(gpointer data)
+gpointer find_removed_printers(gpointer not_used)
 {
-    PrintBackend *skeleton = (PrintBackend *)data;
     g_message("Starting find_removed_printers thread ..\n");
     GHashTable *set[2];
     set[0] = g_hash_table_new(g_str_hash, g_str_equal);
     set[1] = g_hash_table_new(g_str_hash, g_str_equal);
     int curr = 0, prev = 1;
     GHashTableIter iter;
-    gpointer key ,val;
+    gpointer key, val;
     while (num_frontends > 0)
     {
         //fix memory leaks
-       // g_message("curr,prev = %d,%d",curr,prev);
+        // g_message("curr,prev = %d,%d",curr,prev);
         g_hash_table_remove_all(set[curr]);
         cupsEnumDests(CUPS_DEST_FLAGS_NONE,
-                      6000,                //timeout in ms
+                      4500,                //timeout in ms
                       NULL,                //cancel variable
                       0,                   //TYPE
                       0,                   //MASK
@@ -198,8 +222,8 @@ gpointer find_removed_printers(gpointer data)
             //g_message("                                             .. %s ..\n",(gchar*)key);
             if (!g_hash_table_contains(set[curr], (gchar *)key))
             {
-                g_message("Printer %s removed\n", (char*)key);
-                print_backend_emit_printer_removed(skeleton,(char*)key);
+                g_message("Printer %s removed\n", (char *)key);
+                print_backend_emit_printer_removed(skeleton, (char *)key);
             }
         }
         curr = 1 - curr; //switching it over 0<-->1; so that the curr becomes prev and prev becomes curr
@@ -207,7 +231,7 @@ gpointer find_removed_printers(gpointer data)
     }
     g_hash_table_destroy(set[0]);
     g_hash_table_destroy(set[1]);
-    
+
     g_message("find_removed_printers thread exited\n");
 }
 int add_printer_to_list(void *user_data, unsigned flags, cups_dest_t *dest)
