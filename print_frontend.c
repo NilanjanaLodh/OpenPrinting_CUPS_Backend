@@ -24,10 +24,13 @@ static void on_printer_removed(GDBusConnection *connection,
                                GVariant *parameters,
                                gpointer user_data);
 gpointer parse_commands(gpointer user_data);
-
+FrontendObj *f;
 int main()
 {
-    FrontendObj *f = get_new_FrontendObj();
+   // printers = g_hash_table_new(g_str_hash, g_str_equal);
+    //backends = g_hash_table_new(g_str_hash, g_str_equal);
+    
+    f = get_new_FrontendObj();
     g_bus_own_name(G_BUS_TYPE_SESSION,
                    DIALOG_BUS_NAME,
                    0,                //flags
@@ -45,7 +48,6 @@ on_name_acquired(GDBusConnection *connection,
                  const gchar *name,
                  gpointer user_data)
 {
-    FrontendObj *f = (FrontendObj *)user_data;
     PrintFrontend *skeleton;
     skeleton = print_frontend_skeleton_new();
     GError *error = NULL;
@@ -91,18 +93,13 @@ static void on_printer_added(GDBusConnection *connection,
                              GVariant *parameters,
                              gpointer user_data)
 {
-    char *printer_name;
-    char *location;
-    char *info;
-    char *is_accepting_jobs;
-    char *make_and_model;
-    g_variant_get(parameters, "(sssss)", &printer_name, &info, &location, &make_and_model, &is_accepting_jobs);
-    g_message("Received Printer %s\n \
-                location %s\n \
-                info : %s\n\
-                make and model : %s\n\
-                accepting_jobs : %s\n", 
-                printer_name, location , info , make_and_model , is_accepting_jobs );
+
+    PrinterObj *p = get_new_PrinterObj();
+    fill_basic_properties(p, parameters);
+   // g_variant_get(parameters, "(sssss)", &printer_name, &info, &location, &make_and_model, &is_accepting_jobs);
+    add_printer(f,p);
+    print_basic_properties(p);
+    
 }
 static void on_printer_removed(GDBusConnection *connection,
                                const gchar *sender_name,
