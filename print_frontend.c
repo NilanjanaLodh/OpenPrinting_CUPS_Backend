@@ -92,8 +92,17 @@ static void on_printer_added(GDBusConnection *connection,
                              gpointer user_data)
 {
     char *printer_name;
-    g_variant_get(parameters, "(s)", &printer_name);
-    g_message("Received Printer %s!\n", printer_name);
+    char *location;
+    char *info;
+    char *is_accepting_jobs;
+    char *make_and_model;
+    g_variant_get(parameters, "(sssss)", &printer_name, &info, &location, &make_and_model, &is_accepting_jobs);
+    g_message("Received Printer %s\n \
+                location %s\n \
+                info : %s\n\
+                make and model : %s\n\
+                accepting_jobs : %s\n", 
+                printer_name, location , info , make_and_model , is_accepting_jobs );
 }
 static void on_printer_removed(GDBusConnection *connection,
                                const gchar *sender_name,

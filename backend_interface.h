@@ -42,7 +42,11 @@ struct _PrintBackendIface
 
   void (*printer_added) (
     PrintBackend *object,
-    const gchar *arg_printer_name);
+    const gchar *arg_printer_name,
+    const gchar *arg_printer_info,
+    const gchar *arg_printer_location,
+    const gchar *arg_printer_make_and_model,
+    const gchar *arg_printer_is_accepting_jobs);
 
   void (*printer_removed) (
     PrintBackend *object,
@@ -76,7 +80,11 @@ void print_backend_complete_get_printer_option_value (
 /* D-Bus signal emissions functions: */
 void print_backend_emit_printer_added (
     PrintBackend *object,
-    const gchar *arg_printer_name);
+    const gchar *arg_printer_name,
+    const gchar *arg_printer_info,
+    const gchar *arg_printer_location,
+    const gchar *arg_printer_make_and_model,
+    const gchar *arg_printer_is_accepting_jobs);
 
 void print_backend_emit_printer_removed (
     PrintBackend *object,

@@ -12,8 +12,8 @@
 
 GDBusConnection *dbus_connection;
 PrintBackend *skeleton;
-GHashTable *dialog_cancel;
 GHashTable *dialog_printers;
+GHashTable *dialog_cancel;
 int num_frontends; // the number of frontends that are currently connected
 
 static void on_name_acquired(GDBusConnection *connection, const gchar *name, gpointer not_used);
@@ -110,7 +110,7 @@ static void on_activate_backend(GDBusConnection *connection,
                                 gpointer not_used)
 {
 
-    g_message("Enumerating printers for %s\n", sender_name);
+    //g_message("Enumerating printers for %s\n", sender_name);
 
     char *t = malloc(sizeof(gchar) * (strlen(sender_name) + 1));
     strcpy(t, sender_name);
@@ -122,11 +122,12 @@ static void on_activate_backend(GDBusConnection *connection,
     GHashTable *g = g_hash_table_new(g_str_hash, g_str_equal);
     g_hash_table_insert(dialog_printers, t, g);
     num_frontends++;
-    g_thread_new("list_printers_thread", list_printers, t);
-    if (num_frontends == 1) // you need to wake this thread up!
-    {
-        g_thread_new("find_removed_printers_thread", find_removed_printers, NULL);
-    }
+    g_thread_new(NULL, list_printers, t);
+    // if (num_frontends == 1) // you need to wake this thread up!
+    // {
+    //     g_thread_new(NULL, find_removed_printers, NULL);
+    // }
+    // g_message("Leaving this function: the threads will take care.\n");
 }
 
 gpointer list_printers(gpointer _dialog_name)
@@ -145,7 +146,7 @@ gpointer list_printers(gpointer _dialog_name)
                   _dialog_name);
 
     g_hash_table_remove(dialog_cancel, dialog_name);
-    //g_hash_table_destroy(g_hash_table_lookup(dialog_printers, dialog_name));
+    g_hash_table_destroy(g_hash_table_lookup(dialog_printers, dialog_name));
     g_hash_table_remove(dialog_printers, dialog_name); //huge memory leak
     g_message("Exiting thread for dialog at %s\n", dialog_name);
 }
@@ -156,7 +157,7 @@ int send_printer_added(void *_dialog_name, unsigned flags, cups_dest_t *dest)
     char *dialog_name = (char *)_dialog_name;
     GHashTable *g = g_hash_table_lookup(dialog_printers, dialog_name);
     g_assert_nonnull(g);
-    //  g_message("Dialog  is  %s\n",sender_name);
+
     if (g_hash_table_contains(g, dest->name))
     {
         g_message("%s already sent.\n", dest->name);
@@ -166,7 +167,7 @@ int send_printer_added(void *_dialog_name, unsigned flags, cups_dest_t *dest)
     char *t = malloc(sizeof(gchar) * (strlen(dest->name) + 1));
     strcpy(t, dest->name);
     g_hash_table_add(g, dest->name);
-    GVariant *gv = g_variant_new("(s)", dest->name);
+    GVariant *gv = g_variant_new("(sssss)", t , "info" , "location" , "make_and_model" , "accepting_jobs");
     GError *error = NULL;
     g_dbus_connection_emit_signal(dbus_connection,
                                   dialog_name,
@@ -178,7 +179,10 @@ int send_printer_added(void *_dialog_name, unsigned flags, cups_dest_t *dest)
     g_assert_no_error(error);
     g_message("     Sent notification for printer %s\n", dest->name);
 
+
+    ///fix memory leaks
     return 1; //continue enumeration
+
 }
 static void on_stop_backend(GDBusConnection *connection,
                             const gchar *sender_name,
@@ -194,49 +198,49 @@ static void on_stop_backend(GDBusConnection *connection,
     num_frontends--;
 }
 
-gpointer find_removed_printers(gpointer not_used)
-{
-    g_message("Starting find_removed_printers thread ..\n");
-    GHashTable *set[2];
-    set[0] = g_hash_table_new(g_str_hash, g_str_equal);
-    set[1] = g_hash_table_new(g_str_hash, g_str_equal);
-    int curr = 0, prev = 1;
-    GHashTableIter iter;
-    gpointer key, val;
-    while (num_frontends > 0)
-    {
-        //fix memory leaks
-        // g_message("curr,prev = %d,%d",curr,prev);
-        g_hash_table_remove_all(set[curr]);
-        cupsEnumDests(CUPS_DEST_FLAGS_NONE,
-                      4500,                //timeout in ms
-                      NULL,                //cancel variable
-                      0,                   //TYPE
-                      0,                   //MASK
-                      add_printer_to_list, // Callback function
-                      set[curr]);          //user_data
+// gpointer find_removed_printers(gpointer not_used)
+// {
+//     g_message("Starting find_removed_printers thread ..\n");
+//     GHashTable *set[2];
+//     set[0] = g_hash_table_new(g_str_hash, g_str_equal);
+//     set[1] = g_hash_table_new(g_str_hash, g_str_equal);
+//     int curr = 0, prev = 1;
+//     GHashTableIter iter;
+//     gpointer key;
+//     while (num_frontends > 0)
+//     {
+//         //fix memory leaks
+//         // g_message("curr,prev = %d,%d",curr,prev);
+//         g_hash_table_remove_all(set[curr]);
+//         cupsEnumDests(CUPS_DEST_FLAGS_NONE,
+//                       4500,                //timeout in ms
+//                       NULL,                //cancel variable
+//                       0,                   //TYPE
+//                       0,                   //MASK
+//                       add_printer_to_list, // Callback function
+//                       set[curr]);          //user_data
 
-        g_hash_table_iter_init(&iter, set[prev]);
-        while (g_hash_table_iter_next(&iter, &key, &val))
-        {
-            //g_message("                                             .. %s ..\n",(gchar*)key);
-            if (!g_hash_table_contains(set[curr], (gchar *)key))
-            {
-                g_message("Printer %s removed\n", (char *)key);
-                print_backend_emit_printer_removed(skeleton, (char *)key);
-            }
-        }
-        curr = 1 - curr; //switching it over 0<-->1; so that the curr becomes prev and prev becomes curr
-        prev = 1 - prev;
-    }
-    g_hash_table_destroy(set[0]);
-    g_hash_table_destroy(set[1]);
+//         g_hash_table_iter_init(&iter, set[prev]);
+//         while (g_hash_table_iter_next(&iter, &key, NULL))
+//         {
+//             //g_message("                                             .. %s ..\n",(gchar*)key);
+//             if (!g_hash_table_contains(set[curr], (gchar *)key))
+//             {
+//                 g_message("Printer %s removed\n", (char *)key);
+//                 print_backend_emit_printer_removed(skeleton, (char *)key);
+//             }
+//         }
+//         curr = 1 - curr; //switching it over 0<-->1; so that the curr becomes prev and prev becomes curr
+//         prev = 1 - prev;
+//     }
+//     g_hash_table_destroy(set[0]);
+//     g_hash_table_destroy(set[1]);
 
-    g_message("find_removed_printers thread exited\n");
-}
-int add_printer_to_list(void *user_data, unsigned flags, cups_dest_t *dest)
-{
-    GHashTable *h = (GHashTable *)user_data;
-    char *printername = strdup(dest->name);
-    g_hash_table_add(h, printername);
-}
+//     g_message("find_removed_printers thread exited\n");
+// }
+// int add_printer_to_list(void *user_data, unsigned flags, cups_dest_t *dest)
+// {
+//     GHashTable *h = (GHashTable *)user_data;
+//     char *printername = strdup(dest->name);
+//     g_hash_table_add(h, printername);
+// }

@@ -2,6 +2,11 @@
     <interface name="org.openprinting.PrintBackend">
         <signal name="PrinterAdded">
             <arg name="printer_name" type="s" />
+            <arg name="printer_info" type="s" />
+            <arg name="printer_location" type="s" />
+            <arg name="printer_make_and_model" type="s" />
+            <arg name="printer_is_accepting_jobs" type="s" />
+            <!--Send Basic Info along with this-->
         </signal>
         <signal name="PrinterRemoved">
             <arg name="printer_name" type="s" />

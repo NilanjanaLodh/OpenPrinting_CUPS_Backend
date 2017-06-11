@@ -174,6 +174,17 @@ static const _ExtendedGDBusSignalInfo _print_frontend_signal_info_get_backend =
   "get-backend"
 };
 
+static const _ExtendedGDBusSignalInfo _print_frontend_signal_info_refresh_backend =
+{
+  {
+    -1,
+    (gchar *) "RefreshBackend",
+    NULL,
+    NULL
+  },
+  "refresh-backend"
+};
+
 static const _ExtendedGDBusSignalInfo _print_frontend_signal_info_stop_listing =
 {
   {
@@ -188,6 +199,7 @@ static const _ExtendedGDBusSignalInfo _print_frontend_signal_info_stop_listing =
 static const _ExtendedGDBusSignalInfo * const _print_frontend_signal_info_pointers[] =
 {
   &_print_frontend_signal_info_get_backend,
+  &_print_frontend_signal_info_refresh_backend,
   &_print_frontend_signal_info_stop_listing,
   NULL
 };
@@ -247,6 +259,7 @@ print_frontend_override_properties (GObjectClass *klass, guint property_id_begin
  * PrintFrontendIface:
  * @parent_iface: The parent interface.
  * @get_backend: Handler for the #PrintFrontend::get-backend signal.
+ * @refresh_backend: Handler for the #PrintFrontend::refresh-backend signal.
  * @stop_listing: Handler for the #PrintFrontend::stop-listing signal.
  *
  * Virtual table for the D-Bus interface <link linkend="gdbus-interface-org-openprinting-PrintFrontend.top_of_page">org.openprinting.PrintFrontend</link>.
@@ -271,6 +284,24 @@ print_frontend_default_init (PrintFrontendIface *iface)
     G_TYPE_FROM_INTERFACE (iface),
     G_SIGNAL_RUN_LAST,
     G_STRUCT_OFFSET (PrintFrontendIface, get_backend),
+    NULL,
+    NULL,
+    g_cclosure_marshal_generic,
+    G_TYPE_NONE,
+    0);
+
+  /**
+   * PrintFrontend::refresh-backend:
+   * @object: A #PrintFrontend.
+   *
+   * On the client-side, this signal is emitted whenever the D-Bus signal <link linkend="gdbus-signal-org-openprinting-PrintFrontend.RefreshBackend">"RefreshBackend"</link> is received.
+   *
+   * On the service-side, this signal can be used with e.g. g_signal_emit_by_name() to make the object emit the D-Bus signal.
+   */
+  g_signal_new ("refresh-backend",
+    G_TYPE_FROM_INTERFACE (iface),
+    G_SIGNAL_RUN_LAST,
+    G_STRUCT_OFFSET (PrintFrontendIface, refresh_backend),
     NULL,
     NULL,
     g_cclosure_marshal_generic,
@@ -308,6 +339,19 @@ print_frontend_emit_get_backend (
     PrintFrontend *object)
 {
   g_signal_emit_by_name (object, "get-backend");
+}
+
+/**
+ * print_frontend_emit_refresh_backend:
+ * @object: A #PrintFrontend.
+ *
+ * Emits the <link linkend="gdbus-signal-org-openprinting-PrintFrontend.RefreshBackend">"RefreshBackend"</link> D-Bus signal.
+ */
+void
+print_frontend_emit_refresh_backend (
+    PrintFrontend *object)
+{
+  g_signal_emit_by_name (object, "refresh-backend");
 }
 
 /**
@@ -901,6 +945,28 @@ _print_frontend_on_signal_get_backend (
 }
 
 static void
+_print_frontend_on_signal_refresh_backend (
+    PrintFrontend *object)
+{
+  PrintFrontendSkeleton *skeleton = PRINT_FRONTEND_SKELETON (object);
+
+  GList      *connections, *l;
+  GVariant   *signal_variant;
+  connections = g_dbus_interface_skeleton_get_connections (G_DBUS_INTERFACE_SKELETON (skeleton));
+
+  signal_variant = g_variant_ref_sink (g_variant_new ("()"));
+  for (l = connections; l != NULL; l = l->next)
+    {
+      GDBusConnection *connection = l->data;
+      g_dbus_connection_emit_signal (connection,
+        NULL, g_dbus_interface_skeleton_get_object_path (G_DBUS_INTERFACE_SKELETON (skeleton)), "org.openprinting.PrintFrontend", "RefreshBackend",
+        signal_variant, NULL);
+    }
+  g_variant_unref (signal_variant);
+  g_list_free_full (connections, g_object_unref);
+}
+
+static void
 _print_frontend_on_signal_stop_listing (
     PrintFrontend *object)
 {
@@ -982,6 +1048,7 @@ static void
 print_frontend_skeleton_iface_init (PrintFrontendIface *iface)
 {
   iface->get_backend = _print_frontend_on_signal_get_backend;
+  iface->refresh_backend = _print_frontend_on_signal_refresh_backend;
   iface->stop_listing = _print_frontend_on_signal_stop_listing;
 }
 

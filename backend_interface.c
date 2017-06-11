@@ -287,9 +287,57 @@ static const _ExtendedGDBusArgInfo _print_backend_signal_info_printer_added_ARG_
   FALSE
 };
 
+static const _ExtendedGDBusArgInfo _print_backend_signal_info_printer_added_ARG_printer_info =
+{
+  {
+    -1,
+    (gchar *) "printer_info",
+    (gchar *) "s",
+    NULL
+  },
+  FALSE
+};
+
+static const _ExtendedGDBusArgInfo _print_backend_signal_info_printer_added_ARG_printer_location =
+{
+  {
+    -1,
+    (gchar *) "printer_location",
+    (gchar *) "s",
+    NULL
+  },
+  FALSE
+};
+
+static const _ExtendedGDBusArgInfo _print_backend_signal_info_printer_added_ARG_printer_make_and_model =
+{
+  {
+    -1,
+    (gchar *) "printer_make_and_model",
+    (gchar *) "s",
+    NULL
+  },
+  FALSE
+};
+
+static const _ExtendedGDBusArgInfo _print_backend_signal_info_printer_added_ARG_printer_is_accepting_jobs =
+{
+  {
+    -1,
+    (gchar *) "printer_is_accepting_jobs",
+    (gchar *) "s",
+    NULL
+  },
+  FALSE
+};
+
 static const _ExtendedGDBusArgInfo * const _print_backend_signal_info_printer_added_ARG_pointers[] =
 {
   &_print_backend_signal_info_printer_added_ARG_printer_name,
+  &_print_backend_signal_info_printer_added_ARG_printer_info,
+  &_print_backend_signal_info_printer_added_ARG_printer_location,
+  &_print_backend_signal_info_printer_added_ARG_printer_make_and_model,
+  &_print_backend_signal_info_printer_added_ARG_printer_is_accepting_jobs,
   NULL
 };
 
@@ -490,6 +538,10 @@ print_backend_default_init (PrintBackendIface *iface)
    * PrintBackend::printer-added:
    * @object: A #PrintBackend.
    * @arg_printer_name: Argument.
+   * @arg_printer_info: Argument.
+   * @arg_printer_location: Argument.
+   * @arg_printer_make_and_model: Argument.
+   * @arg_printer_is_accepting_jobs: Argument.
    *
    * On the client-side, this signal is emitted whenever the D-Bus signal <link linkend="gdbus-signal-org-openprinting-PrintBackend.PrinterAdded">"PrinterAdded"</link> is received.
    *
@@ -503,7 +555,7 @@ print_backend_default_init (PrintBackendIface *iface)
     NULL,
     g_cclosure_marshal_generic,
     G_TYPE_NONE,
-    1, G_TYPE_STRING);
+    5, G_TYPE_STRING, G_TYPE_STRING, G_TYPE_STRING, G_TYPE_STRING, G_TYPE_STRING);
 
   /**
    * PrintBackend::printer-removed:
@@ -549,15 +601,23 @@ print_backend_default_init (PrintBackendIface *iface)
  * print_backend_emit_printer_added:
  * @object: A #PrintBackend.
  * @arg_printer_name: Argument to pass with the signal.
+ * @arg_printer_info: Argument to pass with the signal.
+ * @arg_printer_location: Argument to pass with the signal.
+ * @arg_printer_make_and_model: Argument to pass with the signal.
+ * @arg_printer_is_accepting_jobs: Argument to pass with the signal.
  *
  * Emits the <link linkend="gdbus-signal-org-openprinting-PrintBackend.PrinterAdded">"PrinterAdded"</link> D-Bus signal.
  */
 void
 print_backend_emit_printer_added (
     PrintBackend *object,
-    const gchar *arg_printer_name)
+    const gchar *arg_printer_name,
+    const gchar *arg_printer_info,
+    const gchar *arg_printer_location,
+    const gchar *arg_printer_make_and_model,
+    const gchar *arg_printer_is_accepting_jobs)
 {
-  g_signal_emit_by_name (object, "printer-added", arg_printer_name);
+  g_signal_emit_by_name (object, "printer-added", arg_printer_name, arg_printer_info, arg_printer_location, arg_printer_make_and_model, arg_printer_is_accepting_jobs);
 }
 
 /**
@@ -1404,7 +1464,11 @@ print_backend_skeleton_dbus_interface_flush (GDBusInterfaceSkeleton *_skeleton)
 static void
 _print_backend_on_signal_printer_added (
     PrintBackend *object,
-    const gchar *arg_printer_name)
+    const gchar *arg_printer_name,
+    const gchar *arg_printer_info,
+    const gchar *arg_printer_location,
+    const gchar *arg_printer_make_and_model,
+    const gchar *arg_printer_is_accepting_jobs)
 {
   PrintBackendSkeleton *skeleton = PRINT_BACKEND_SKELETON (object);
 
@@ -1412,8 +1476,12 @@ _print_backend_on_signal_printer_added (
   GVariant   *signal_variant;
   connections = g_dbus_interface_skeleton_get_connections (G_DBUS_INTERFACE_SKELETON (skeleton));
 
-  signal_variant = g_variant_ref_sink (g_variant_new ("(s)",
-                   arg_printer_name));
+  signal_variant = g_variant_ref_sink (g_variant_new ("(sssss)",
+                   arg_printer_name,
+                   arg_printer_info,
+                   arg_printer_location,
+                   arg_printer_make_and_model,
+                   arg_printer_is_accepting_jobs));
   for (l = connections; l != NULL; l = l->next)
     {
       GDBusConnection *connection = l->data;

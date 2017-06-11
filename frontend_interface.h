@@ -31,6 +31,9 @@ struct _PrintFrontendIface
   void (*get_backend) (
     PrintFrontend *object);
 
+  void (*refresh_backend) (
+    PrintFrontend *object);
+
   void (*stop_listing) (
     PrintFrontend *object);
 
@@ -44,6 +47,9 @@ guint print_frontend_override_properties (GObjectClass *klass, guint property_id
 
 /* D-Bus signal emissions functions: */
 void print_frontend_emit_get_backend (
+    PrintFrontend *object);
+
+void print_frontend_emit_refresh_backend (
     PrintFrontend *object);
 
 void print_frontend_emit_stop_listing (
