@@ -40,9 +40,13 @@ static void on_refresh_backend(GDBusConnection *connection,
                                gpointer not_used);
 gpointer list_printers(gpointer _dialog_name);
 int send_printer_added(void *_dialog_name, unsigned flags, cups_dest_t *dest);
-gpointer find_removed_printers(gpointer not_used);
+//gpointer find_removed_printers(gpointer not_used);
 int add_printer_to_list(void *user_data, unsigned flags, cups_dest_t *dest);
 
+static gboolean on_handle_list_basic_options(PrintBackend *interface,
+                                             GDBusMethodInvocation *invocation,
+                                             const gchar *printer_name,
+                                             gpointer user_data);
 int main()
 {
     dbus_connection = NULL;
@@ -74,13 +78,10 @@ on_name_acquired(GDBusConnection *connection,
 
     skeleton = print_backend_skeleton_new();
 
-    /** handle remote method calls **/
-    /**
-    g_signal_connect(skeleton,        //instance
-                     "handle-",       //signal name
-                     G_CALLBACK(on_), //callback
-                     NULL);           //user_data
-    **/
+    g_signal_connect(skeleton,                                 //instance
+                     "handle-list-basic-options",              //signal name
+                     G_CALLBACK(on_handle_list_basic_options), //callback
+                     NULL);                                    //user_data
 
     /**subscribe to signals **/
     g_dbus_connection_signal_subscribe(connection,
@@ -222,27 +223,33 @@ static void on_refresh_backend(GDBusConnection *connection,
     gpointer key;
     GHashTable *prev = g_hash_table_lookup(dialog_printers, sender_name);
     cupsEnumDests(CUPS_DEST_FLAGS_NONE,
-                  1000,  //timeout
-                  NULL, //cancel
-                  0,    //TYPE
-                  0,    //MASK
+                  1000,                //timeout
+                  NULL,                //cancel
+                  0,                   //TYPE
+                  0,                   //MASK
                   add_printer_to_list, //function
-                  g);   //user_data
+                  g);                  //user_data
     g_hash_table_iter_init(&iter, prev);
     while (g_hash_table_iter_next(&iter, &key, NULL))
     {
-        g_message("                                             .. %s ..\n",(gchar*)key);
+        //g_message("                                             .. %s ..\n", (gchar *)key);
         if (!g_hash_table_contains(g, (gchar *)key))
-        {            
+        {
             g_message("Printer %s removed\n", (char *)key);
-            print_backend_emit_printer_removed(skeleton, (char *)key);
+            //print_backend_emit_printer_removed(skeleton, (char *)key);
+            g_dbus_connection_emit_signal(dbus_connection,
+                                          sender_name,
+                                          OBJECT_PATH,
+                                          "org.openprinting.PrintBackend",
+                                          PRINTER_REMOVED_SIGNAL,
+                                          g_variant_new("(s)", (char *)key),
+                                          NULL);
         }
     }
-    
 
     char *t = malloc(sizeof(gchar) * (strlen(sender_name) + 1));
     strcpy(t, sender_name);
-    g_hash_table_replace(dialog_printers , t , g);
+    g_hash_table_replace(dialog_printers, t, g);
     g_thread_new(NULL, list_printers, t);
     //g_message("Hi\n");
     ///call cupsEnumDests once .. check with current hash table.
@@ -267,7 +274,21 @@ static void on_stop_backend(GDBusConnection *connection,
     *cancel = 1;
     num_frontends--;
 }
-
+gboolean on_handle_list_basic_options(PrintBackend *interface,
+                                      GDBusMethodInvocation *invocation,
+                                      const gchar *printer_name,
+                                      gpointer user_data)
+{
+    g_message("Listing basic options");
+    cups_dest_t *dest = cupsGetNamedDest(CUPS_HTTP_DEFAULT, printer_name, NULL);
+    g_assert_nonnull(dest);
+    print_backend_complete_list_basic_options(interface, invocation,
+                                              cupsGetOption("printer-info", dest->num_options, dest->options),
+                                              cupsGetOption("printer-location", dest->num_options, dest->options),
+                                              cupsGetOption("printer-make-and-model", dest->num_options, dest->options),
+                                              cupsGetOption("printer-is-accepting-jobs", dest->num_options, dest->options));
+    return TRUE;
+}
 // gpointer find_removed_printers(gpointer not_used)
 // {
 //     g_message("Starting find_removed_printers thread ..\n");

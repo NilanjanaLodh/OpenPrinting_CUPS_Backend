@@ -14,9 +14,12 @@
         <signal name="PrinterStatusChanged">
             <arg name="printer_name" type="s" />
         </signal>
-        <method name="listPrinterOptions">
+        <method name="listBasicOptions">
             <arg name="printer_name" direction="in" type="s"/>
-            <arg name="printer_options" direction="out" type="v"/>
+            <arg name="printer_info" direction="out" type="s"/>
+            <arg name="printer_location" direction="out" type="s"/>
+            <arg name="printer_make_and_model" direction="out" type="s" />
+            <arg name="printer_is_accepting_jobs" direction="out" type="s" />
         </method>
         <method name="getPrinterOptionValue">
             <arg name="printer_name" direction="in" type="s" />

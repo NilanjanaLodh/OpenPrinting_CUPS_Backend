@@ -163,7 +163,7 @@ _g_value_equal (const GValue *a, const GValue *b)
 
 /* ---- Introspection data for org.openprinting.PrintBackend ---- */
 
-static const _ExtendedGDBusArgInfo _print_backend_method_info_list_printer_options_IN_ARG_printer_name =
+static const _ExtendedGDBusArgInfo _print_backend_method_info_list_basic_options_IN_ARG_printer_name =
 {
   {
     -1,
@@ -174,39 +174,75 @@ static const _ExtendedGDBusArgInfo _print_backend_method_info_list_printer_optio
   FALSE
 };
 
-static const _ExtendedGDBusArgInfo * const _print_backend_method_info_list_printer_options_IN_ARG_pointers[] =
+static const _ExtendedGDBusArgInfo * const _print_backend_method_info_list_basic_options_IN_ARG_pointers[] =
 {
-  &_print_backend_method_info_list_printer_options_IN_ARG_printer_name,
+  &_print_backend_method_info_list_basic_options_IN_ARG_printer_name,
   NULL
 };
 
-static const _ExtendedGDBusArgInfo _print_backend_method_info_list_printer_options_OUT_ARG_printer_options =
+static const _ExtendedGDBusArgInfo _print_backend_method_info_list_basic_options_OUT_ARG_printer_info =
 {
   {
     -1,
-    (gchar *) "printer_options",
-    (gchar *) "v",
+    (gchar *) "printer_info",
+    (gchar *) "s",
     NULL
   },
   FALSE
 };
 
-static const _ExtendedGDBusArgInfo * const _print_backend_method_info_list_printer_options_OUT_ARG_pointers[] =
-{
-  &_print_backend_method_info_list_printer_options_OUT_ARG_printer_options,
-  NULL
-};
-
-static const _ExtendedGDBusMethodInfo _print_backend_method_info_list_printer_options =
+static const _ExtendedGDBusArgInfo _print_backend_method_info_list_basic_options_OUT_ARG_printer_location =
 {
   {
     -1,
-    (gchar *) "listPrinterOptions",
-    (GDBusArgInfo **) &_print_backend_method_info_list_printer_options_IN_ARG_pointers,
-    (GDBusArgInfo **) &_print_backend_method_info_list_printer_options_OUT_ARG_pointers,
+    (gchar *) "printer_location",
+    (gchar *) "s",
     NULL
   },
-  "handle-list-printer-options",
+  FALSE
+};
+
+static const _ExtendedGDBusArgInfo _print_backend_method_info_list_basic_options_OUT_ARG_printer_make_and_model =
+{
+  {
+    -1,
+    (gchar *) "printer_make_and_model",
+    (gchar *) "s",
+    NULL
+  },
+  FALSE
+};
+
+static const _ExtendedGDBusArgInfo _print_backend_method_info_list_basic_options_OUT_ARG_printer_is_accepting_jobs =
+{
+  {
+    -1,
+    (gchar *) "printer_is_accepting_jobs",
+    (gchar *) "s",
+    NULL
+  },
+  FALSE
+};
+
+static const _ExtendedGDBusArgInfo * const _print_backend_method_info_list_basic_options_OUT_ARG_pointers[] =
+{
+  &_print_backend_method_info_list_basic_options_OUT_ARG_printer_info,
+  &_print_backend_method_info_list_basic_options_OUT_ARG_printer_location,
+  &_print_backend_method_info_list_basic_options_OUT_ARG_printer_make_and_model,
+  &_print_backend_method_info_list_basic_options_OUT_ARG_printer_is_accepting_jobs,
+  NULL
+};
+
+static const _ExtendedGDBusMethodInfo _print_backend_method_info_list_basic_options =
+{
+  {
+    -1,
+    (gchar *) "listBasicOptions",
+    (GDBusArgInfo **) &_print_backend_method_info_list_basic_options_IN_ARG_pointers,
+    (GDBusArgInfo **) &_print_backend_method_info_list_basic_options_OUT_ARG_pointers,
+    NULL
+  },
+  "handle-list-basic-options",
   FALSE
 };
 
@@ -271,7 +307,7 @@ static const _ExtendedGDBusMethodInfo _print_backend_method_info_get_printer_opt
 
 static const _ExtendedGDBusMethodInfo * const _print_backend_method_info_pointers[] =
 {
-  &_print_backend_method_info_list_printer_options,
+  &_print_backend_method_info_list_basic_options,
   &_print_backend_method_info_get_printer_option_value,
   NULL
 };
@@ -471,7 +507,7 @@ print_backend_override_properties (GObjectClass *klass, guint property_id_begin)
  * PrintBackendIface:
  * @parent_iface: The parent interface.
  * @handle_get_printer_option_value: Handler for the #PrintBackend::handle-get-printer-option-value signal.
- * @handle_list_printer_options: Handler for the #PrintBackend::handle-list-printer-options signal.
+ * @handle_list_basic_options: Handler for the #PrintBackend::handle-list-basic-options signal.
  * @printer_added: Handler for the #PrintBackend::printer-added signal.
  * @printer_removed: Handler for the #PrintBackend::printer-removed signal.
  * @printer_status_changed: Handler for the #PrintBackend::printer-status-changed signal.
@@ -487,21 +523,21 @@ print_backend_default_init (PrintBackendIface *iface)
 {
   /* GObject signals for incoming D-Bus method calls: */
   /**
-   * PrintBackend::handle-list-printer-options:
+   * PrintBackend::handle-list-basic-options:
    * @object: A #PrintBackend.
    * @invocation: A #GDBusMethodInvocation.
    * @arg_printer_name: Argument passed by remote caller.
    *
-   * Signal emitted when a remote caller is invoking the <link linkend="gdbus-method-org-openprinting-PrintBackend.listPrinterOptions">listPrinterOptions()</link> D-Bus method.
+   * Signal emitted when a remote caller is invoking the <link linkend="gdbus-method-org-openprinting-PrintBackend.listBasicOptions">listBasicOptions()</link> D-Bus method.
    *
-   * If a signal handler returns %TRUE, it means the signal handler will handle the invocation (e.g. take a reference to @invocation and eventually call print_backend_complete_list_printer_options() or e.g. g_dbus_method_invocation_return_error() on it) and no order signal handlers will run. If no signal handler handles the invocation, the %G_DBUS_ERROR_UNKNOWN_METHOD error is returned.
+   * If a signal handler returns %TRUE, it means the signal handler will handle the invocation (e.g. take a reference to @invocation and eventually call print_backend_complete_list_basic_options() or e.g. g_dbus_method_invocation_return_error() on it) and no order signal handlers will run. If no signal handler handles the invocation, the %G_DBUS_ERROR_UNKNOWN_METHOD error is returned.
    *
    * Returns: %TRUE if the invocation was handled, %FALSE to let other signal handlers run.
    */
-  g_signal_new ("handle-list-printer-options",
+  g_signal_new ("handle-list-basic-options",
     G_TYPE_FROM_INTERFACE (iface),
     G_SIGNAL_RUN_LAST,
-    G_STRUCT_OFFSET (PrintBackendIface, handle_list_printer_options),
+    G_STRUCT_OFFSET (PrintBackendIface, handle_list_basic_options),
     g_signal_accumulator_true_handled,
     NULL,
     g_cclosure_marshal_generic,
@@ -651,21 +687,21 @@ print_backend_emit_printer_status_changed (
 }
 
 /**
- * print_backend_call_list_printer_options:
+ * print_backend_call_list_basic_options:
  * @proxy: A #PrintBackendProxy.
  * @arg_printer_name: Argument to pass with the method invocation.
  * @cancellable: (allow-none): A #GCancellable or %NULL.
  * @callback: A #GAsyncReadyCallback to call when the request is satisfied or %NULL.
  * @user_data: User data to pass to @callback.
  *
- * Asynchronously invokes the <link linkend="gdbus-method-org-openprinting-PrintBackend.listPrinterOptions">listPrinterOptions()</link> D-Bus method on @proxy.
+ * Asynchronously invokes the <link linkend="gdbus-method-org-openprinting-PrintBackend.listBasicOptions">listBasicOptions()</link> D-Bus method on @proxy.
  * When the operation is finished, @callback will be invoked in the <link linkend="g-main-context-push-thread-default">thread-default main loop</link> of the thread you are calling this method from.
- * You can then call print_backend_call_list_printer_options_finish() to get the result of the operation.
+ * You can then call print_backend_call_list_basic_options_finish() to get the result of the operation.
  *
- * See print_backend_call_list_printer_options_sync() for the synchronous, blocking version of this method.
+ * See print_backend_call_list_basic_options_sync() for the synchronous, blocking version of this method.
  */
 void
-print_backend_call_list_printer_options (
+print_backend_call_list_basic_options (
     PrintBackend *proxy,
     const gchar *arg_printer_name,
     GCancellable *cancellable,
@@ -673,7 +709,7 @@ print_backend_call_list_printer_options (
     gpointer user_data)
 {
   g_dbus_proxy_call (G_DBUS_PROXY (proxy),
-    "listPrinterOptions",
+    "listBasicOptions",
     g_variant_new ("(s)",
                    arg_printer_name),
     G_DBUS_CALL_FLAGS_NONE,
@@ -684,20 +720,26 @@ print_backend_call_list_printer_options (
 }
 
 /**
- * print_backend_call_list_printer_options_finish:
+ * print_backend_call_list_basic_options_finish:
  * @proxy: A #PrintBackendProxy.
- * @out_printer_options: (out): Return location for return parameter or %NULL to ignore.
- * @res: The #GAsyncResult obtained from the #GAsyncReadyCallback passed to print_backend_call_list_printer_options().
+ * @out_printer_info: (out): Return location for return parameter or %NULL to ignore.
+ * @out_printer_location: (out): Return location for return parameter or %NULL to ignore.
+ * @out_printer_make_and_model: (out): Return location for return parameter or %NULL to ignore.
+ * @out_printer_is_accepting_jobs: (out): Return location for return parameter or %NULL to ignore.
+ * @res: The #GAsyncResult obtained from the #GAsyncReadyCallback passed to print_backend_call_list_basic_options().
  * @error: Return location for error or %NULL.
  *
- * Finishes an operation started with print_backend_call_list_printer_options().
+ * Finishes an operation started with print_backend_call_list_basic_options().
  *
  * Returns: (skip): %TRUE if the call succeded, %FALSE if @error is set.
  */
 gboolean
-print_backend_call_list_printer_options_finish (
+print_backend_call_list_basic_options_finish (
     PrintBackend *proxy,
-    GVariant **out_printer_options,
+    gchar **out_printer_info,
+    gchar **out_printer_location,
+    gchar **out_printer_make_and_model,
+    gchar **out_printer_is_accepting_jobs,
     GAsyncResult *res,
     GError **error)
 {
@@ -706,38 +748,47 @@ print_backend_call_list_printer_options_finish (
   if (_ret == NULL)
     goto _out;
   g_variant_get (_ret,
-                 "(@v)",
-                 out_printer_options);
+                 "(ssss)",
+                 out_printer_info,
+                 out_printer_location,
+                 out_printer_make_and_model,
+                 out_printer_is_accepting_jobs);
   g_variant_unref (_ret);
 _out:
   return _ret != NULL;
 }
 
 /**
- * print_backend_call_list_printer_options_sync:
+ * print_backend_call_list_basic_options_sync:
  * @proxy: A #PrintBackendProxy.
  * @arg_printer_name: Argument to pass with the method invocation.
- * @out_printer_options: (out): Return location for return parameter or %NULL to ignore.
+ * @out_printer_info: (out): Return location for return parameter or %NULL to ignore.
+ * @out_printer_location: (out): Return location for return parameter or %NULL to ignore.
+ * @out_printer_make_and_model: (out): Return location for return parameter or %NULL to ignore.
+ * @out_printer_is_accepting_jobs: (out): Return location for return parameter or %NULL to ignore.
  * @cancellable: (allow-none): A #GCancellable or %NULL.
  * @error: Return location for error or %NULL.
  *
- * Synchronously invokes the <link linkend="gdbus-method-org-openprinting-PrintBackend.listPrinterOptions">listPrinterOptions()</link> D-Bus method on @proxy. The calling thread is blocked until a reply is received.
+ * Synchronously invokes the <link linkend="gdbus-method-org-openprinting-PrintBackend.listBasicOptions">listBasicOptions()</link> D-Bus method on @proxy. The calling thread is blocked until a reply is received.
  *
- * See print_backend_call_list_printer_options() for the asynchronous version of this method.
+ * See print_backend_call_list_basic_options() for the asynchronous version of this method.
  *
  * Returns: (skip): %TRUE if the call succeded, %FALSE if @error is set.
  */
 gboolean
-print_backend_call_list_printer_options_sync (
+print_backend_call_list_basic_options_sync (
     PrintBackend *proxy,
     const gchar *arg_printer_name,
-    GVariant **out_printer_options,
+    gchar **out_printer_info,
+    gchar **out_printer_location,
+    gchar **out_printer_make_and_model,
+    gchar **out_printer_is_accepting_jobs,
     GCancellable *cancellable,
     GError **error)
 {
   GVariant *_ret;
   _ret = g_dbus_proxy_call_sync (G_DBUS_PROXY (proxy),
-    "listPrinterOptions",
+    "listBasicOptions",
     g_variant_new ("(s)",
                    arg_printer_name),
     G_DBUS_CALL_FLAGS_NONE,
@@ -747,8 +798,11 @@ print_backend_call_list_printer_options_sync (
   if (_ret == NULL)
     goto _out;
   g_variant_get (_ret,
-                 "(@v)",
-                 out_printer_options);
+                 "(ssss)",
+                 out_printer_info,
+                 out_printer_location,
+                 out_printer_make_and_model,
+                 out_printer_is_accepting_jobs);
   g_variant_unref (_ret);
 _out:
   return _ret != NULL;
@@ -865,24 +919,33 @@ _out:
 }
 
 /**
- * print_backend_complete_list_printer_options:
+ * print_backend_complete_list_basic_options:
  * @object: A #PrintBackend.
  * @invocation: (transfer full): A #GDBusMethodInvocation.
- * @printer_options: Parameter to return.
+ * @printer_info: Parameter to return.
+ * @printer_location: Parameter to return.
+ * @printer_make_and_model: Parameter to return.
+ * @printer_is_accepting_jobs: Parameter to return.
  *
- * Helper function used in service implementations to finish handling invocations of the <link linkend="gdbus-method-org-openprinting-PrintBackend.listPrinterOptions">listPrinterOptions()</link> D-Bus method. If you instead want to finish handling an invocation by returning an error, use g_dbus_method_invocation_return_error() or similar.
+ * Helper function used in service implementations to finish handling invocations of the <link linkend="gdbus-method-org-openprinting-PrintBackend.listBasicOptions">listBasicOptions()</link> D-Bus method. If you instead want to finish handling an invocation by returning an error, use g_dbus_method_invocation_return_error() or similar.
  *
  * This method will free @invocation, you cannot use it afterwards.
  */
 void
-print_backend_complete_list_printer_options (
+print_backend_complete_list_basic_options (
     PrintBackend *object,
     GDBusMethodInvocation *invocation,
-    GVariant *printer_options)
+    const gchar *printer_info,
+    const gchar *printer_location,
+    const gchar *printer_make_and_model,
+    const gchar *printer_is_accepting_jobs)
 {
   g_dbus_method_invocation_return_value (invocation,
-    g_variant_new ("(@v)",
-                   printer_options));
+    g_variant_new ("(ssss)",
+                   printer_info,
+                   printer_location,
+                   printer_make_and_model,
+                   printer_is_accepting_jobs));
 }
 
 /**

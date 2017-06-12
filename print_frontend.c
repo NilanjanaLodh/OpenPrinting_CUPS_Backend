@@ -95,10 +95,10 @@ static void on_printer_added(GDBusConnection *connection,
 {
 
     PrinterObj *p = get_new_PrinterObj();
-    fill_basic_properties(p, parameters);
+    fill_basic_options(p, parameters);
    // g_variant_get(parameters, "(sssss)", &printer_name, &info, &location, &make_and_model, &is_accepting_jobs);
-    add_printer(f,p);
-    print_basic_properties(p);
+    add_printer(f,p, sender_name , object_path);
+    print_basic_options(p);
     
 }
 static void on_printer_removed(GDBusConnection *connection,
@@ -131,6 +131,13 @@ gpointer parse_commands(gpointer user_data)
         {
             print_frontend_emit_refresh_backend(skeleton);
             g_message("Sending refresh request..\n");
+        }
+         else if (strcmp(buf, "update-basic") == 0)
+        {
+            char printer_name[100];
+            scanf("%s", printer_name);
+            g_message("Updating basic options ..\n");
+            update_basic_printer_options(f,printer_name);
         }
     }
 }

@@ -35,7 +35,7 @@ struct _PrintBackendIface
     const gchar *arg_printer_name,
     const gchar *arg_option_name);
 
-  gboolean (*handle_list_printer_options) (
+  gboolean (*handle_list_basic_options) (
     PrintBackend *object,
     GDBusMethodInvocation *invocation,
     const gchar *arg_printer_name);
@@ -65,10 +65,13 @@ guint print_backend_override_properties (GObjectClass *klass, guint property_id_
 
 
 /* D-Bus method call completion functions: */
-void print_backend_complete_list_printer_options (
+void print_backend_complete_list_basic_options (
     PrintBackend *object,
     GDBusMethodInvocation *invocation,
-    GVariant *printer_options);
+    const gchar *printer_info,
+    const gchar *printer_location,
+    const gchar *printer_make_and_model,
+    const gchar *printer_is_accepting_jobs);
 
 void print_backend_complete_get_printer_option_value (
     PrintBackend *object,
@@ -97,23 +100,29 @@ void print_backend_emit_printer_status_changed (
 
 
 /* D-Bus method calls: */
-void print_backend_call_list_printer_options (
+void print_backend_call_list_basic_options (
     PrintBackend *proxy,
     const gchar *arg_printer_name,
     GCancellable *cancellable,
     GAsyncReadyCallback callback,
     gpointer user_data);
 
-gboolean print_backend_call_list_printer_options_finish (
+gboolean print_backend_call_list_basic_options_finish (
     PrintBackend *proxy,
-    GVariant **out_printer_options,
+    gchar **out_printer_info,
+    gchar **out_printer_location,
+    gchar **out_printer_make_and_model,
+    gchar **out_printer_is_accepting_jobs,
     GAsyncResult *res,
     GError **error);
 
-gboolean print_backend_call_list_printer_options_sync (
+gboolean print_backend_call_list_basic_options_sync (
     PrintBackend *proxy,
     const gchar *arg_printer_name,
-    GVariant **out_printer_options,
+    gchar **out_printer_info,
+    gchar **out_printer_location,
+    gchar **out_printer_make_and_model,
+    gchar **out_printer_is_accepting_jobs,
     GCancellable *cancellable,
     GError **error);
 
