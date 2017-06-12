@@ -127,5 +127,10 @@ gpointer parse_commands(gpointer user_data)
             g_message("Stopping front end..\n");
             exit(0);
         }
+        else if (strcmp(buf, "refresh") == 0)
+        {
+            print_frontend_emit_refresh_backend(skeleton);
+            g_message("Sending refresh request..\n");
+        }
     }
 }
