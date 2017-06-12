@@ -57,7 +57,11 @@ void update_basic_options(PrinterObj *p)
     PrintBackend *proxy = p->backend_proxy;
     print_backend_call_list_basic_options_sync(p->backend_proxy,
                                                p->name,
-                                               NULL, NULL, NULL, NULL, NULL, NULL);
+                                               &p->info,
+                                               &p->location, 
+                                               &p->make_and_model, 
+                                               NULL, NULL, NULL);
+    //actual updation 
     print_basic_options(p);
 }
 
