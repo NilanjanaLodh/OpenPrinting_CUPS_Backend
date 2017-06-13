@@ -13,6 +13,16 @@ gboolean get_boolean(gchar *g)
 
     return FALSE;
 }
+struct _PrinterCapabilities
+{
+    gboolean copies; // if multiple copies can be set
+    gboolean media;  // if the media size option is available
+    gboolean number_up;
+    gboolean orientation;
+    gboolean color_mode;
+    gboolean print_quality;
+    gboolean sides; // one sided or both sided
+};
 struct _PrinterObj
 {
     /**The basic options first**/
@@ -25,6 +35,8 @@ struct _PrinterObj
     char *state;
     gboolean is_printing;
     gboolean is_accepting_jobs;
+
+    PrinterCapabilities capabilities;
     //add options here
 };
 PrinterObj *get_new_PrinterObj()
@@ -34,13 +46,36 @@ PrinterObj *get_new_PrinterObj()
 void fill_basic_options(PrinterObj *p, GVariant *gv)
 {
     char *is_accepting_jobs_str;
-    g_variant_get(gv, "(sssss)",
+    g_variant_get(gv, "(ssssss)",
                   &(p->name),
                   &(p->info),
                   &(p->location),
                   &(p->make_and_model),
-                  &is_accepting_jobs_str);
+                  &is_accepting_jobs_str,
+                  &(p->state));
+
     p->is_accepting_jobs = get_boolean(is_accepting_jobs_str);
+    if (p->state)
+    {
+        switch (p->state[0])
+        {
+        case '3':
+            free(p->state);
+            p->state = "idle";
+            break;
+        case '4':
+            free(p->state);
+            p->state = "printing";
+            break;
+        case '5':
+            free(p->state);
+            p->state = "stopped";
+            break;
+        default:
+            free(p->state);
+            p->state = "NA";
+        }
+    }
 }
 void print_basic_options(PrinterObj *p)
 {
@@ -48,8 +83,10 @@ void print_basic_options(PrinterObj *p)
                 location : %s\n\
                 info : %s\n\
                 make and model : %s\n\
-                accepting_jobs : %d\n",
-              p->name, p->location, p->info, p->make_and_model, p->is_accepting_jobs);
+                accepting_jobs : %d\n\
+                state : %s\n",
+              p->name,
+              p->location, p->info, p->make_and_model, p->is_accepting_jobs, p->state);
 }
 
 void update_basic_options(PrinterObj *p)
@@ -58,13 +95,41 @@ void update_basic_options(PrinterObj *p)
     print_backend_call_list_basic_options_sync(p->backend_proxy,
                                                p->name,
                                                &p->info,
-                                               &p->location, 
-                                               &p->make_and_model, 
+                                               &p->location,
+                                               &p->make_and_model,
+                                               &p->state,
                                                NULL, NULL, NULL);
-    //actual updation 
+    //actual updation
     print_basic_options(p);
 }
+void get_capabilities(PrinterObj *p)
+{
+    GError *error = NULL;
+    print_backend_call_get_printer_capabilities_sync(p->backend_proxy, p->name,
+                                                     &(p->capabilities.copies),
+                                                     &(p->capabilities.media),
+                                                     &(p->capabilities.number_up),
+                                                     &(p->capabilities.orientation),
+                                                     &(p->capabilities.color_mode),
+                                                     &(p->capabilities.print_quality),
+                                                     &(p->capabilities.sides),
+                                                     NULL, &error);
 
+    print_capabilities(p);
+    g_assert_no_error(error);
+}
+void print_capabilities(PrinterObj *p)
+{
+    g_message("1 means supported, 0 means that option is not supported.");
+    printf("copies : %d \nmedia : %d\nnumber_up : %d\norientation : %d\ncolor_mode : %d\n(many other capabilites not printed!)\n",
+              p->capabilities.copies,
+              p->capabilities.media,
+              p->capabilities.number_up,
+              p->capabilities.orientation, 
+              p->capabilities.color_mode );
+}
+
+/************************************************* FrontendObj********************************************/
 struct _FrontendObj
 {
     int num_backends;
@@ -108,4 +173,11 @@ void update_basic_printer_options(FrontendObj *f, gchar *printer_name)
     g_assert_nonnull(p);
 
     update_basic_options(p);
+}
+void get_printer_capabilities(FrontendObj *f, gchar *printer_name)
+{
+    PrinterObj *p = g_hash_table_lookup(f->printer, printer_name);
+    g_assert_nonnull(p);
+
+    get_capabilities(p);
 }

@@ -9,6 +9,10 @@
 #include <glib.h>
 
 gboolean get_boolean(gchar *);
+
+
+/**********PrinterCapabilities**********************************/
+typedef struct _PrinterCapabilities PrinterCapabilities;
 /**********PrinterObj definitions*******************************/
 
 typedef struct _PrinterObj PrinterObj;
@@ -16,12 +20,14 @@ PrinterObj *get_new_PrinterObj();
 void fill_basic_options(PrinterObj *, GVariant *);
 void print_basic_options(PrinterObj *);
 void update_basic_options(PrinterObj *);
-
+void get_capabilities(PrinterObj *);
+void print_capabilities(PrinterObj *);
 /**********FrontendObj definitions*******************************/
 typedef struct _FrontendObj FrontendObj;
 
 FrontendObj *get_new_FrontendObj();
 gboolean add_printer(FrontendObj *, PrinterObj * ,gchar *, gchar *); ///think about this definition a little more
 void update_basic_printer_options(FrontendObj * , gchar *);
+void get_printer_capabilities(FrontendObj * , gchar *);
 /***************************************************************/
 #endif

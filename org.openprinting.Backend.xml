@@ -6,6 +6,7 @@
             <arg name="printer_location" type="s" />
             <arg name="printer_make_and_model" type="s" />
             <arg name="printer_is_accepting_jobs" type="s" />
+            <arg name="printer_state" direction="out" type="s" />
             <!--Send Basic Info along with this-->
         </signal>
         <signal name="PrinterRemoved">
@@ -20,6 +21,20 @@
             <arg name="printer_location" direction="out" type="s"/>
             <arg name="printer_make_and_model" direction="out" type="s" />
             <arg name="printer_is_accepting_jobs" direction="out" type="s" />
+            <arg name="printer_state" direction="out" type="s" />
+        </method>
+        <method name="getPrinterCapabilities">
+            <arg name="printer_name" direction="in" type="s" />
+            <arg name="copies" direction="out" type="b"/>
+            <arg name="media" direction="out" type="b"/>
+            <arg name="number_up" direction="out" type="b"/>
+            <arg name="orientation" direction="out" type="b"/>
+            <arg name="color_mode" direction="out" type="b"/>    
+            <arg name="print_quality" direction="out" type="b"/>                    
+            <arg name="sides" direction="out" type="b"/>
+        </method>
+        <method name="getDetailedOptions">
+            <arg name="printer_name" direction="in" type="s" />
         </method>
         <method name="getPrinterOptionValue">
             <arg name="printer_name" direction="in" type="s" />
