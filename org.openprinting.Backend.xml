@@ -33,10 +33,7 @@
             <arg name="print_quality" direction="out" type="b"/>                    
             <arg name="sides" direction="out" type="b"/>
         </method>
-        <method name="getDetailedOptions">
-            <arg name="printer_name" direction="in" type="s" />
-        </method>
-        <method name="getPrinterOptionValue">
+        <method name="getDefaultValue">
             <arg name="printer_name" direction="in" type="s" />
             <arg name="option_name" direction="in" type="s"/>
             <arg name="option_value" direction="out" type="s" />

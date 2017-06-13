@@ -122,13 +122,22 @@ void print_capabilities(PrinterObj *p)
 {
     g_message("1 means supported, 0 means that option is not supported.");
     printf("copies : %d \nmedia : %d\nnumber_up : %d\norientation : %d\ncolor_mode : %d\n(many other capabilites not printed!)\n",
-              p->capabilities.copies,
-              p->capabilities.media,
-              p->capabilities.number_up,
-              p->capabilities.orientation, 
-              p->capabilities.color_mode );
+           p->capabilities.copies,
+           p->capabilities.media,
+           p->capabilities.number_up,
+           p->capabilities.orientation,
+           p->capabilities.color_mode);
 }
-
+void get_option_default(PrinterObj *p, gchar *option_name)
+{
+    char *value = NULL;
+    GError *error = NULL;
+    print_backend_call_get_default_value_sync(p->backend_proxy, p->name,
+                                              option_name, &value,
+                                              NULL, &error);
+    g_assert_no_error(error);
+    g_message("%s", value);
+}
 /************************************************* FrontendObj********************************************/
 struct _FrontendObj
 {
@@ -180,4 +189,11 @@ void get_printer_capabilities(FrontendObj *f, gchar *printer_name)
     g_assert_nonnull(p);
 
     get_capabilities(p);
+}
+void get_printer_option_default(FrontendObj *f, gchar *printer_name, gchar *option_name)
+{
+    PrinterObj *p = g_hash_table_lookup(f->printer, printer_name);
+    g_assert_nonnull(p);
+
+    get_option_default(p, option_name);
 }

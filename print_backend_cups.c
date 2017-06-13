@@ -47,6 +47,16 @@ static gboolean on_handle_list_basic_options(PrintBackend *interface,
                                              GDBusMethodInvocation *invocation,
                                              const gchar *printer_name,
                                              gpointer user_data);
+static gboolean on_handle_get_printer_capabilities(PrintBackend *interface,
+                                                   GDBusMethodInvocation *invocation,
+                                                   const gchar *printer_name,
+                                                   gpointer user_data);
+
+static gboolean on_handle_get_default_value(PrintBackend *interface,
+                                            GDBusMethodInvocation *invocation,
+                                            const gchar *printer_name,
+                                            const gchar *option_name,
+                                            gpointer user_data);
 int main()
 {
     dbus_connection = NULL;
@@ -83,6 +93,14 @@ on_name_acquired(GDBusConnection *connection,
                      G_CALLBACK(on_handle_list_basic_options), //callback
                      NULL);                                    //user_data
 
+    g_signal_connect(skeleton,                                       //instance
+                     "handle-get-printer-capabilities",              //signal name
+                     G_CALLBACK(on_handle_get_printer_capabilities), //callback
+                     NULL);
+    g_signal_connect(skeleton,                                //instance
+                     "handle-get-default-value",              //signal name
+                     G_CALLBACK(on_handle_get_default_value), //callback
+                     NULL);
     /**subscribe to signals **/
     g_dbus_connection_signal_subscribe(connection,
                                        NULL,                             //Sender name
@@ -181,16 +199,18 @@ int send_printer_added(void *_dialog_name, unsigned flags, cups_dest_t *dest)
         g_message("%s already sent.\n", dest->name);
         return 1;
     }
+    cups_ptype_t pt = *cupsGetOption("printer-type", dest->num_options, dest->options);
 
     char *t = malloc(sizeof(gchar) * (strlen(dest->name) + 1));
     strcpy(t, dest->name);
     g_hash_table_add(g, t);
-    GVariant *gv = g_variant_new("(sssss)",
+    GVariant *gv = g_variant_new("(ssssss)",
                                  t,
                                  cupsGetOption("printer-info", dest->num_options, dest->options),
                                  cupsGetOption("printer-location", dest->num_options, dest->options),
                                  cupsGetOption("printer-make-and-model", dest->num_options, dest->options),
-                                 cupsGetOption("printer-is-accepting-jobs", dest->num_options, dest->options));
+                                 cupsGetOption("printer-is-accepting-jobs", dest->num_options, dest->options),
+                                 cupsGetOption("printer-state", dest->num_options, dest->options));
 
     GError *error = NULL;
     g_dbus_connection_emit_signal(dbus_connection,
@@ -286,8 +306,162 @@ gboolean on_handle_list_basic_options(PrintBackend *interface,
                                               cupsGetOption("printer-info", dest->num_options, dest->options),
                                               cupsGetOption("printer-location", dest->num_options, dest->options),
                                               cupsGetOption("printer-make-and-model", dest->num_options, dest->options),
-                                              cupsGetOption("printer-is-accepting-jobs", dest->num_options, dest->options));
+                                              cupsGetOption("printer-is-accepting-jobs", dest->num_options, dest->options),
+                                              cupsGetOption("printer-state", dest->num_options, dest->options));
     return TRUE;
+}
+
+static gboolean on_handle_get_printer_capabilities(PrintBackend *interface,
+                                                   GDBusMethodInvocation *invocation,
+                                                   const gchar *printer_name,
+                                                   gpointer user_data)
+{
+    cups_dest_t *dest = cupsGetNamedDest(CUPS_HTTP_DEFAULT, printer_name, NULL);
+    g_assert_nonnull(dest);
+    http_t *http = cupsConnectDest(dest, CUPS_DEST_FLAGS_NONE, 500, NULL, NULL, 0, NULL, NULL);
+    g_assert_nonnull(http);
+    cups_dinfo_t *dinfo = cupsCopyDestInfo(http, dest);
+    g_assert_nonnull(dinfo);
+
+    gboolean copies, media, n_up, orientation, color_mode, quality, sides;
+
+    copies = media = n_up = orientation = color_mode = quality = sides = FALSE;
+
+    /**
+    Actually, it should be checked this way according to the cups programming manual: 
+
+    copies = cupsCheckDestSupported(http, dest, dinfo, CUPS_MEDIA, NULL);
+    media = cupsCheckDestSupported(http, dest, dinfo, CUPS_MEDIA, NULL);
+    n_up = cupsCheckDestSupported(http, dest, dinfo, CUPS_NUMBER_UP, NULL);
+    orientation = cupsCheckDestSupported(http, dest, dinfo, CUPS_ORIENTATION, NULL);
+    color_mode = cupsCheckDestSupported(http, dest, dinfo, CUPS_PRINT_COLOR_MODE, NULL);
+    quality = cupsCheckDestSupported(http, dest, dinfo, CUPS_PRINT_QUALITY, NULL);
+    sides = cupsCheckDestSupported(http, dest, dinfo, CUPS_SIDES, NULL);
+
+    However, this doesn't work ! Probably due to some bug in the cups API
+    Filed an issue here: 
+    https://github.com/apple/cups/issues/5031 
+
+    Till then , I'm using a workaround to get things done.
+
+**/
+    ipp_attribute_t *attrs = cupsFindDestSupported(http, dest, dinfo,
+                                                   "job-creation-attributes");
+    int num_options = ippGetCount(attrs);
+    char *str;
+    for (int i = 0; i < num_options; i++)
+    {
+        str = ippGetString(attrs, i, NULL);
+        if (strcmp(str, CUPS_COPIES) == 0)
+        {
+            copies = TRUE;
+        }
+        else if (strcmp(str, CUPS_MEDIA) == 0)
+        {
+            media = TRUE;
+        }
+        else if (strcmp(str, CUPS_NUMBER_UP) == 0)
+        {
+            n_up = TRUE;
+        }
+        else if (strcmp(str, CUPS_ORIENTATION) == 0)
+        {
+            orientation = TRUE;
+        }
+        else if (strcmp(str, CUPS_PRINT_COLOR_MODE) == 0)
+        {
+            color_mode = TRUE;
+        }
+        else if (strcmp(str, CUPS_PRINT_QUALITY) == 0)
+        {
+            quality = TRUE;
+        }
+        else if (strcmp(str, CUPS_SIDES) == 0)
+        {
+            sides = TRUE;
+        }
+    }
+    print_backend_complete_get_printer_capabilities(interface, invocation,
+                                                    copies,
+                                                    media,
+                                                    n_up,
+                                                    orientation,
+                                                    color_mode,
+                                                    quality,
+                                                    sides);
+    //fix memory leaks
+    return TRUE;
+}
+static gboolean on_handle_get_default_value(PrintBackend *interface,
+                                            GDBusMethodInvocation *invocation,
+                                            const gchar *printer_name,
+                                            const gchar *option_name,
+                                            gpointer user_data)
+{
+
+    cups_dest_t *dest = cupsGetNamedDest(CUPS_HTTP_DEFAULT, printer_name, NULL);
+    g_assert_nonnull(dest);
+    http_t *http = cupsConnectDest(dest, CUPS_DEST_FLAGS_NONE, 500, NULL, NULL, 0, NULL, NULL);
+    g_assert_nonnull(http);
+    cups_dinfo_t *dinfo = cupsCopyDestInfo(http, dest);
+    g_assert_nonnull(dinfo);
+
+    g_message("retrieving default %s for printer %s..", option_name, printer_name);
+    char *def_value = cupsGetOption(option_name, dest->num_options,
+                                    dest->options);
+
+    ipp_attribute_t *def_attr =
+        cupsFindDestDefault(CUPS_HTTP_DEFAULT, dest, dinfo,
+                            option_name);
+    gchar *value = "NA";
+    if (def_value != NULL)
+    {
+
+        value = def_value;
+        printf("%s\n", def_value);
+    }
+    else
+    {
+        g_message("Hi");
+        if (ippGetCount(def_attr))
+            value = ippGetString(def_attr, 0, NULL);
+        printf("%s\n", value);
+    }
+    print_backend_complete_get_default_value(interface, invocation,
+                                             value);
+    return TRUE;
+}
+//get_capabilities
+static gboolean on_handle_get_detailed_options(PrintBackend *interface,
+                                               GDBusMethodInvocation *invocation,
+                                               const gchar *printer_name,
+                                               gpointer user_data)
+{
+    /**
+        old basic things ..
+        ____________
+        Check supported ..
+
+
+        (u need to get the defaults/set options here)
+        AVAILABLE OPTIONS
+        CUPS_COPIES
+        CUPS_MEDIA:
+        CUPS_MEDIA_type
+        CUPS_NUMBER_UP 
+        CUPS_ORIENTATION 
+        CUPS_PRINT_COLOR_MODE
+        CUPS_PRINT_QUALITY
+        CUPS_SIDES 
+
+        Operations regarding these options
+        cupsCheckDestSupported : see if the option is supported (capabilities)
+        cupsFindDestSupported : get possible values for each 
+
+        job-creation-attributes can be queried to get a list of supported options
+        
+
+    **/
 }
 // gpointer find_removed_printers(gpointer not_used)
 // {

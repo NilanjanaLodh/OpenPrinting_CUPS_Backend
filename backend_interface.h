@@ -29,21 +29,16 @@ struct _PrintBackendIface
   GTypeInterface parent_iface;
 
 
-  gboolean (*handle_get_detailed_options) (
+  gboolean (*handle_get_default_value) (
     PrintBackend *object,
     GDBusMethodInvocation *invocation,
-    const gchar *arg_printer_name);
+    const gchar *arg_printer_name,
+    const gchar *arg_option_name);
 
   gboolean (*handle_get_printer_capabilities) (
     PrintBackend *object,
     GDBusMethodInvocation *invocation,
     const gchar *arg_printer_name);
-
-  gboolean (*handle_get_printer_option_value) (
-    PrintBackend *object,
-    GDBusMethodInvocation *invocation,
-    const gchar *arg_printer_name,
-    const gchar *arg_option_name);
 
   gboolean (*handle_list_basic_options) (
     PrintBackend *object,
@@ -96,11 +91,7 @@ void print_backend_complete_get_printer_capabilities (
     gboolean print_quality,
     gboolean sides);
 
-void print_backend_complete_get_detailed_options (
-    PrintBackend *object,
-    GDBusMethodInvocation *invocation);
-
-void print_backend_complete_get_printer_option_value (
+void print_backend_complete_get_default_value (
     PrintBackend *object,
     GDBusMethodInvocation *invocation,
     const gchar *option_value);
@@ -188,25 +179,7 @@ gboolean print_backend_call_get_printer_capabilities_sync (
     GCancellable *cancellable,
     GError **error);
 
-void print_backend_call_get_detailed_options (
-    PrintBackend *proxy,
-    const gchar *arg_printer_name,
-    GCancellable *cancellable,
-    GAsyncReadyCallback callback,
-    gpointer user_data);
-
-gboolean print_backend_call_get_detailed_options_finish (
-    PrintBackend *proxy,
-    GAsyncResult *res,
-    GError **error);
-
-gboolean print_backend_call_get_detailed_options_sync (
-    PrintBackend *proxy,
-    const gchar *arg_printer_name,
-    GCancellable *cancellable,
-    GError **error);
-
-void print_backend_call_get_printer_option_value (
+void print_backend_call_get_default_value (
     PrintBackend *proxy,
     const gchar *arg_printer_name,
     const gchar *arg_option_name,
@@ -214,13 +187,13 @@ void print_backend_call_get_printer_option_value (
     GAsyncReadyCallback callback,
     gpointer user_data);
 
-gboolean print_backend_call_get_printer_option_value_finish (
+gboolean print_backend_call_get_default_value_finish (
     PrintBackend *proxy,
     gchar **out_option_value,
     GAsyncResult *res,
     GError **error);
 
-gboolean print_backend_call_get_printer_option_value_sync (
+gboolean print_backend_call_get_default_value_sync (
     PrintBackend *proxy,
     const gchar *arg_printer_name,
     const gchar *arg_option_name,

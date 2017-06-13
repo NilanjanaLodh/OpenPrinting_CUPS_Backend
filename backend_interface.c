@@ -377,7 +377,7 @@ static const _ExtendedGDBusMethodInfo _print_backend_method_info_get_printer_cap
   FALSE
 };
 
-static const _ExtendedGDBusArgInfo _print_backend_method_info_get_detailed_options_IN_ARG_printer_name =
+static const _ExtendedGDBusArgInfo _print_backend_method_info_get_default_value_IN_ARG_printer_name =
 {
   {
     -1,
@@ -388,37 +388,7 @@ static const _ExtendedGDBusArgInfo _print_backend_method_info_get_detailed_optio
   FALSE
 };
 
-static const _ExtendedGDBusArgInfo * const _print_backend_method_info_get_detailed_options_IN_ARG_pointers[] =
-{
-  &_print_backend_method_info_get_detailed_options_IN_ARG_printer_name,
-  NULL
-};
-
-static const _ExtendedGDBusMethodInfo _print_backend_method_info_get_detailed_options =
-{
-  {
-    -1,
-    (gchar *) "getDetailedOptions",
-    (GDBusArgInfo **) &_print_backend_method_info_get_detailed_options_IN_ARG_pointers,
-    NULL,
-    NULL
-  },
-  "handle-get-detailed-options",
-  FALSE
-};
-
-static const _ExtendedGDBusArgInfo _print_backend_method_info_get_printer_option_value_IN_ARG_printer_name =
-{
-  {
-    -1,
-    (gchar *) "printer_name",
-    (gchar *) "s",
-    NULL
-  },
-  FALSE
-};
-
-static const _ExtendedGDBusArgInfo _print_backend_method_info_get_printer_option_value_IN_ARG_option_name =
+static const _ExtendedGDBusArgInfo _print_backend_method_info_get_default_value_IN_ARG_option_name =
 {
   {
     -1,
@@ -429,14 +399,14 @@ static const _ExtendedGDBusArgInfo _print_backend_method_info_get_printer_option
   FALSE
 };
 
-static const _ExtendedGDBusArgInfo * const _print_backend_method_info_get_printer_option_value_IN_ARG_pointers[] =
+static const _ExtendedGDBusArgInfo * const _print_backend_method_info_get_default_value_IN_ARG_pointers[] =
 {
-  &_print_backend_method_info_get_printer_option_value_IN_ARG_printer_name,
-  &_print_backend_method_info_get_printer_option_value_IN_ARG_option_name,
+  &_print_backend_method_info_get_default_value_IN_ARG_printer_name,
+  &_print_backend_method_info_get_default_value_IN_ARG_option_name,
   NULL
 };
 
-static const _ExtendedGDBusArgInfo _print_backend_method_info_get_printer_option_value_OUT_ARG_option_value =
+static const _ExtendedGDBusArgInfo _print_backend_method_info_get_default_value_OUT_ARG_option_value =
 {
   {
     -1,
@@ -447,22 +417,22 @@ static const _ExtendedGDBusArgInfo _print_backend_method_info_get_printer_option
   FALSE
 };
 
-static const _ExtendedGDBusArgInfo * const _print_backend_method_info_get_printer_option_value_OUT_ARG_pointers[] =
+static const _ExtendedGDBusArgInfo * const _print_backend_method_info_get_default_value_OUT_ARG_pointers[] =
 {
-  &_print_backend_method_info_get_printer_option_value_OUT_ARG_option_value,
+  &_print_backend_method_info_get_default_value_OUT_ARG_option_value,
   NULL
 };
 
-static const _ExtendedGDBusMethodInfo _print_backend_method_info_get_printer_option_value =
+static const _ExtendedGDBusMethodInfo _print_backend_method_info_get_default_value =
 {
   {
     -1,
-    (gchar *) "getPrinterOptionValue",
-    (GDBusArgInfo **) &_print_backend_method_info_get_printer_option_value_IN_ARG_pointers,
-    (GDBusArgInfo **) &_print_backend_method_info_get_printer_option_value_OUT_ARG_pointers,
+    (gchar *) "getDefaultValue",
+    (GDBusArgInfo **) &_print_backend_method_info_get_default_value_IN_ARG_pointers,
+    (GDBusArgInfo **) &_print_backend_method_info_get_default_value_OUT_ARG_pointers,
     NULL
   },
-  "handle-get-printer-option-value",
+  "handle-get-default-value",
   FALSE
 };
 
@@ -470,8 +440,7 @@ static const _ExtendedGDBusMethodInfo * const _print_backend_method_info_pointer
 {
   &_print_backend_method_info_list_basic_options,
   &_print_backend_method_info_get_printer_capabilities,
-  &_print_backend_method_info_get_detailed_options,
-  &_print_backend_method_info_get_printer_option_value,
+  &_print_backend_method_info_get_default_value,
   NULL
 };
 
@@ -681,9 +650,8 @@ print_backend_override_properties (GObjectClass *klass, guint property_id_begin)
 /**
  * PrintBackendIface:
  * @parent_iface: The parent interface.
- * @handle_get_detailed_options: Handler for the #PrintBackend::handle-get-detailed-options signal.
+ * @handle_get_default_value: Handler for the #PrintBackend::handle-get-default-value signal.
  * @handle_get_printer_capabilities: Handler for the #PrintBackend::handle-get-printer-capabilities signal.
- * @handle_get_printer_option_value: Handler for the #PrintBackend::handle-get-printer-option-value signal.
  * @handle_list_basic_options: Handler for the #PrintBackend::handle-list-basic-options signal.
  * @printer_added: Handler for the #PrintBackend::printer-added signal.
  * @printer_removed: Handler for the #PrintBackend::printer-removed signal.
@@ -746,45 +714,22 @@ print_backend_default_init (PrintBackendIface *iface)
     G_TYPE_DBUS_METHOD_INVOCATION, G_TYPE_STRING);
 
   /**
-   * PrintBackend::handle-get-detailed-options:
-   * @object: A #PrintBackend.
-   * @invocation: A #GDBusMethodInvocation.
-   * @arg_printer_name: Argument passed by remote caller.
-   *
-   * Signal emitted when a remote caller is invoking the <link linkend="gdbus-method-org-openprinting-PrintBackend.getDetailedOptions">getDetailedOptions()</link> D-Bus method.
-   *
-   * If a signal handler returns %TRUE, it means the signal handler will handle the invocation (e.g. take a reference to @invocation and eventually call print_backend_complete_get_detailed_options() or e.g. g_dbus_method_invocation_return_error() on it) and no order signal handlers will run. If no signal handler handles the invocation, the %G_DBUS_ERROR_UNKNOWN_METHOD error is returned.
-   *
-   * Returns: %TRUE if the invocation was handled, %FALSE to let other signal handlers run.
-   */
-  g_signal_new ("handle-get-detailed-options",
-    G_TYPE_FROM_INTERFACE (iface),
-    G_SIGNAL_RUN_LAST,
-    G_STRUCT_OFFSET (PrintBackendIface, handle_get_detailed_options),
-    g_signal_accumulator_true_handled,
-    NULL,
-    g_cclosure_marshal_generic,
-    G_TYPE_BOOLEAN,
-    2,
-    G_TYPE_DBUS_METHOD_INVOCATION, G_TYPE_STRING);
-
-  /**
-   * PrintBackend::handle-get-printer-option-value:
+   * PrintBackend::handle-get-default-value:
    * @object: A #PrintBackend.
    * @invocation: A #GDBusMethodInvocation.
    * @arg_printer_name: Argument passed by remote caller.
    * @arg_option_name: Argument passed by remote caller.
    *
-   * Signal emitted when a remote caller is invoking the <link linkend="gdbus-method-org-openprinting-PrintBackend.getPrinterOptionValue">getPrinterOptionValue()</link> D-Bus method.
+   * Signal emitted when a remote caller is invoking the <link linkend="gdbus-method-org-openprinting-PrintBackend.getDefaultValue">getDefaultValue()</link> D-Bus method.
    *
-   * If a signal handler returns %TRUE, it means the signal handler will handle the invocation (e.g. take a reference to @invocation and eventually call print_backend_complete_get_printer_option_value() or e.g. g_dbus_method_invocation_return_error() on it) and no order signal handlers will run. If no signal handler handles the invocation, the %G_DBUS_ERROR_UNKNOWN_METHOD error is returned.
+   * If a signal handler returns %TRUE, it means the signal handler will handle the invocation (e.g. take a reference to @invocation and eventually call print_backend_complete_get_default_value() or e.g. g_dbus_method_invocation_return_error() on it) and no order signal handlers will run. If no signal handler handles the invocation, the %G_DBUS_ERROR_UNKNOWN_METHOD error is returned.
    *
    * Returns: %TRUE if the invocation was handled, %FALSE to let other signal handlers run.
    */
-  g_signal_new ("handle-get-printer-option-value",
+  g_signal_new ("handle-get-default-value",
     G_TYPE_FROM_INTERFACE (iface),
     G_SIGNAL_RUN_LAST,
-    G_STRUCT_OFFSET (PrintBackendIface, handle_get_printer_option_value),
+    G_STRUCT_OFFSET (PrintBackendIface, handle_get_default_value),
     g_signal_accumulator_true_handled,
     NULL,
     g_cclosure_marshal_generic,
@@ -1181,105 +1126,7 @@ _out:
 }
 
 /**
- * print_backend_call_get_detailed_options:
- * @proxy: A #PrintBackendProxy.
- * @arg_printer_name: Argument to pass with the method invocation.
- * @cancellable: (allow-none): A #GCancellable or %NULL.
- * @callback: A #GAsyncReadyCallback to call when the request is satisfied or %NULL.
- * @user_data: User data to pass to @callback.
- *
- * Asynchronously invokes the <link linkend="gdbus-method-org-openprinting-PrintBackend.getDetailedOptions">getDetailedOptions()</link> D-Bus method on @proxy.
- * When the operation is finished, @callback will be invoked in the <link linkend="g-main-context-push-thread-default">thread-default main loop</link> of the thread you are calling this method from.
- * You can then call print_backend_call_get_detailed_options_finish() to get the result of the operation.
- *
- * See print_backend_call_get_detailed_options_sync() for the synchronous, blocking version of this method.
- */
-void
-print_backend_call_get_detailed_options (
-    PrintBackend *proxy,
-    const gchar *arg_printer_name,
-    GCancellable *cancellable,
-    GAsyncReadyCallback callback,
-    gpointer user_data)
-{
-  g_dbus_proxy_call (G_DBUS_PROXY (proxy),
-    "getDetailedOptions",
-    g_variant_new ("(s)",
-                   arg_printer_name),
-    G_DBUS_CALL_FLAGS_NONE,
-    -1,
-    cancellable,
-    callback,
-    user_data);
-}
-
-/**
- * print_backend_call_get_detailed_options_finish:
- * @proxy: A #PrintBackendProxy.
- * @res: The #GAsyncResult obtained from the #GAsyncReadyCallback passed to print_backend_call_get_detailed_options().
- * @error: Return location for error or %NULL.
- *
- * Finishes an operation started with print_backend_call_get_detailed_options().
- *
- * Returns: (skip): %TRUE if the call succeded, %FALSE if @error is set.
- */
-gboolean
-print_backend_call_get_detailed_options_finish (
-    PrintBackend *proxy,
-    GAsyncResult *res,
-    GError **error)
-{
-  GVariant *_ret;
-  _ret = g_dbus_proxy_call_finish (G_DBUS_PROXY (proxy), res, error);
-  if (_ret == NULL)
-    goto _out;
-  g_variant_get (_ret,
-                 "()");
-  g_variant_unref (_ret);
-_out:
-  return _ret != NULL;
-}
-
-/**
- * print_backend_call_get_detailed_options_sync:
- * @proxy: A #PrintBackendProxy.
- * @arg_printer_name: Argument to pass with the method invocation.
- * @cancellable: (allow-none): A #GCancellable or %NULL.
- * @error: Return location for error or %NULL.
- *
- * Synchronously invokes the <link linkend="gdbus-method-org-openprinting-PrintBackend.getDetailedOptions">getDetailedOptions()</link> D-Bus method on @proxy. The calling thread is blocked until a reply is received.
- *
- * See print_backend_call_get_detailed_options() for the asynchronous version of this method.
- *
- * Returns: (skip): %TRUE if the call succeded, %FALSE if @error is set.
- */
-gboolean
-print_backend_call_get_detailed_options_sync (
-    PrintBackend *proxy,
-    const gchar *arg_printer_name,
-    GCancellable *cancellable,
-    GError **error)
-{
-  GVariant *_ret;
-  _ret = g_dbus_proxy_call_sync (G_DBUS_PROXY (proxy),
-    "getDetailedOptions",
-    g_variant_new ("(s)",
-                   arg_printer_name),
-    G_DBUS_CALL_FLAGS_NONE,
-    -1,
-    cancellable,
-    error);
-  if (_ret == NULL)
-    goto _out;
-  g_variant_get (_ret,
-                 "()");
-  g_variant_unref (_ret);
-_out:
-  return _ret != NULL;
-}
-
-/**
- * print_backend_call_get_printer_option_value:
+ * print_backend_call_get_default_value:
  * @proxy: A #PrintBackendProxy.
  * @arg_printer_name: Argument to pass with the method invocation.
  * @arg_option_name: Argument to pass with the method invocation.
@@ -1287,14 +1134,14 @@ _out:
  * @callback: A #GAsyncReadyCallback to call when the request is satisfied or %NULL.
  * @user_data: User data to pass to @callback.
  *
- * Asynchronously invokes the <link linkend="gdbus-method-org-openprinting-PrintBackend.getPrinterOptionValue">getPrinterOptionValue()</link> D-Bus method on @proxy.
+ * Asynchronously invokes the <link linkend="gdbus-method-org-openprinting-PrintBackend.getDefaultValue">getDefaultValue()</link> D-Bus method on @proxy.
  * When the operation is finished, @callback will be invoked in the <link linkend="g-main-context-push-thread-default">thread-default main loop</link> of the thread you are calling this method from.
- * You can then call print_backend_call_get_printer_option_value_finish() to get the result of the operation.
+ * You can then call print_backend_call_get_default_value_finish() to get the result of the operation.
  *
- * See print_backend_call_get_printer_option_value_sync() for the synchronous, blocking version of this method.
+ * See print_backend_call_get_default_value_sync() for the synchronous, blocking version of this method.
  */
 void
-print_backend_call_get_printer_option_value (
+print_backend_call_get_default_value (
     PrintBackend *proxy,
     const gchar *arg_printer_name,
     const gchar *arg_option_name,
@@ -1303,7 +1150,7 @@ print_backend_call_get_printer_option_value (
     gpointer user_data)
 {
   g_dbus_proxy_call (G_DBUS_PROXY (proxy),
-    "getPrinterOptionValue",
+    "getDefaultValue",
     g_variant_new ("(ss)",
                    arg_printer_name,
                    arg_option_name),
@@ -1315,18 +1162,18 @@ print_backend_call_get_printer_option_value (
 }
 
 /**
- * print_backend_call_get_printer_option_value_finish:
+ * print_backend_call_get_default_value_finish:
  * @proxy: A #PrintBackendProxy.
  * @out_option_value: (out): Return location for return parameter or %NULL to ignore.
- * @res: The #GAsyncResult obtained from the #GAsyncReadyCallback passed to print_backend_call_get_printer_option_value().
+ * @res: The #GAsyncResult obtained from the #GAsyncReadyCallback passed to print_backend_call_get_default_value().
  * @error: Return location for error or %NULL.
  *
- * Finishes an operation started with print_backend_call_get_printer_option_value().
+ * Finishes an operation started with print_backend_call_get_default_value().
  *
  * Returns: (skip): %TRUE if the call succeded, %FALSE if @error is set.
  */
 gboolean
-print_backend_call_get_printer_option_value_finish (
+print_backend_call_get_default_value_finish (
     PrintBackend *proxy,
     gchar **out_option_value,
     GAsyncResult *res,
@@ -1345,7 +1192,7 @@ _out:
 }
 
 /**
- * print_backend_call_get_printer_option_value_sync:
+ * print_backend_call_get_default_value_sync:
  * @proxy: A #PrintBackendProxy.
  * @arg_printer_name: Argument to pass with the method invocation.
  * @arg_option_name: Argument to pass with the method invocation.
@@ -1353,14 +1200,14 @@ _out:
  * @cancellable: (allow-none): A #GCancellable or %NULL.
  * @error: Return location for error or %NULL.
  *
- * Synchronously invokes the <link linkend="gdbus-method-org-openprinting-PrintBackend.getPrinterOptionValue">getPrinterOptionValue()</link> D-Bus method on @proxy. The calling thread is blocked until a reply is received.
+ * Synchronously invokes the <link linkend="gdbus-method-org-openprinting-PrintBackend.getDefaultValue">getDefaultValue()</link> D-Bus method on @proxy. The calling thread is blocked until a reply is received.
  *
- * See print_backend_call_get_printer_option_value() for the asynchronous version of this method.
+ * See print_backend_call_get_default_value() for the asynchronous version of this method.
  *
  * Returns: (skip): %TRUE if the call succeded, %FALSE if @error is set.
  */
 gboolean
-print_backend_call_get_printer_option_value_sync (
+print_backend_call_get_default_value_sync (
     PrintBackend *proxy,
     const gchar *arg_printer_name,
     const gchar *arg_option_name,
@@ -1370,7 +1217,7 @@ print_backend_call_get_printer_option_value_sync (
 {
   GVariant *_ret;
   _ret = g_dbus_proxy_call_sync (G_DBUS_PROXY (proxy),
-    "getPrinterOptionValue",
+    "getDefaultValue",
     g_variant_new ("(ss)",
                    arg_printer_name,
                    arg_option_name),
@@ -1461,35 +1308,17 @@ print_backend_complete_get_printer_capabilities (
 }
 
 /**
- * print_backend_complete_get_detailed_options:
- * @object: A #PrintBackend.
- * @invocation: (transfer full): A #GDBusMethodInvocation.
- *
- * Helper function used in service implementations to finish handling invocations of the <link linkend="gdbus-method-org-openprinting-PrintBackend.getDetailedOptions">getDetailedOptions()</link> D-Bus method. If you instead want to finish handling an invocation by returning an error, use g_dbus_method_invocation_return_error() or similar.
- *
- * This method will free @invocation, you cannot use it afterwards.
- */
-void
-print_backend_complete_get_detailed_options (
-    PrintBackend *object,
-    GDBusMethodInvocation *invocation)
-{
-  g_dbus_method_invocation_return_value (invocation,
-    g_variant_new ("()"));
-}
-
-/**
- * print_backend_complete_get_printer_option_value:
+ * print_backend_complete_get_default_value:
  * @object: A #PrintBackend.
  * @invocation: (transfer full): A #GDBusMethodInvocation.
  * @option_value: Parameter to return.
  *
- * Helper function used in service implementations to finish handling invocations of the <link linkend="gdbus-method-org-openprinting-PrintBackend.getPrinterOptionValue">getPrinterOptionValue()</link> D-Bus method. If you instead want to finish handling an invocation by returning an error, use g_dbus_method_invocation_return_error() or similar.
+ * Helper function used in service implementations to finish handling invocations of the <link linkend="gdbus-method-org-openprinting-PrintBackend.getDefaultValue">getDefaultValue()</link> D-Bus method. If you instead want to finish handling an invocation by returning an error, use g_dbus_method_invocation_return_error() or similar.
  *
  * This method will free @invocation, you cannot use it afterwards.
  */
 void
-print_backend_complete_get_printer_option_value (
+print_backend_complete_get_default_value (
     PrintBackend *object,
     GDBusMethodInvocation *invocation,
     const gchar *option_value)
