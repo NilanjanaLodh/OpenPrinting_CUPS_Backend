@@ -161,6 +161,21 @@ void get_supported_values(PrinterObj *p, gchar *option_name)
 
     // this only prints the value to screen.. edit it so that it sets the actual value
 }
+void get_supported_media(PrinterObj *p)
+{
+    GError *error = NULL;
+    GVariant *values;
+    gchar *str;
+    GVariantIter *iter;
+    print_backend_call_get_supported_media_sync(p->backend_proxy, p->name,
+                                                &values, NULL, &error);
+    g_variant_get(values, "a(s)", &iter);
+    while (g_variant_iter_loop(iter, "(s)", &str))
+        g_print("%s\n", str);
+
+    g_variant_iter_free(iter);
+}
+
 /************************************************* FrontendObj********************************************/
 struct _FrontendObj
 {
@@ -227,4 +242,11 @@ void get_printer_supported_values(FrontendObj *f, gchar *printer_name, gchar *op
     g_assert_nonnull(p);
 
     get_supported_values(p, option_name);
+}
+void get_printer_supported_media(FrontendObj *f, gchar *printer_name)
+{
+    PrinterObj *p = g_hash_table_lookup(f->printer, printer_name);
+    g_assert_nonnull(p);
+
+    get_supported_media(p);
 }

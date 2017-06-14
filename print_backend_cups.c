@@ -14,6 +14,14 @@ GDBusConnection *dbus_connection;
 PrintBackend *skeleton;
 GHashTable *dialog_printers;
 GHashTable *dialog_cancel;
+
+///mapping of the cups values to the values expected by the frontend
+GHashTable *media_mappings;
+// GHashTable *color_mappings;
+// GHashTable *print_quality_mappings;
+// GHashTable *orientation_mappings;
+// GHashTable *job_priority_mappings;
+// GHashTable *sides_mappings;
 int num_frontends; // the number of frontends that are currently connected
 
 static void on_name_acquired(GDBusConnection *connection, const gchar *name, gpointer not_used);
@@ -42,6 +50,7 @@ gpointer list_printers(gpointer _dialog_name);
 int send_printer_added(void *_dialog_name, unsigned flags, cups_dest_t *dest);
 //gpointer find_removed_printers(gpointer not_used);
 int add_printer_to_list(void *user_data, unsigned flags, cups_dest_t *dest);
+void set_up_mappings();
 
 static gboolean on_handle_list_basic_options(PrintBackend *interface,
                                              GDBusMethodInvocation *invocation,
@@ -62,8 +71,13 @@ static gboolean on_handle_get_supported_values(PrintBackend *interface,
                                                const gchar *printer_name,
                                                const gchar *option_name,
                                                gpointer user_data);
+static gboolean on_handle_get_supported_media(PrintBackend *interface,
+                                              GDBusMethodInvocation *invocation,
+                                              const gchar *printer_name,
+                                              gpointer user_data);
 int main()
 {
+    set_up_mappings();
     dbus_connection = NULL;
     skeleton = NULL;
     dialog_cancel = g_hash_table_new(g_str_hash, g_str_equal); /// to do : add destroy functions
@@ -109,6 +123,10 @@ on_name_acquired(GDBusConnection *connection,
     g_signal_connect(skeleton,                                   //instance
                      "handle-get-supported-values",              //signal name
                      G_CALLBACK(on_handle_get_supported_values), //callback
+                     NULL);
+    g_signal_connect(skeleton,                                  //instance
+                     "handle-get-supported-media",              //signal name
+                     G_CALLBACK(on_handle_get_supported_media), //callback
                      NULL);
     /**subscribe to signals **/
     g_dbus_connection_signal_subscribe(connection,
@@ -474,6 +492,62 @@ static gboolean on_handle_get_supported_values(PrintBackend *interface,
     return TRUE;
 }
 //get_capabilities
+
+static gboolean on_handle_get_supported_media(PrintBackend *interface,
+                                              GDBusMethodInvocation *invocation,
+                                              const gchar *printer_name,
+                                              gpointer user_data)
+{
+    cups_dest_t *dest = cupsGetNamedDest(CUPS_HTTP_DEFAULT, printer_name, NULL);
+    g_assert_nonnull(dest);
+    http_t *http = cupsConnectDest(dest, CUPS_DEST_FLAGS_NONE, 500, NULL, NULL, 0, NULL, NULL);
+    g_assert_nonnull(http);
+    cups_dinfo_t *dinfo = cupsCopyDestInfo(http, dest);
+    g_assert_nonnull(dinfo);
+    ipp_attribute_t *attrs =
+        cupsFindDestSupported(http, dest, dinfo, CUPS_MEDIA);
+    int i, count = ippGetCount(attrs);
+    GVariantBuilder *builder;
+    GVariant *values;
+
+    builder = g_variant_builder_new(G_VARIANT_TYPE("a(s)"));
+
+    char *str;
+    for (i = 0; i < count; i++)
+    {
+        char *str = ippGetString(attrs, i, NULL);
+        if(g_hash_table_contains(media_mappings, str))
+        {
+            str =(char *) g_hash_table_lookup(media_mappings, str);
+        }
+        g_message("%s", str);
+        g_variant_builder_add(builder, "(s)", str);
+    }
+
+    values = g_variant_new("a(s)", builder);
+    //unref this later
+    print_backend_complete_get_supported_media(interface, invocation, values);
+}
+
+void set_up_mappings()
+{
+    media_mappings = g_hash_table_new(g_str_hash, g_str_equal);
+    g_hash_table_insert(media_mappings, CUPS_MEDIA_A3, MEDIA_A3);
+    g_hash_table_insert(media_mappings, CUPS_MEDIA_A4, MEDIA_A4);
+    g_hash_table_insert(media_mappings, CUPS_MEDIA_A5, MEDIA_A5);
+    g_hash_table_insert(media_mappings, CUPS_MEDIA_A6, MEDIA_A6);
+    g_hash_table_insert(media_mappings, CUPS_MEDIA_LEGAL, MEDIA_LEGAL);
+    g_hash_table_insert(media_mappings, CUPS_MEDIA_LETTER, MEDIA_LETTER);
+    g_hash_table_insert(media_mappings, CUPS_MEDIA_TABLOID, MEDIA_TABLOID);
+    g_hash_table_insert(media_mappings, CUPS_MEDIA_ENV10, MEDIA_ENV);
+    g_hash_table_insert(media_mappings, CUPS_MEDIA_PHOTO_L, MEDIA_PHOTO);
+
+    // color_mappings = g_hash_table_new(g_str_hash, g_str_equal);
+    // g_hash_table_insert(color_mappings, CUPS_PRINT_COLOR_MODE_COLOR, "color");
+    // g_hash_table_insert(color_mappings, CUPS_PRINT_COLOR_MODE_MONOCHROME, "monochrome");
+    // g_hash_table_insert(color_mappings, CUPS_PRINT_COLOR_MODE_AUTO, "auto");
+}
+
 static gboolean on_handle_get_detailed_options(PrintBackend *interface,
                                                GDBusMethodInvocation *invocation,
                                                const gchar *printer_name,

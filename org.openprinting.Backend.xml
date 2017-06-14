@@ -29,8 +29,8 @@
             <arg name="media" direction="out" type="b"/>
             <arg name="number_up" direction="out" type="b"/>
             <arg name="orientation" direction="out" type="b"/>
-            <arg name="color_mode" direction="out" type="b"/>    
-            <arg name="print_quality" direction="out" type="b"/>                    
+            <arg name="color_mode" direction="out" type="b"/>
+            <arg name="print_quality" direction="out" type="b"/>
             <arg name="sides" direction="out" type="b"/>
         </method>
         <method name="getDefaultValue">
@@ -43,6 +43,10 @@
             <arg name="option_name" direction="in" type="s"/>
             <arg name="num_values" direction="out" type="i"/>
             <arg name="option_values" direction="out" type="a(s)" />
+        </method>
+        <method name="getSupportedMedia">
+            <arg name="printer_name" direction="in" type="s" />
+            <arg name="values" direction="out" type="a(s)" />
         </method>
     </interface>
 </node>
