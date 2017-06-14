@@ -152,5 +152,11 @@ gpointer parse_commands(gpointer user_data)
             scanf("%s%s", printer_name , option_name);
             get_printer_option_default(f,printer_name, option_name);
         }
+        else if (strcmp(buf, "get-supported-values") == 0)
+        {
+            char printer_name[100] , option_name[100];
+            scanf("%s%s", printer_name , option_name);
+            get_printer_supported_values(f,printer_name, option_name);
+        }
     }
 }

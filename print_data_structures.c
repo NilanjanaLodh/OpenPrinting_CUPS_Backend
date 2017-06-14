@@ -137,6 +137,29 @@ void get_option_default(PrinterObj *p, gchar *option_name)
                                               NULL, &error);
     g_assert_no_error(error);
     g_message("%s", value);
+    // this only prints the value to screen.. edit it so that it sets the actual value
+}
+void get_supported_values(PrinterObj *p, gchar *option_name)
+{
+    GError *error = NULL;
+    int num_values;
+    GVariant *values;
+    print_backend_call_get_supported_values_sync(p->backend_proxy, p->name,
+                                                 option_name, &num_values, &values,
+                                                 NULL, &error);
+    g_assert_no_error(error);
+    g_message("%d supported values", num_values);
+    int i;
+    gchar *str;
+    GVariantIter *iter;
+
+    g_variant_get(values, "a(s)", &iter);
+    while (g_variant_iter_loop(iter, "(s)", &str))
+        g_print("%s\n", str);
+
+    g_variant_iter_free(iter);
+
+    // this only prints the value to screen.. edit it so that it sets the actual value
 }
 /************************************************* FrontendObj********************************************/
 struct _FrontendObj
@@ -196,4 +219,12 @@ void get_printer_option_default(FrontendObj *f, gchar *printer_name, gchar *opti
     g_assert_nonnull(p);
 
     get_option_default(p, option_name);
+}
+
+void get_printer_supported_values(FrontendObj *f, gchar *printer_name, gchar *option_name)
+{
+    PrinterObj *p = g_hash_table_lookup(f->printer, printer_name);
+    g_assert_nonnull(p);
+
+    get_supported_values(p, option_name);
 }

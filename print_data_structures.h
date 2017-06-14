@@ -23,6 +23,7 @@ void update_basic_options(PrinterObj *);
 void get_capabilities(PrinterObj *);
 void print_capabilities(PrinterObj *);
 void get_option_default(PrinterObj * , gchar *);
+void get_supported_values(PrinterObj * , gchar *);
 /**********FrontendObj definitions*******************************/
 typedef struct _FrontendObj FrontendObj;
 
@@ -31,6 +32,6 @@ gboolean add_printer(FrontendObj *, PrinterObj * ,gchar *, gchar *); ///think ab
 void update_basic_printer_options(FrontendObj * , gchar *);
 void get_printer_capabilities(FrontendObj * , gchar *);
 void get_printer_option_default(FrontendObj *,gchar * , gchar *);
-
+void get_printer_supported_values(FrontendObj *,gchar * , gchar *);
 /***************************************************************/
 #endif

@@ -38,5 +38,11 @@
             <arg name="option_name" direction="in" type="s"/>
             <arg name="option_value" direction="out" type="s" />
         </method>
+        <method name="getSupportedValues">
+            <arg name="printer_name" direction="in" type="s" />
+            <arg name="option_name" direction="in" type="s"/>
+            <arg name="num_values" direction="out" type="i"/>
+            <arg name="option_values" direction="out" type="a(s)" />
+        </method>
     </interface>
 </node>

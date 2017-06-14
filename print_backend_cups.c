@@ -57,6 +57,11 @@ static gboolean on_handle_get_default_value(PrintBackend *interface,
                                             const gchar *printer_name,
                                             const gchar *option_name,
                                             gpointer user_data);
+static gboolean on_handle_get_supported_values(PrintBackend *interface,
+                                               GDBusMethodInvocation *invocation,
+                                               const gchar *printer_name,
+                                               const gchar *option_name,
+                                               gpointer user_data);
 int main()
 {
     dbus_connection = NULL;
@@ -100,6 +105,10 @@ on_name_acquired(GDBusConnection *connection,
     g_signal_connect(skeleton,                                //instance
                      "handle-get-default-value",              //signal name
                      G_CALLBACK(on_handle_get_default_value), //callback
+                     NULL);
+    g_signal_connect(skeleton,                                   //instance
+                     "handle-get-supported-values",              //signal name
+                     G_CALLBACK(on_handle_get_supported_values), //callback
                      NULL);
     /**subscribe to signals **/
     g_dbus_connection_signal_subscribe(connection,
@@ -422,13 +431,46 @@ static gboolean on_handle_get_default_value(PrintBackend *interface,
     }
     else
     {
-        g_message("Hi");
         if (ippGetCount(def_attr))
             value = ippGetString(def_attr, 0, NULL);
         printf("%s\n", value);
     }
     print_backend_complete_get_default_value(interface, invocation,
                                              value);
+    return TRUE;
+}
+
+static gboolean on_handle_get_supported_values(PrintBackend *interface,
+                                               GDBusMethodInvocation *invocation,
+                                               const gchar *printer_name,
+                                               const gchar *option_name,
+                                               gpointer user_data)
+{
+    cups_dest_t *dest = cupsGetNamedDest(CUPS_HTTP_DEFAULT, printer_name, NULL);
+    g_assert_nonnull(dest);
+    http_t *http = cupsConnectDest(dest, CUPS_DEST_FLAGS_NONE, 500, NULL, NULL, 0, NULL, NULL);
+    g_assert_nonnull(http);
+    cups_dinfo_t *dinfo = cupsCopyDestInfo(http, dest);
+    g_assert_nonnull(dinfo);
+    ipp_attribute_t *attrs =
+        cupsFindDestSupported(http, dest, dinfo,
+                              option_name);
+    int i, count = ippGetCount(attrs);
+    GVariantBuilder *builder;
+    GVariant *values;
+
+    builder = g_variant_builder_new(G_VARIANT_TYPE("a(s)"));
+
+    for (i = 0; i < count; i++)
+    {
+        g_variant_builder_add(builder, "(s)", ippGetString(attrs, i, NULL));
+    }
+
+    values = g_variant_new("a(s)", builder);
+    //unref this later
+    print_backend_complete_get_supported_values(interface, invocation,
+                                                count, values);
+
     return TRUE;
 }
 //get_capabilities

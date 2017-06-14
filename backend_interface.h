@@ -40,6 +40,12 @@ struct _PrintBackendIface
     GDBusMethodInvocation *invocation,
     const gchar *arg_printer_name);
 
+  gboolean (*handle_get_supported_values) (
+    PrintBackend *object,
+    GDBusMethodInvocation *invocation,
+    const gchar *arg_printer_name,
+    const gchar *arg_option_name);
+
   gboolean (*handle_list_basic_options) (
     PrintBackend *object,
     GDBusMethodInvocation *invocation,
@@ -95,6 +101,12 @@ void print_backend_complete_get_default_value (
     PrintBackend *object,
     GDBusMethodInvocation *invocation,
     const gchar *option_value);
+
+void print_backend_complete_get_supported_values (
+    PrintBackend *object,
+    GDBusMethodInvocation *invocation,
+    gint num_values,
+    GVariant *option_values);
 
 
 
@@ -198,6 +210,30 @@ gboolean print_backend_call_get_default_value_sync (
     const gchar *arg_printer_name,
     const gchar *arg_option_name,
     gchar **out_option_value,
+    GCancellable *cancellable,
+    GError **error);
+
+void print_backend_call_get_supported_values (
+    PrintBackend *proxy,
+    const gchar *arg_printer_name,
+    const gchar *arg_option_name,
+    GCancellable *cancellable,
+    GAsyncReadyCallback callback,
+    gpointer user_data);
+
+gboolean print_backend_call_get_supported_values_finish (
+    PrintBackend *proxy,
+    gint *out_num_values,
+    GVariant **out_option_values,
+    GAsyncResult *res,
+    GError **error);
+
+gboolean print_backend_call_get_supported_values_sync (
+    PrintBackend *proxy,
+    const gchar *arg_printer_name,
+    const gchar *arg_option_name,
+    gint *out_num_values,
+    GVariant **out_option_values,
     GCancellable *cancellable,
     GError **error);
 
