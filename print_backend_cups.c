@@ -19,7 +19,7 @@ GHashTable *dialog_cancel;
 GHashTable *media_mappings;
 GHashTable *color_mappings;
 GHashTable *print_quality_mappings;
-// GHashTable *orientation_mappings;
+GHashTable *orientation_mappings;
 // GHashTable *job_priority_mappings;
 // GHashTable *sides_mappings;
 int num_frontends; // the number of frontends that are currently connected
@@ -83,6 +83,10 @@ static gboolean on_handle_get_supported_quality(PrintBackend *interface,
                                                 GDBusMethodInvocation *invocation,
                                                 const gchar *printer_name,
                                                 gpointer user_data);
+static gboolean on_handle_get_supported_orientation(PrintBackend *interface,
+                                                    GDBusMethodInvocation *invocation,
+                                                    const gchar *printer_name,
+                                                    gpointer user_data);
 int main()
 {
     set_up_mappings();
@@ -143,6 +147,10 @@ on_name_acquired(GDBusConnection *connection,
     g_signal_connect(skeleton,                                    //instance
                      "handle-get-supported-quality",              //signal name
                      G_CALLBACK(on_handle_get_supported_quality), //callback
+                     NULL);
+    g_signal_connect(skeleton,                                        //instance
+                     "handle-get-supported-orientation",              //signal name
+                     G_CALLBACK(on_handle_get_supported_orientation), //callback
                      NULL);
     /**subscribe to signals **/
     g_dbus_connection_signal_subscribe(connection,
@@ -605,7 +613,7 @@ static gboolean on_handle_get_supported_quality(PrintBackend *interface,
     for (i = 0; i < count; i++)
     {
         x = ippGetInteger(attrs, i);
-        if (g_hash_table_contains(print_quality_mappings, GINT_TO_POINTER(x) ))
+        if (g_hash_table_contains(print_quality_mappings, GINT_TO_POINTER(x)))
         {
             str = (char *)g_hash_table_lookup(print_quality_mappings, GINT_TO_POINTER(x));
 
@@ -617,6 +625,43 @@ static gboolean on_handle_get_supported_quality(PrintBackend *interface,
     values = g_variant_new("a(s)", builder);
     //unref this later
     print_backend_complete_get_supported_quality(interface, invocation, count, values);
+}
+static gboolean on_handle_get_supported_orientation(PrintBackend *interface,
+                                                    GDBusMethodInvocation *invocation,
+                                                    const gchar *printer_name,
+                                                    gpointer user_data)
+{
+    cups_dest_t *dest = cupsGetNamedDest(CUPS_HTTP_DEFAULT, printer_name, NULL);
+    g_assert_nonnull(dest);
+    http_t *http = cupsConnectDest(dest, CUPS_DEST_FLAGS_NONE, 500, NULL, NULL, 0, NULL, NULL);
+    g_assert_nonnull(http);
+    cups_dinfo_t *dinfo = cupsCopyDestInfo(http, dest);
+    g_assert_nonnull(dinfo);
+    ipp_attribute_t *attrs =
+        cupsFindDestSupported(http, dest, dinfo, CUPS_ORIENTATION);
+    int i, count = ippGetCount(attrs);
+    GVariantBuilder *builder;
+    GVariant *values;
+
+    builder = g_variant_builder_new(G_VARIANT_TYPE("a(s)"));
+
+    int x;
+    char *str;
+    int c=0;
+    for (i = 0; i < count; i++)
+    {
+        x = ippGetInteger(attrs, i);
+        if (g_hash_table_contains(orientation_mappings, GINT_TO_POINTER(x)))
+        {
+            c++;
+            str = (char *)g_hash_table_lookup(orientation_mappings, GINT_TO_POINTER(x));
+            g_variant_builder_add(builder, "(s)", str);
+        }
+    }
+
+    values = g_variant_new("a(s)", builder);
+    //unref this later
+    print_backend_complete_get_supported_orientation(interface, invocation, c, values);
 }
 void set_up_mappings()
 {
@@ -640,6 +685,10 @@ void set_up_mappings()
     g_hash_table_insert(print_quality_mappings, GINT_TO_POINTER(atoi(CUPS_PRINT_QUALITY_DRAFT)), QUALITY_DRAFT);
     g_hash_table_insert(print_quality_mappings, GINT_TO_POINTER(atoi(CUPS_PRINT_QUALITY_HIGH)), QUALITY_HIGH);
     g_hash_table_insert(print_quality_mappings, GINT_TO_POINTER(atoi(CUPS_PRINT_QUALITY_NORMAL)), QUALITY_NORMAL);
+
+     orientation_mappings = g_hash_table_new(g_direct_hash, g_direct_equal);
+    g_hash_table_insert(orientation_mappings,  GINT_TO_POINTER(atoi(CUPS_ORIENTATION_LANDSCAPE)), ORIENTATION_LANDSCAPE);
+    g_hash_table_insert(orientation_mappings,  GINT_TO_POINTER(atoi(CUPS_ORIENTATION_PORTRAIT)), ORIENTATION_PORTRAIT);
 }
 
 static gboolean on_handle_get_detailed_options(PrintBackend *interface,

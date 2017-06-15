@@ -16,13 +16,16 @@ gboolean get_boolean(gchar *g)
 struct _SupportedValues
 {
     int num_media;
-    char **media; 
+    char **media;
 
     int num_color;
-    char **color; 
+    char **color;
 
     int num_quality;
     char **quality;
+
+    int num_orientation;
+    char **orientation;
 };
 
 struct _PrinterCapabilities
@@ -182,21 +185,21 @@ void get_supported_media(PrinterObj *p)
     GVariantIter *iter;
     print_backend_call_get_supported_media_sync(p->backend_proxy, p->name,
                                                 &p->supported.num_media, &values, NULL, &error);
-    p->supported.media = (char **) malloc(sizeof(char*) * p->supported.num_media);
+    p->supported.media = (char **)malloc(sizeof(char *) * p->supported.num_media);
 
     g_variant_get(values, "a(s)", &iter);
-    int i=0;
+    int i = 0;
     while (g_variant_iter_loop(iter, "(s)", &str))
     {
-        p->supported.media[i] = malloc(sizeof(char) * (strlen(str)+1));
-        strcpy(p->supported.media[i],str);
+        p->supported.media[i] = malloc(sizeof(char) * (strlen(str) + 1));
+        strcpy(p->supported.media[i], str);
         i++;
     }
 
-    for(i=0;i<p->supported.num_media;i++)
+    for (i = 0; i < p->supported.num_media; i++)
     {
         g_print(" %s\n", p->supported.media[i]);
-    }    
+    }
 }
 void get_supported_color(PrinterObj *p)
 {
@@ -206,21 +209,21 @@ void get_supported_color(PrinterObj *p)
     GVariantIter *iter;
     print_backend_call_get_supported_color_sync(p->backend_proxy, p->name,
                                                 &p->supported.num_color, &values, NULL, &error);
-    p->supported.color = (char **) malloc(sizeof(char*) * p->supported.num_color);
+    p->supported.color = (char **)malloc(sizeof(char *) * p->supported.num_color);
 
     g_variant_get(values, "a(s)", &iter);
-    int i=0;
+    int i = 0;
     while (g_variant_iter_loop(iter, "(s)", &str))
     {
-        p->supported.color[i] = malloc(sizeof(char) * (strlen(str)+1));
-        strcpy(p->supported.color[i],str);
+        p->supported.color[i] = malloc(sizeof(char) * (strlen(str) + 1));
+        strcpy(p->supported.color[i], str);
         i++;
     }
 
-    for(i=0;i<p->supported.num_color;i++)
+    for (i = 0; i < p->supported.num_color; i++)
     {
         g_print(" %s\n", p->supported.color[i]);
-    }    
+    }
 }
 void get_supported_quality(PrinterObj *p)
 {
@@ -229,22 +232,46 @@ void get_supported_quality(PrinterObj *p)
     gchar *str;
     GVariantIter *iter;
     print_backend_call_get_supported_quality_sync(p->backend_proxy, p->name,
-                                                &p->supported.num_quality, &values, NULL, &error);
-    p->supported.quality = (char **) malloc(sizeof(char*) * p->supported.num_quality);
+                                                  &p->supported.num_quality, &values, NULL, &error);
+    p->supported.quality = (char **)malloc(sizeof(char *) * p->supported.num_quality);
 
     g_variant_get(values, "a(s)", &iter);
-    int i=0;
+    int i = 0;
     while (g_variant_iter_loop(iter, "(s)", &str))
     {
-        p->supported.quality[i] = malloc(sizeof(char) * (strlen(str)+1));
-        strcpy(p->supported.quality[i],str);
+        p->supported.quality[i] = malloc(sizeof(char) * (strlen(str) + 1));
+        strcpy(p->supported.quality[i], str);
         i++;
     }
 
-    for(i=0;i<p->supported.num_quality;i++)
+    for (i = 0; i < p->supported.num_quality; i++)
     {
         g_print(" %s\n", p->supported.quality[i]);
-    }    
+    }
+}
+void get_supported_orientation(PrinterObj *p)
+{
+    GError *error = NULL;
+    GVariant *values;
+    gchar *str;
+    GVariantIter *iter;
+    print_backend_call_get_supported_orientation_sync(p->backend_proxy, p->name,
+                                                      &p->supported.num_orientation, &values, NULL, &error);
+    p->supported.orientation = (char **)malloc(sizeof(char *) * p->supported.num_orientation);
+
+    g_variant_get(values, "a(s)", &iter);
+    int i = 0;
+    while (g_variant_iter_loop(iter, "(s)", &str))
+    {
+        p->supported.orientation[i] = malloc(sizeof(char) * (strlen(str) + 1));
+        strcpy(p->supported.orientation[i], str);
+        i++;
+    }
+
+    for (i = 0; i < p->supported.num_orientation; i++)
+    {
+        g_print(" %s\n", p->supported.orientation[i]);
+    }
 }
 /************************************************* FrontendObj********************************************/
 struct _FrontendObj
@@ -333,4 +360,11 @@ void get_printer_supported_quality(FrontendObj *f, gchar *printer_name)
     g_assert_nonnull(p);
 
     get_supported_quality(p);
+}
+void get_printer_supported_orientation(FrontendObj *f, gchar *printer_name)
+{
+    PrinterObj *p = g_hash_table_lookup(f->printer, printer_name);
+    g_assert_nonnull(p);
+
+    get_supported_orientation(p);
 }

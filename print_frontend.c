@@ -27,9 +27,9 @@ gpointer parse_commands(gpointer user_data);
 FrontendObj *f;
 int main()
 {
-   // printers = g_hash_table_new(g_str_hash, g_str_equal);
+    // printers = g_hash_table_new(g_str_hash, g_str_equal);
     //backends = g_hash_table_new(g_str_hash, g_str_equal);
-    
+
     f = get_new_FrontendObj();
     g_bus_own_name(G_BUS_TYPE_SESSION,
                    DIALOG_BUS_NAME,
@@ -96,10 +96,9 @@ static void on_printer_added(GDBusConnection *connection,
 
     PrinterObj *p = get_new_PrinterObj();
     fill_basic_options(p, parameters);
-   // g_variant_get(parameters, "(sssss)", &printer_name, &info, &location, &make_and_model, &is_accepting_jobs);
-    add_printer(f,p, sender_name , object_path);
+    // g_variant_get(parameters, "(sssss)", &printer_name, &info, &location, &make_and_model, &is_accepting_jobs);
+    add_printer(f, p, sender_name, object_path);
     print_basic_options(p);
-    
 }
 static void on_printer_removed(GDBusConnection *connection,
                                const gchar *sender_name,
@@ -132,49 +131,55 @@ gpointer parse_commands(gpointer user_data)
             print_frontend_emit_refresh_backend(skeleton);
             g_message("Sending refresh request..\n");
         }
-         else if (strcmp(buf, "update-basic") == 0)
+        else if (strcmp(buf, "update-basic") == 0)
         {
             char printer_name[100];
             scanf("%s", printer_name);
             g_message("Updating basic options ..\n");
-            update_basic_printer_options(f,printer_name);
+            update_basic_printer_options(f, printer_name);
         }
         else if (strcmp(buf, "get-capabilities") == 0)
         {
             char printer_name[100];
             scanf("%s", printer_name);
             g_message("Getting basic capabilities ..\n");
-            get_printer_capabilities(f,printer_name);
+            get_printer_capabilities(f, printer_name);
         }
         else if (strcmp(buf, "get-option-default") == 0)
         {
-            char printer_name[100] , option_name[100];
-            scanf("%s%s", printer_name , option_name);
-            get_printer_option_default(f,printer_name, option_name);
+            char printer_name[100], option_name[100];
+            scanf("%s%s", printer_name, option_name);
+            get_printer_option_default(f, printer_name, option_name);
         }
         else if (strcmp(buf, "get-supported-values") == 0)
         {
-            char printer_name[100] , option_name[100];
-            scanf("%s%s", printer_name , option_name);
-            get_printer_supported_values(f,printer_name, option_name);
+            char printer_name[100], option_name[100];
+            scanf("%s%s", printer_name, option_name);
+            get_printer_supported_values(f, printer_name, option_name);
         }
         else if (strcmp(buf, "get-supported-media") == 0)
         {
             char printer_name[100];
             scanf("%s", printer_name);
-            get_printer_supported_media(f,printer_name);
+            get_printer_supported_media(f, printer_name);
         }
         else if (strcmp(buf, "get-supported-color") == 0)
         {
             char printer_name[100];
             scanf("%s", printer_name);
-            get_printer_supported_color(f,printer_name);
+            get_printer_supported_color(f, printer_name);
         }
-         else if (strcmp(buf, "get-supported-quality") == 0)
+        else if (strcmp(buf, "get-supported-quality") == 0)
         {
             char printer_name[100];
             scanf("%s", printer_name);
-            get_printer_supported_quality(f,printer_name);
+            get_printer_supported_quality(f, printer_name);
+        }
+        else if (strcmp(buf, "get-supported-orientation") == 0)
+        {
+            char printer_name[100];
+            scanf("%s", printer_name);
+            get_printer_supported_orientation(f, printer_name);
         }
     }
 }
