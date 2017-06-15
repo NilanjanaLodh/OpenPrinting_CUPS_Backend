@@ -41,6 +41,7 @@
             <arg name="color_mode" direction="out" type="b"/>
             <arg name="print_quality" direction="out" type="b"/>
             <arg name="sides" direction="out" type="b"/>
+            <arg name="resolution" direction="out" type="b"/>
         </method>
         <method name="getDefaultValue">
             <arg name="printer_name" direction="in" type="s" />
@@ -72,6 +73,11 @@
             <arg name="printer_name" direction="in" type="s" />
             <arg name="num_values" direction="out" type="i"/>
             <arg name="values" direction="out" type="a(s)" />
+        </method>
+        <method name="getResolution">
+            <arg name="printer_name" direction="in" type="s" />
+            <arg name="x_res" direction="out" type="i"/>
+            <arg name="y_res" direction="out" type="i"/>               
         </method>
     </interface>
 </node>

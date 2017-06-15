@@ -7,6 +7,11 @@
 #include "backend_interface.h"
 #include "frontend_interface.h"
 
+typedef struct _Resolution
+{
+    int xres;
+    int yres;
+} Resolution;
 
 struct _SupportedValues
 {
@@ -21,6 +26,18 @@ struct _SupportedValues
 
     int num_orientation;
     char **orientation;
+
+    int num_res;
+    Resolution *res;
+};
+
+struct _CurrentValues
+{
+    char *media;
+    char *color;
+    char *quaity;
+    char *orientation;
+    Resolution res;
 };
 
 struct _PrinterCapabilities
@@ -31,7 +48,8 @@ struct _PrinterCapabilities
     gboolean orientation;
     gboolean color_mode;
     gboolean print_quality;
-    gboolean sides; // one sided or both sided
+    gboolean sides;      // one sided or both sided
+    gboolean resolution; ////////////// to do .. i.e. add this also in getCapabilities
 };
 struct _PrinterObj
 {
@@ -42,12 +60,13 @@ struct _PrinterObj
     char *location;
     char *info;
     char *make_and_model;
-    char *state;
+    char *state; //to do : change the boolean state variables too when you inp
     gboolean is_printing;
     gboolean is_accepting_jobs;
 
     PrinterCapabilities capabilities;
     SupportedValues supported;
+    CurrentValues current;
     //add options here
 };
 PrinterObj *get_new_PrinterObj()
@@ -63,7 +82,6 @@ void fill_basic_options(PrinterObj *p, GVariant *gv)
                   &(p->make_and_model),
                   &(p->is_accepting_jobs),
                   &(p->state));
-    
 }
 void print_basic_options(PrinterObj *p)
 {
@@ -102,6 +120,7 @@ void get_capabilities(PrinterObj *p)
                                                      &(p->capabilities.color_mode),
                                                      &(p->capabilities.print_quality),
                                                      &(p->capabilities.sides),
+                                                     &(p->capabilities.resolution),
                                                      NULL, &error);
 
     print_capabilities(p);
@@ -249,15 +268,27 @@ void get_supported_orientation(PrinterObj *p)
 void get_state(PrinterObj *p)
 {
     GError *error = NULL;
-    print_backend_call_get_printer_state_sync(p->backend_proxy , p->name , &p->state , NULL, &error);
+    print_backend_call_get_printer_state_sync(p->backend_proxy, p->name, &p->state, NULL, &error);
     g_assert_no_error(error);
 
+    /// To do : set the other boolean flags too
     g_message("%s", p->state);
+}
+void get_resolution(PrinterObj *p)
+{
+    GError *error = NULL;
+    print_backend_call_get_resolution_sync(p->backend_proxy, p->name,
+                                           &p->current.res.xres, &p->current.res.yres,
+                                           NULL, &error);
+    g_assert_no_error(error);
+
+    /// To do : set the other boolean flags too
+    g_message("%d x %d", p->current.res.xres , p->current.res.yres);
 }
 void is_accepting_jobs(PrinterObj *p)
 {
     GError *error = NULL;
-    print_backend_call_is_accepting_jobs_sync(p->backend_proxy , p->name , &p->is_accepting_jobs , NULL, &error);
+    print_backend_call_is_accepting_jobs_sync(p->backend_proxy, p->name, &p->is_accepting_jobs, NULL, &error);
     g_assert_no_error(error);
 
     g_message("%d", p->is_accepting_jobs);
@@ -370,4 +401,11 @@ void printer_is_accepting_jobs(FrontendObj *f, gchar *printer_name)
     g_assert_nonnull(p);
 
     is_accepting_jobs(p);
+}
+void get_printer_resolution(FrontendObj *f, gchar *printer_name)
+{
+    PrinterObj *p = g_hash_table_lookup(f->printer, printer_name);
+    g_assert_nonnull(p);
+
+    get_resolution(p);
 }

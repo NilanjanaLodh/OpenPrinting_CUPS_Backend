@@ -4,7 +4,7 @@
 #include <glib.h>
 
 
-
+typedef struct _CurrentValues CurrentValues;
 /**********Supportedvalues**************************************/
 typedef struct _SupportedValues SupportedValues;
 /**********PrinterCapabilities**********************************/
@@ -26,6 +26,7 @@ void get_supported_quality(PrinterObj *);
 void get_supported_orientation(PrinterObj *);
 void get_state(PrinterObj *);
 void is_accepting_jobs(PrinterObj *);
+void get_resolution(PrinterObj *);
 
 /**********FrontendObj definitions*******************************/
 typedef struct _FrontendObj FrontendObj;
@@ -42,7 +43,7 @@ void get_printer_supported_quality(FrontendObj *, gchar *);
 void get_printer_supported_orientation(FrontendObj *, gchar *);
 void get_printer_state(FrontendObj *, gchar *);
 void printer_is_accepting_jobs(FrontendObj *, gchar *);
-
+void get_printer_resolution(FrontendObj *, gchar *);
 /***************************************************************/
 
 

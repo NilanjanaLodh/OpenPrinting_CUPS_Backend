@@ -45,6 +45,11 @@ struct _PrintBackendIface
     GDBusMethodInvocation *invocation,
     const gchar *arg_printer_name);
 
+  gboolean (*handle_get_resolution) (
+    PrintBackend *object,
+    GDBusMethodInvocation *invocation,
+    const gchar *arg_printer_name);
+
   gboolean (*handle_get_supported_color) (
     PrintBackend *object,
     GDBusMethodInvocation *invocation,
@@ -135,7 +140,8 @@ void print_backend_complete_get_printer_capabilities (
     gboolean orientation,
     gboolean color_mode,
     gboolean print_quality,
-    gboolean sides);
+    gboolean sides,
+    gboolean resolution);
 
 void print_backend_complete_get_default_value (
     PrintBackend *object,
@@ -171,6 +177,12 @@ void print_backend_complete_get_supported_orientation (
     GDBusMethodInvocation *invocation,
     gint num_values,
     GVariant *values);
+
+void print_backend_complete_get_resolution (
+    PrintBackend *object,
+    GDBusMethodInvocation *invocation,
+    gint x_res,
+    gint y_res);
 
 
 
@@ -279,6 +291,7 @@ gboolean print_backend_call_get_printer_capabilities_finish (
     gboolean *out_color_mode,
     gboolean *out_print_quality,
     gboolean *out_sides,
+    gboolean *out_resolution,
     GAsyncResult *res,
     GError **error);
 
@@ -292,6 +305,7 @@ gboolean print_backend_call_get_printer_capabilities_sync (
     gboolean *out_color_mode,
     gboolean *out_print_quality,
     gboolean *out_sides,
+    gboolean *out_resolution,
     GCancellable *cancellable,
     GError **error);
 
@@ -426,6 +440,28 @@ gboolean print_backend_call_get_supported_orientation_sync (
     const gchar *arg_printer_name,
     gint *out_num_values,
     GVariant **out_values,
+    GCancellable *cancellable,
+    GError **error);
+
+void print_backend_call_get_resolution (
+    PrintBackend *proxy,
+    const gchar *arg_printer_name,
+    GCancellable *cancellable,
+    GAsyncReadyCallback callback,
+    gpointer user_data);
+
+gboolean print_backend_call_get_resolution_finish (
+    PrintBackend *proxy,
+    gint *out_x_res,
+    gint *out_y_res,
+    GAsyncResult *res,
+    GError **error);
+
+gboolean print_backend_call_get_resolution_sync (
+    PrintBackend *proxy,
+    const gchar *arg_printer_name,
+    gint *out_x_res,
+    gint *out_y_res,
     GCancellable *cancellable,
     GError **error);
 

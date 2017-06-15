@@ -98,6 +98,10 @@ static gboolean on_handle_is_accepting_jobs(PrintBackend *interface,
                                             GDBusMethodInvocation *invocation,
                                             const gchar *printer_name,
                                             gpointer user_data);
+static gboolean on_handle_get_resolution(PrintBackend *interface,
+                                         GDBusMethodInvocation *invocation,
+                                         const gchar *printer_name,
+                                         gpointer user_data);
 int main()
 {
     set_up_mappings();
@@ -318,9 +322,9 @@ static gboolean on_handle_get_printer_capabilities(PrintBackend *interface,
     cups_dinfo_t *dinfo = cupsCopyDestInfo(http, dest);
     g_assert_nonnull(dinfo);
 
-    gboolean copies, media, n_up, orientation, color_mode, quality, sides;
+    gboolean copies, media, n_up, orientation, color_mode, quality, sides , res;
 
-    copies = media = n_up = orientation = color_mode = quality = sides = FALSE;
+    copies = media = n_up = orientation = color_mode = quality = sides = res = FALSE;
 
     /**
     Actually, it should be checked this way according to the cups programming manual: 
@@ -375,6 +379,10 @@ static gboolean on_handle_get_printer_capabilities(PrintBackend *interface,
         {
             sides = TRUE;
         }
+        else if(strcmp(str,"printer-resolution")==0)
+        {
+            res = TRUE;
+        }
     }
     print_backend_complete_get_printer_capabilities(interface, invocation,
                                                     copies,
@@ -383,7 +391,8 @@ static gboolean on_handle_get_printer_capabilities(PrintBackend *interface,
                                                     orientation,
                                                     color_mode,
                                                     quality,
-                                                    sides);
+                                                    sides,
+                                                    res);
     //fix memory leaks
     return TRUE;
 }
@@ -406,7 +415,7 @@ static gboolean on_handle_get_default_value(PrintBackend *interface,
                                     dest->options);
 
     ipp_attribute_t *def_attr =
-        cupsFindDestDefault(CUPS_HTTP_DEFAULT, dest, dinfo,
+        cupsFindDestDefault(http, dest, dinfo,
                             option_name);
     gchar *value = "NA";
     if (def_value != NULL)
@@ -652,6 +661,18 @@ static gboolean on_handle_is_accepting_jobs(PrintBackend *interface,
     print_backend_complete_is_accepting_jobs(interface, invocation, cups_is_accepting_jobs(dest));
     return TRUE;
 }
+static gboolean on_handle_get_resolution(PrintBackend *interface,
+                                         GDBusMethodInvocation *invocation,
+                                         const gchar *printer_name,
+                                         gpointer user_data)
+{
+    cups_dest_t *dest = cupsGetNamedDest(CUPS_HTTP_DEFAULT, printer_name, NULL);
+    g_assert_nonnull(dest);
+    int xres, yres;
+    getResolution(dest, &xres, &yres);
+    print_backend_complete_get_resolution(interface, invocation, xres, yres);
+    return TRUE;
+}
 void set_up_mappings()
 {
     media_mappings = g_hash_table_new(g_str_hash, g_str_equal);
@@ -723,6 +744,10 @@ void connect_to_signals()
     g_signal_connect(skeleton,                                //instance
                      "handle-is-accepting-jobs",              //signal name
                      G_CALLBACK(on_handle_is_accepting_jobs), //callback
+                     NULL);
+    g_signal_connect(skeleton,                             //instance
+                     "handle-get-resolution",              //signal name
+                     G_CALLBACK(on_handle_get_resolution), //callback
                      NULL);
     /**subscribe to signals **/
     g_dbus_connection_signal_subscribe(dbus_connection,
