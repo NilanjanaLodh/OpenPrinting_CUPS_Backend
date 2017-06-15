@@ -21,6 +21,7 @@ GHashTable *media_mappings;
 GHashTable *color_mappings;
 GHashTable *print_quality_mappings;
 GHashTable *orientation_mappings;
+
 // GHashTable *job_priority_mappings;
 // GHashTable *sides_mappings;
 int num_frontends; // the number of frontends that are currently connected
@@ -52,6 +53,7 @@ int send_printer_added(void *_dialog_name, unsigned flags, cups_dest_t *dest);
 //gpointer find_removed_printers(gpointer not_used);
 int add_printer_to_list(void *user_data, unsigned flags, cups_dest_t *dest);
 void set_up_mappings();
+void connect_to_signals();
 
 static gboolean on_handle_list_basic_options(PrintBackend *interface,
                                              GDBusMethodInvocation *invocation,
@@ -88,6 +90,10 @@ static gboolean on_handle_get_supported_orientation(PrintBackend *interface,
                                                     GDBusMethodInvocation *invocation,
                                                     const gchar *printer_name,
                                                     gpointer user_data);
+static gboolean on_handle_get_printer_state(PrintBackend *interface,
+                                            GDBusMethodInvocation *invocation,
+                                            const gchar *printer_name,
+                                            gpointer user_data);
 int main()
 {
     set_up_mappings();
@@ -120,70 +126,7 @@ on_name_acquired(GDBusConnection *connection,
 
     skeleton = print_backend_skeleton_new();
 
-    g_signal_connect(skeleton,                                 //instance
-                     "handle-list-basic-options",              //signal name
-                     G_CALLBACK(on_handle_list_basic_options), //callback
-                     NULL);                                    //user_data
-
-    g_signal_connect(skeleton,                                       //instance
-                     "handle-get-printer-capabilities",              //signal name
-                     G_CALLBACK(on_handle_get_printer_capabilities), //callback
-                     NULL);
-    g_signal_connect(skeleton,                                //instance
-                     "handle-get-default-value",              //signal name
-                     G_CALLBACK(on_handle_get_default_value), //callback
-                     NULL);
-    g_signal_connect(skeleton,                                   //instance
-                     "handle-get-supported-values-raw-string",   //signal name
-                     G_CALLBACK(on_handle_get_supported_values), //callback
-                     NULL);
-    g_signal_connect(skeleton,                                  //instance
-                     "handle-get-supported-media",              //signal name
-                     G_CALLBACK(on_handle_get_supported_media), //callback
-                     NULL);
-    g_signal_connect(skeleton,                                  //instance
-                     "handle-get-supported-color",              //signal name
-                     G_CALLBACK(on_handle_get_supported_color), //callback
-                     NULL);
-    g_signal_connect(skeleton,                                    //instance
-                     "handle-get-supported-quality",              //signal name
-                     G_CALLBACK(on_handle_get_supported_quality), //callback
-                     NULL);
-    g_signal_connect(skeleton,                                        //instance
-                     "handle-get-supported-orientation",              //signal name
-                     G_CALLBACK(on_handle_get_supported_orientation), //callback
-                     NULL);
-    /**subscribe to signals **/
-    g_dbus_connection_signal_subscribe(connection,
-                                       NULL,                             //Sender name
-                                       "org.openprinting.PrintFrontend", //Sender interface
-                                       ACTIVATE_BACKEND_SIGNAL,          //Signal name
-                                       NULL,                             /**match on all object paths**/
-                                       NULL,                             /**match on all arguments**/
-                                       0,                                //Flags
-                                       on_activate_backend,              //callback
-                                       NULL,                             //user_data
-                                       NULL);
-    g_dbus_connection_signal_subscribe(connection,
-                                       NULL,                             //Sender name
-                                       "org.openprinting.PrintFrontend", //Sender interface
-                                       STOP_BACKEND_SIGNAL,              //Signal name
-                                       NULL,                             /**match on all object paths**/
-                                       NULL,                             /**match on all arguments**/
-                                       0,                                //Flags
-                                       on_stop_backend,                  //callback
-                                       NULL,                             //user_data
-                                       NULL);
-    g_dbus_connection_signal_subscribe(connection,
-                                       NULL,                             //Sender name
-                                       "org.openprinting.PrintFrontend", //Sender interface
-                                       REFRESH_BACKEND_SIGNAL,           //Signal name
-                                       NULL,                             /**match on all object paths**/
-                                       NULL,                             /**match on all arguments**/
-                                       0,                                //Flags
-                                       on_refresh_backend,               //callback
-                                       NULL,                             //user_data
-                                       NULL);
+    connect_to_signals();
     g_dbus_interface_skeleton_export(G_DBUS_INTERFACE_SKELETON(skeleton), connection, OBJECT_PATH, &error);
     g_assert_no_error(error);
 }
@@ -210,10 +153,6 @@ static void on_activate_backend(GDBusConnection *connection,
     g_hash_table_insert(dialog_printers, t, g);
     num_frontends++;
     g_thread_new(NULL, list_printers, t);
-    // if (num_frontends == 1) // you need to wake this thread up!
-    // {
-    //     g_thread_new(NULL, find_removed_printers, NULL);
-    // }
     // g_message("Leaving this function: the threads will take care.\n");
 }
 
@@ -256,13 +195,13 @@ int send_printer_added(void *_dialog_name, unsigned flags, cups_dest_t *dest)
     char *t = malloc(sizeof(gchar) * (strlen(dest->name) + 1));
     strcpy(t, dest->name);
     g_hash_table_add(g, t);
-    GVariant *gv = g_variant_new("(ssssss)",
+    GVariant *gv = g_variant_new("(ssssbs)",
                                  t,
                                  cupsGetOption("printer-info", dest->num_options, dest->options),
                                  cupsGetOption("printer-location", dest->num_options, dest->options),
                                  cupsGetOption("printer-make-and-model", dest->num_options, dest->options),
-                                 cupsGetOption("printer-is-accepting-jobs", dest->num_options, dest->options),
-                                 cupsGetOption("printer-state", dest->num_options, dest->options));
+                                 cups_is_accepting_jobs(dest),
+                                 cups_printer_state(dest));
 
     GError *error = NULL;
     g_dbus_connection_emit_signal(dbus_connection,
@@ -358,8 +297,8 @@ gboolean on_handle_list_basic_options(PrintBackend *interface,
                                               cupsGetOption("printer-info", dest->num_options, dest->options),
                                               cupsGetOption("printer-location", dest->num_options, dest->options),
                                               cupsGetOption("printer-make-and-model", dest->num_options, dest->options),
-                                              cupsGetOption("printer-is-accepting-jobs", dest->num_options, dest->options),
-                                              cupsGetOption("printer-state", dest->num_options, dest->options));
+                                              cups_is_accepting_jobs(dest),
+                                              cups_printer_state(dest));
     return TRUE;
 }
 
@@ -477,20 +416,20 @@ static gboolean on_handle_get_default_value(PrintBackend *interface,
 
         if (ippGetCount(def_attr))
         {
-            if(ippGetValueTag(def_attr)==IPP_TAG_STRING)
+            if (ippGetValueTag(def_attr) == IPP_TAG_STRING)
                 value = ippGetString(def_attr, 0, NULL);
 
-            else if(ippGetValueTag(def_attr)==IPP_TAG_INTEGER)
+            else if (ippGetValueTag(def_attr) == IPP_TAG_INTEGER)
             {
                 value = malloc(sizeof(char) * 10);
                 sprintf(value, "%d", ippGetInteger(def_attr, 0));
             }
-            else if(ippGetValueTag(def_attr)==IPP_TAG_INTEGER)
+            else if (ippGetValueTag(def_attr) == IPP_TAG_INTEGER)
             {
                 value = malloc(sizeof(char) * 10);
                 sprintf(value, "%d", ippGetInteger(def_attr, 0));
             }
-            else if(ippGetValueTag(def_attr)==IPP_TAG_BOOLEAN)
+            else if (ippGetValueTag(def_attr) == IPP_TAG_BOOLEAN)
             {
                 value = malloc(sizeof(char) * 5);
                 sprintf(value, "%d", ippGetBoolean(def_attr, 0));
@@ -687,6 +626,17 @@ static gboolean on_handle_get_supported_orientation(PrintBackend *interface,
     //unref this later
     print_backend_complete_get_supported_orientation(interface, invocation, c, values);
 }
+static gboolean on_handle_get_printer_state(PrintBackend *interface,
+                                            GDBusMethodInvocation *invocation,
+                                            const gchar *printer_name,
+                                            gpointer user_data)
+{
+    cups_dest_t *dest = cupsGetNamedDest(CUPS_HTTP_DEFAULT, printer_name, NULL);
+    g_assert_nonnull(dest);
+
+    print_backend_complete_get_printer_state(interface, invocation , cups_printer_state(dest));
+    return TRUE;
+}
 void set_up_mappings()
 {
     media_mappings = g_hash_table_new(g_str_hash, g_str_equal);
@@ -713,4 +663,77 @@ void set_up_mappings()
     orientation_mappings = g_hash_table_new(g_direct_hash, g_direct_equal);
     g_hash_table_insert(orientation_mappings, GINT_TO_POINTER(atoi(CUPS_ORIENTATION_LANDSCAPE)), ORIENTATION_LANDSCAPE);
     g_hash_table_insert(orientation_mappings, GINT_TO_POINTER(atoi(CUPS_ORIENTATION_PORTRAIT)), ORIENTATION_PORTRAIT);
+}
+
+/*****************************************************************/
+void connect_to_signals()
+{
+    g_signal_connect(skeleton,                                 //instance
+                     "handle-list-basic-options",              //signal name
+                     G_CALLBACK(on_handle_list_basic_options), //callback
+                     NULL);                                    //user_data
+
+    g_signal_connect(skeleton,                                       //instance
+                     "handle-get-printer-capabilities",              //signal name
+                     G_CALLBACK(on_handle_get_printer_capabilities), //callback
+                     NULL);
+    g_signal_connect(skeleton,                                //instance
+                     "handle-get-default-value",              //signal name
+                     G_CALLBACK(on_handle_get_default_value), //callback
+                     NULL);
+    g_signal_connect(skeleton,                                   //instance
+                     "handle-get-supported-values-raw-string",   //signal name
+                     G_CALLBACK(on_handle_get_supported_values), //callback
+                     NULL);
+    g_signal_connect(skeleton,                                  //instance
+                     "handle-get-supported-media",              //signal name
+                     G_CALLBACK(on_handle_get_supported_media), //callback
+                     NULL);
+    g_signal_connect(skeleton,                                  //instance
+                     "handle-get-supported-color",              //signal name
+                     G_CALLBACK(on_handle_get_supported_color), //callback
+                     NULL);
+    g_signal_connect(skeleton,                                    //instance
+                     "handle-get-supported-quality",              //signal name
+                     G_CALLBACK(on_handle_get_supported_quality), //callback
+                     NULL);
+    g_signal_connect(skeleton,                                        //instance
+                     "handle-get-supported-orientation",              //signal name
+                     G_CALLBACK(on_handle_get_supported_orientation), //callback
+                     NULL);
+    g_signal_connect(skeleton,                                //instance
+                     "handle-get-printer-state",              //signal name
+                     G_CALLBACK(on_handle_get_printer_state), //callback
+                     NULL);
+    /**subscribe to signals **/
+    g_dbus_connection_signal_subscribe(dbus_connection,
+                                       NULL,                             //Sender name
+                                       "org.openprinting.PrintFrontend", //Sender interface
+                                       ACTIVATE_BACKEND_SIGNAL,          //Signal name
+                                       NULL,                             /**match on all object paths**/
+                                       NULL,                             /**match on all arguments**/
+                                       0,                                //Flags
+                                       on_activate_backend,              //callback
+                                       NULL,                             //user_data
+                                       NULL);
+    g_dbus_connection_signal_subscribe(dbus_connection,
+                                       NULL,                             //Sender name
+                                       "org.openprinting.PrintFrontend", //Sender interface
+                                       STOP_BACKEND_SIGNAL,              //Signal name
+                                       NULL,                             /**match on all object paths**/
+                                       NULL,                             /**match on all arguments**/
+                                       0,                                //Flags
+                                       on_stop_backend,                  //callback
+                                       NULL,                             //user_data
+                                       NULL);
+    g_dbus_connection_signal_subscribe(dbus_connection,
+                                       NULL,                             //Sender name
+                                       "org.openprinting.PrintFrontend", //Sender interface
+                                       REFRESH_BACKEND_SIGNAL,           //Signal name
+                                       NULL,                             /**match on all object paths**/
+                                       NULL,                             /**match on all arguments**/
+                                       0,                                //Flags
+                                       on_refresh_backend,               //callback
+                                       NULL,                             //user_data
+                                       NULL);
 }

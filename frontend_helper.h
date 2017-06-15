@@ -24,6 +24,7 @@ void get_supported_media(PrinterObj *);
 void get_supported_color(PrinterObj *);
 void get_supported_quality(PrinterObj *);
 void get_supported_orientation(PrinterObj *);
+void get_state(PrinterObj *);
 /**********FrontendObj definitions*******************************/
 typedef struct _FrontendObj FrontendObj;
 
@@ -37,6 +38,7 @@ void get_printer_supported_media(FrontendObj *, gchar *);
 void get_printer_supported_color(FrontendObj *, gchar *);
 void get_printer_supported_quality(FrontendObj *, gchar *);
 void get_printer_supported_orientation(FrontendObj *, gchar *);
+void get_printer_state(FrontendObj *, gchar *);
 /***************************************************************/
 
 

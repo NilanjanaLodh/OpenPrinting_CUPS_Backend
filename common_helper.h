@@ -35,6 +35,10 @@
 #define PRIOIRITY_MEDIUM "medium"
 #define PRIOIRITY_LOW "low"
 
+#define STATE_IDLE "idle"
+#define STATE_PRINTING "printing"
+#define STATE_STOPPED "stopped"
+
 #define STOP_BACKEND_SIGNAL "StopListing"
 #define ACTIVATE_BACKEND_SIGNAL "GetBackend"
 #define REFRESH_BACKEND_SIGNAL "RefreshBackend"

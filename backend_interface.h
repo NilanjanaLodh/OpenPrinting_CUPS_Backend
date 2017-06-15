@@ -40,6 +40,11 @@ struct _PrintBackendIface
     GDBusMethodInvocation *invocation,
     const gchar *arg_printer_name);
 
+  gboolean (*handle_get_printer_state) (
+    PrintBackend *object,
+    GDBusMethodInvocation *invocation,
+    const gchar *arg_printer_name);
+
   gboolean (*handle_get_supported_color) (
     PrintBackend *object,
     GDBusMethodInvocation *invocation,
@@ -66,6 +71,11 @@ struct _PrintBackendIface
     const gchar *arg_printer_name,
     const gchar *arg_option_name);
 
+  gboolean (*handle_is_accepting_jobs) (
+    PrintBackend *object,
+    GDBusMethodInvocation *invocation,
+    const gchar *arg_printer_name);
+
   gboolean (*handle_list_basic_options) (
     PrintBackend *object,
     GDBusMethodInvocation *invocation,
@@ -77,7 +87,7 @@ struct _PrintBackendIface
     const gchar *arg_printer_info,
     const gchar *arg_printer_location,
     const gchar *arg_printer_make_and_model,
-    const gchar *arg_printer_is_accepting_jobs,
+    gboolean arg_printer_is_accepting_jobs,
     const gchar *arg_printer_state);
 
   void (*printer_removed) (
@@ -103,8 +113,18 @@ void print_backend_complete_list_basic_options (
     const gchar *printer_info,
     const gchar *printer_location,
     const gchar *printer_make_and_model,
-    const gchar *printer_is_accepting_jobs,
+    gboolean printer_is_accepting_jobs,
     const gchar *printer_state);
+
+void print_backend_complete_get_printer_state (
+    PrintBackend *object,
+    GDBusMethodInvocation *invocation,
+    const gchar *state);
+
+void print_backend_complete_is_accepting_jobs (
+    PrintBackend *object,
+    GDBusMethodInvocation *invocation,
+    gboolean is_accepting);
 
 void print_backend_complete_get_printer_capabilities (
     PrintBackend *object,
@@ -161,7 +181,7 @@ void print_backend_emit_printer_added (
     const gchar *arg_printer_info,
     const gchar *arg_printer_location,
     const gchar *arg_printer_make_and_model,
-    const gchar *arg_printer_is_accepting_jobs,
+    gboolean arg_printer_is_accepting_jobs,
     const gchar *arg_printer_state);
 
 void print_backend_emit_printer_removed (
@@ -187,7 +207,7 @@ gboolean print_backend_call_list_basic_options_finish (
     gchar **out_printer_info,
     gchar **out_printer_location,
     gchar **out_printer_make_and_model,
-    gchar **out_printer_is_accepting_jobs,
+    gboolean *out_printer_is_accepting_jobs,
     gchar **out_printer_state,
     GAsyncResult *res,
     GError **error);
@@ -198,8 +218,48 @@ gboolean print_backend_call_list_basic_options_sync (
     gchar **out_printer_info,
     gchar **out_printer_location,
     gchar **out_printer_make_and_model,
-    gchar **out_printer_is_accepting_jobs,
+    gboolean *out_printer_is_accepting_jobs,
     gchar **out_printer_state,
+    GCancellable *cancellable,
+    GError **error);
+
+void print_backend_call_get_printer_state (
+    PrintBackend *proxy,
+    const gchar *arg_printer_name,
+    GCancellable *cancellable,
+    GAsyncReadyCallback callback,
+    gpointer user_data);
+
+gboolean print_backend_call_get_printer_state_finish (
+    PrintBackend *proxy,
+    gchar **out_state,
+    GAsyncResult *res,
+    GError **error);
+
+gboolean print_backend_call_get_printer_state_sync (
+    PrintBackend *proxy,
+    const gchar *arg_printer_name,
+    gchar **out_state,
+    GCancellable *cancellable,
+    GError **error);
+
+void print_backend_call_is_accepting_jobs (
+    PrintBackend *proxy,
+    const gchar *arg_printer_name,
+    GCancellable *cancellable,
+    GAsyncReadyCallback callback,
+    gpointer user_data);
+
+gboolean print_backend_call_is_accepting_jobs_finish (
+    PrintBackend *proxy,
+    gboolean *out_is_accepting,
+    GAsyncResult *res,
+    GError **error);
+
+gboolean print_backend_call_is_accepting_jobs_sync (
+    PrintBackend *proxy,
+    const gchar *arg_printer_name,
+    gboolean *out_is_accepting,
     GCancellable *cancellable,
     GError **error);
 

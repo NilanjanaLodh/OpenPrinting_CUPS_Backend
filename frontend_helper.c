@@ -36,8 +36,8 @@ struct _PrinterCapabilities
 struct _PrinterObj
 {
     /**The basic options first**/
-    char *name;
     PrintBackend *backend_proxy;
+    char *name;
     char *uri;
     char *location;
     char *info;
@@ -56,37 +56,14 @@ PrinterObj *get_new_PrinterObj()
 }
 void fill_basic_options(PrinterObj *p, GVariant *gv)
 {
-    char *is_accepting_jobs_str;
-    g_variant_get(gv, "(ssssss)",
+    g_variant_get(gv, "(ssssbs)",
                   &(p->name),
                   &(p->info),
                   &(p->location),
                   &(p->make_and_model),
-                  &is_accepting_jobs_str,
+                  &(p->is_accepting_jobs),
                   &(p->state));
-
-    p->is_accepting_jobs = get_boolean(is_accepting_jobs_str);
-    if (p->state)
-    {
-        switch (p->state[0])
-        {
-        case '3':
-            free(p->state);
-            p->state = "idle";
-            break;
-        case '4':
-            free(p->state);
-            p->state = "printing";
-            break;
-        case '5':
-            free(p->state);
-            p->state = "stopped";
-            break;
-        default:
-            free(p->state);
-            p->state = "NA";
-        }
-    }
+    
 }
 void print_basic_options(PrinterObj *p)
 {
@@ -268,6 +245,14 @@ void get_supported_orientation(PrinterObj *p)
         g_print(" %s\n", p->supported.orientation[i]);
     }
 }
+void get_state(PrinterObj *p)
+{
+    GError *error = NULL;
+    print_backend_call_get_printer_state_sync(p->backend_proxy , p->name , &p->state , NULL, &error);
+    g_assert_no_error(error);
+
+    g_message("%s", p->state);
+}
 /************************************************* FrontendObj********************************************/
 struct _FrontendObj
 {
@@ -362,4 +347,11 @@ void get_printer_supported_orientation(FrontendObj *f, gchar *printer_name)
     g_assert_nonnull(p);
 
     get_supported_orientation(p);
+}
+void get_printer_state(FrontendObj *f, gchar *printer_name)
+{
+    PrinterObj *p = g_hash_table_lookup(f->printer, printer_name);
+    g_assert_nonnull(p);
+
+    get_state(p);
 }
