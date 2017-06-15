@@ -49,5 +49,10 @@
             <arg name="num_values" direction="out" type="i"/>
             <arg name="values" direction="out" type="a(s)" />
         </method>
+        <method name="getSupportedColor">
+            <arg name="printer_name" direction="in" type="s" />
+            <arg name="num_values" direction="out" type="i"/>
+            <arg name="values" direction="out" type="a(s)" />
+        </method>
     </interface>
 </node>
