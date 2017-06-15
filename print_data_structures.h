@@ -27,6 +27,7 @@ void get_option_default(PrinterObj *, gchar *);
 void get_supported_values_raw(PrinterObj *, gchar *);
 void get_supported_media(PrinterObj *);
 void get_supported_color(PrinterObj *);
+void get_supported_quality(PrinterObj *);
 /**********FrontendObj definitions*******************************/
 typedef struct _FrontendObj FrontendObj;
 
@@ -38,6 +39,7 @@ void get_printer_option_default(FrontendObj *, gchar *, gchar *);
 void get_printer_supported_values_raw(FrontendObj *, gchar *, gchar *);
 void get_printer_supported_media(FrontendObj *, gchar *);
 void get_printer_supported_color(FrontendObj *, gchar *);
+void get_printer_supported_quality(FrontendObj *, gchar *);
 /***************************************************************/
 
 /*********LISTING OF ALL POSSIBLE OPTIONS*****/

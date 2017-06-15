@@ -170,5 +170,11 @@ gpointer parse_commands(gpointer user_data)
             scanf("%s", printer_name);
             get_printer_supported_color(f,printer_name);
         }
+         else if (strcmp(buf, "get-supported-quality") == 0)
+        {
+            char printer_name[100];
+            scanf("%s", printer_name);
+            get_printer_supported_quality(f,printer_name);
+        }
     }
 }

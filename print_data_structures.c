@@ -20,6 +20,9 @@ struct _SupportedValues
 
     int num_color;
     char **color; 
+
+    int num_quality;
+    char **quality;
 };
 
 struct _PrinterCapabilities
@@ -219,6 +222,30 @@ void get_supported_color(PrinterObj *p)
         g_print(" %s\n", p->supported.color[i]);
     }    
 }
+void get_supported_quality(PrinterObj *p)
+{
+    GError *error = NULL;
+    GVariant *values;
+    gchar *str;
+    GVariantIter *iter;
+    print_backend_call_get_supported_quality_sync(p->backend_proxy, p->name,
+                                                &p->supported.num_quality, &values, NULL, &error);
+    p->supported.quality = (char **) malloc(sizeof(char*) * p->supported.num_quality);
+
+    g_variant_get(values, "a(s)", &iter);
+    int i=0;
+    while (g_variant_iter_loop(iter, "(s)", &str))
+    {
+        p->supported.quality[i] = malloc(sizeof(char) * (strlen(str)+1));
+        strcpy(p->supported.quality[i],str);
+        i++;
+    }
+
+    for(i=0;i<p->supported.num_quality;i++)
+    {
+        g_print(" %s\n", p->supported.quality[i]);
+    }    
+}
 /************************************************* FrontendObj********************************************/
 struct _FrontendObj
 {
@@ -299,4 +326,11 @@ void get_printer_supported_color(FrontendObj *f, gchar *printer_name)
     g_assert_nonnull(p);
 
     get_supported_color(p);
+}
+void get_printer_supported_quality(FrontendObj *f, gchar *printer_name)
+{
+    PrinterObj *p = g_hash_table_lookup(f->printer, printer_name);
+    g_assert_nonnull(p);
+
+    get_supported_quality(p);
 }
