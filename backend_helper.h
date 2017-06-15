@@ -5,4 +5,6 @@
 #include "common_helper.h"
 
 char* cups_printer_state(cups_dest_t *dest);
+gboolean cups_is_accepting_jobs(cups_dest_t *dest);
+
 #endif

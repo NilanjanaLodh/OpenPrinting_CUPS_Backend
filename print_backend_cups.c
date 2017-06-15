@@ -94,6 +94,10 @@ static gboolean on_handle_get_printer_state(PrintBackend *interface,
                                             GDBusMethodInvocation *invocation,
                                             const gchar *printer_name,
                                             gpointer user_data);
+static gboolean on_handle_is_accepting_jobs(PrintBackend *interface,
+                                            GDBusMethodInvocation *invocation,
+                                            const gchar *printer_name,
+                                            gpointer user_data);
 int main()
 {
     set_up_mappings();
@@ -634,7 +638,18 @@ static gboolean on_handle_get_printer_state(PrintBackend *interface,
     cups_dest_t *dest = cupsGetNamedDest(CUPS_HTTP_DEFAULT, printer_name, NULL);
     g_assert_nonnull(dest);
 
-    print_backend_complete_get_printer_state(interface, invocation , cups_printer_state(dest));
+    print_backend_complete_get_printer_state(interface, invocation, cups_printer_state(dest));
+    return TRUE;
+}
+static gboolean on_handle_is_accepting_jobs(PrintBackend *interface,
+                                            GDBusMethodInvocation *invocation,
+                                            const gchar *printer_name,
+                                            gpointer user_data)
+{
+    cups_dest_t *dest = cupsGetNamedDest(CUPS_HTTP_DEFAULT, printer_name, NULL);
+    g_assert_nonnull(dest);
+
+    print_backend_complete_is_accepting_jobs(interface, invocation, cups_is_accepting_jobs(dest));
     return TRUE;
 }
 void set_up_mappings()
@@ -704,6 +719,10 @@ void connect_to_signals()
     g_signal_connect(skeleton,                                //instance
                      "handle-get-printer-state",              //signal name
                      G_CALLBACK(on_handle_get_printer_state), //callback
+                     NULL);
+    g_signal_connect(skeleton,                                //instance
+                     "handle-is-accepting-jobs",              //signal name
+                     G_CALLBACK(on_handle_is_accepting_jobs), //callback
                      NULL);
     /**subscribe to signals **/
     g_dbus_connection_signal_subscribe(dbus_connection,

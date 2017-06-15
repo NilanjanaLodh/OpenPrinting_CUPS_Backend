@@ -79,14 +79,15 @@ void print_basic_options(PrinterObj *p)
 
 void update_basic_options(PrinterObj *p)
 {
-    PrintBackend *proxy = p->backend_proxy;
+    GError *error = NULL;
     print_backend_call_list_basic_options_sync(p->backend_proxy,
                                                p->name,
                                                &p->info,
                                                &p->location,
                                                &p->make_and_model,
+                                               &p->is_accepting_jobs,
                                                &p->state,
-                                               NULL, NULL, NULL);
+                                               NULL, &error);
     //actual updation
     print_basic_options(p);
 }
@@ -253,6 +254,14 @@ void get_state(PrinterObj *p)
 
     g_message("%s", p->state);
 }
+void is_accepting_jobs(PrinterObj *p)
+{
+    GError *error = NULL;
+    print_backend_call_is_accepting_jobs_sync(p->backend_proxy , p->name , &p->is_accepting_jobs , NULL, &error);
+    g_assert_no_error(error);
+
+    g_message("%d", p->is_accepting_jobs);
+}
 /************************************************* FrontendObj********************************************/
 struct _FrontendObj
 {
@@ -354,4 +363,11 @@ void get_printer_state(FrontendObj *f, gchar *printer_name)
     g_assert_nonnull(p);
 
     get_state(p);
+}
+void printer_is_accepting_jobs(FrontendObj *f, gchar *printer_name)
+{
+    PrinterObj *p = g_hash_table_lookup(f->printer, printer_name);
+    g_assert_nonnull(p);
+
+    is_accepting_jobs(p);
 }
