@@ -524,6 +524,17 @@ static const _ExtendedGDBusArgInfo * const _print_backend_method_info_get_suppor
   NULL
 };
 
+static const _ExtendedGDBusArgInfo _print_backend_method_info_get_supported_media_OUT_ARG_num_values =
+{
+  {
+    -1,
+    (gchar *) "num_values",
+    (gchar *) "i",
+    NULL
+  },
+  FALSE
+};
+
 static const _ExtendedGDBusArgInfo _print_backend_method_info_get_supported_media_OUT_ARG_values =
 {
   {
@@ -537,6 +548,7 @@ static const _ExtendedGDBusArgInfo _print_backend_method_info_get_supported_medi
 
 static const _ExtendedGDBusArgInfo * const _print_backend_method_info_get_supported_media_OUT_ARG_pointers[] =
 {
+  &_print_backend_method_info_get_supported_media_OUT_ARG_num_values,
   &_print_backend_method_info_get_supported_media_OUT_ARG_values,
   NULL
 };
@@ -1556,6 +1568,7 @@ print_backend_call_get_supported_media (
 /**
  * print_backend_call_get_supported_media_finish:
  * @proxy: A #PrintBackendProxy.
+ * @out_num_values: (out): Return location for return parameter or %NULL to ignore.
  * @out_values: (out): Return location for return parameter or %NULL to ignore.
  * @res: The #GAsyncResult obtained from the #GAsyncReadyCallback passed to print_backend_call_get_supported_media().
  * @error: Return location for error or %NULL.
@@ -1567,6 +1580,7 @@ print_backend_call_get_supported_media (
 gboolean
 print_backend_call_get_supported_media_finish (
     PrintBackend *proxy,
+    gint *out_num_values,
     GVariant **out_values,
     GAsyncResult *res,
     GError **error)
@@ -1576,7 +1590,8 @@ print_backend_call_get_supported_media_finish (
   if (_ret == NULL)
     goto _out;
   g_variant_get (_ret,
-                 "(@a(s))",
+                 "(i@a(s))",
+                 out_num_values,
                  out_values);
   g_variant_unref (_ret);
 _out:
@@ -1587,6 +1602,7 @@ _out:
  * print_backend_call_get_supported_media_sync:
  * @proxy: A #PrintBackendProxy.
  * @arg_printer_name: Argument to pass with the method invocation.
+ * @out_num_values: (out): Return location for return parameter or %NULL to ignore.
  * @out_values: (out): Return location for return parameter or %NULL to ignore.
  * @cancellable: (allow-none): A #GCancellable or %NULL.
  * @error: Return location for error or %NULL.
@@ -1601,6 +1617,7 @@ gboolean
 print_backend_call_get_supported_media_sync (
     PrintBackend *proxy,
     const gchar *arg_printer_name,
+    gint *out_num_values,
     GVariant **out_values,
     GCancellable *cancellable,
     GError **error)
@@ -1617,7 +1634,8 @@ print_backend_call_get_supported_media_sync (
   if (_ret == NULL)
     goto _out;
   g_variant_get (_ret,
-                 "(@a(s))",
+                 "(i@a(s))",
+                 out_num_values,
                  out_values);
   g_variant_unref (_ret);
 _out:
@@ -1745,6 +1763,7 @@ print_backend_complete_get_supported_values (
  * print_backend_complete_get_supported_media:
  * @object: A #PrintBackend.
  * @invocation: (transfer full): A #GDBusMethodInvocation.
+ * @num_values: Parameter to return.
  * @values: Parameter to return.
  *
  * Helper function used in service implementations to finish handling invocations of the <link linkend="gdbus-method-org-openprinting-PrintBackend.getSupportedMedia">getSupportedMedia()</link> D-Bus method. If you instead want to finish handling an invocation by returning an error, use g_dbus_method_invocation_return_error() or similar.
@@ -1755,10 +1774,12 @@ void
 print_backend_complete_get_supported_media (
     PrintBackend *object,
     GDBusMethodInvocation *invocation,
+    gint num_values,
     GVariant *values)
 {
   g_dbus_method_invocation_return_value (invocation,
-    g_variant_new ("(@a(s))",
+    g_variant_new ("(i@a(s))",
+                   num_values,
                    values));
 }
 

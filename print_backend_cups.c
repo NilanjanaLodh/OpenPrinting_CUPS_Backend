@@ -526,7 +526,7 @@ static gboolean on_handle_get_supported_media(PrintBackend *interface,
 
     values = g_variant_new("a(s)", builder);
     //unref this later
-    print_backend_complete_get_supported_media(interface, invocation, values);
+    print_backend_complete_get_supported_media(interface, invocation,count, values);
 }
 
 void set_up_mappings()

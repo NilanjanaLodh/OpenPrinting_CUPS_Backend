@@ -116,6 +116,7 @@ void print_backend_complete_get_supported_values (
 void print_backend_complete_get_supported_media (
     PrintBackend *object,
     GDBusMethodInvocation *invocation,
+    gint num_values,
     GVariant *values);
 
 
@@ -256,6 +257,7 @@ void print_backend_call_get_supported_media (
 
 gboolean print_backend_call_get_supported_media_finish (
     PrintBackend *proxy,
+    gint *out_num_values,
     GVariant **out_values,
     GAsyncResult *res,
     GError **error);
@@ -263,6 +265,7 @@ gboolean print_backend_call_get_supported_media_finish (
 gboolean print_backend_call_get_supported_media_sync (
     PrintBackend *proxy,
     const gchar *arg_printer_name,
+    gint *out_num_values,
     GVariant **out_values,
     GCancellable *cancellable,
     GError **error);

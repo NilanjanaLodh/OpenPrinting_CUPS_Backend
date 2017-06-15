@@ -10,6 +10,8 @@
 
 gboolean get_boolean(gchar *);
 
+/**********Supportedvalues**************************************/
+typedef struct _SupportedValues SupportedValues;
 /**********PrinterCapabilities**********************************/
 typedef struct _PrinterCapabilities PrinterCapabilities;
 /**********PrinterObj definitions*******************************/

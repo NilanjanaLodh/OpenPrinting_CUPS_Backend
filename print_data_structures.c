@@ -13,6 +13,12 @@ gboolean get_boolean(gchar *g)
 
     return FALSE;
 }
+struct _SupportedValues
+{
+    int num_media;
+    char **media; 
+};
+
 struct _PrinterCapabilities
 {
     gboolean copies; // if multiple copies can be set
@@ -37,6 +43,7 @@ struct _PrinterObj
     gboolean is_accepting_jobs;
 
     PrinterCapabilities capabilities;
+    SupportedValues supported;
     //add options here
 };
 PrinterObj *get_new_PrinterObj()
@@ -168,12 +175,23 @@ void get_supported_media(PrinterObj *p)
     gchar *str;
     GVariantIter *iter;
     print_backend_call_get_supported_media_sync(p->backend_proxy, p->name,
-                                                &values, NULL, &error);
-    g_variant_get(values, "a(s)", &iter);
-    while (g_variant_iter_loop(iter, "(s)", &str))
-        g_print("%s\n", str);
+                                                &p->supported.num_media, &values, NULL, &error);
+    p->supported.media = (char **) malloc(sizeof(char*) * p->supported.num_media);
 
-    g_variant_iter_free(iter);
+    g_variant_get(values, "a(s)", &iter);
+    int i=0;
+    while (g_variant_iter_loop(iter, "(s)", &str))
+    {
+        p->supported.media[i] = malloc(sizeof(char) * (strlen(str)+1));
+        strcpy(p->supported.media[i],str);
+        i++;
+    }
+
+    for(i=0;i<p->supported.num_media;i++)
+    {
+        g_print(" %s\n", p->supported.media[i]);
+    }
+    
 }
 
 /************************************************* FrontendObj********************************************/
