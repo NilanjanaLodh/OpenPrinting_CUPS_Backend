@@ -436,7 +436,7 @@ static const _ExtendedGDBusMethodInfo _print_backend_method_info_get_default_val
   FALSE
 };
 
-static const _ExtendedGDBusArgInfo _print_backend_method_info_get_supported_values_IN_ARG_printer_name =
+static const _ExtendedGDBusArgInfo _print_backend_method_info_get_supported_values_raw_string_IN_ARG_printer_name =
 {
   {
     -1,
@@ -447,7 +447,7 @@ static const _ExtendedGDBusArgInfo _print_backend_method_info_get_supported_valu
   FALSE
 };
 
-static const _ExtendedGDBusArgInfo _print_backend_method_info_get_supported_values_IN_ARG_option_name =
+static const _ExtendedGDBusArgInfo _print_backend_method_info_get_supported_values_raw_string_IN_ARG_option_name =
 {
   {
     -1,
@@ -458,14 +458,14 @@ static const _ExtendedGDBusArgInfo _print_backend_method_info_get_supported_valu
   FALSE
 };
 
-static const _ExtendedGDBusArgInfo * const _print_backend_method_info_get_supported_values_IN_ARG_pointers[] =
+static const _ExtendedGDBusArgInfo * const _print_backend_method_info_get_supported_values_raw_string_IN_ARG_pointers[] =
 {
-  &_print_backend_method_info_get_supported_values_IN_ARG_printer_name,
-  &_print_backend_method_info_get_supported_values_IN_ARG_option_name,
+  &_print_backend_method_info_get_supported_values_raw_string_IN_ARG_printer_name,
+  &_print_backend_method_info_get_supported_values_raw_string_IN_ARG_option_name,
   NULL
 };
 
-static const _ExtendedGDBusArgInfo _print_backend_method_info_get_supported_values_OUT_ARG_num_values =
+static const _ExtendedGDBusArgInfo _print_backend_method_info_get_supported_values_raw_string_OUT_ARG_num_values =
 {
   {
     -1,
@@ -476,7 +476,7 @@ static const _ExtendedGDBusArgInfo _print_backend_method_info_get_supported_valu
   FALSE
 };
 
-static const _ExtendedGDBusArgInfo _print_backend_method_info_get_supported_values_OUT_ARG_option_values =
+static const _ExtendedGDBusArgInfo _print_backend_method_info_get_supported_values_raw_string_OUT_ARG_option_values =
 {
   {
     -1,
@@ -487,23 +487,23 @@ static const _ExtendedGDBusArgInfo _print_backend_method_info_get_supported_valu
   FALSE
 };
 
-static const _ExtendedGDBusArgInfo * const _print_backend_method_info_get_supported_values_OUT_ARG_pointers[] =
+static const _ExtendedGDBusArgInfo * const _print_backend_method_info_get_supported_values_raw_string_OUT_ARG_pointers[] =
 {
-  &_print_backend_method_info_get_supported_values_OUT_ARG_num_values,
-  &_print_backend_method_info_get_supported_values_OUT_ARG_option_values,
+  &_print_backend_method_info_get_supported_values_raw_string_OUT_ARG_num_values,
+  &_print_backend_method_info_get_supported_values_raw_string_OUT_ARG_option_values,
   NULL
 };
 
-static const _ExtendedGDBusMethodInfo _print_backend_method_info_get_supported_values =
+static const _ExtendedGDBusMethodInfo _print_backend_method_info_get_supported_values_raw_string =
 {
   {
     -1,
-    (gchar *) "getSupportedValues",
-    (GDBusArgInfo **) &_print_backend_method_info_get_supported_values_IN_ARG_pointers,
-    (GDBusArgInfo **) &_print_backend_method_info_get_supported_values_OUT_ARG_pointers,
+    (gchar *) "getSupportedValuesRawString",
+    (GDBusArgInfo **) &_print_backend_method_info_get_supported_values_raw_string_IN_ARG_pointers,
+    (GDBusArgInfo **) &_print_backend_method_info_get_supported_values_raw_string_OUT_ARG_pointers,
     NULL
   },
-  "handle-get-supported-values",
+  "handle-get-supported-values-raw-string",
   FALSE
 };
 
@@ -748,7 +748,7 @@ static const _ExtendedGDBusMethodInfo * const _print_backend_method_info_pointer
   &_print_backend_method_info_list_basic_options,
   &_print_backend_method_info_get_printer_capabilities,
   &_print_backend_method_info_get_default_value,
-  &_print_backend_method_info_get_supported_values,
+  &_print_backend_method_info_get_supported_values_raw_string,
   &_print_backend_method_info_get_supported_media,
   &_print_backend_method_info_get_supported_color,
   &_print_backend_method_info_get_supported_quality,
@@ -968,7 +968,7 @@ print_backend_override_properties (GObjectClass *klass, guint property_id_begin)
  * @handle_get_supported_media: Handler for the #PrintBackend::handle-get-supported-media signal.
  * @handle_get_supported_orientation: Handler for the #PrintBackend::handle-get-supported-orientation signal.
  * @handle_get_supported_quality: Handler for the #PrintBackend::handle-get-supported-quality signal.
- * @handle_get_supported_values: Handler for the #PrintBackend::handle-get-supported-values signal.
+ * @handle_get_supported_values_raw_string: Handler for the #PrintBackend::handle-get-supported-values-raw-string signal.
  * @handle_list_basic_options: Handler for the #PrintBackend::handle-list-basic-options signal.
  * @printer_added: Handler for the #PrintBackend::printer-added signal.
  * @printer_removed: Handler for the #PrintBackend::printer-removed signal.
@@ -1055,22 +1055,22 @@ print_backend_default_init (PrintBackendIface *iface)
     G_TYPE_DBUS_METHOD_INVOCATION, G_TYPE_STRING, G_TYPE_STRING);
 
   /**
-   * PrintBackend::handle-get-supported-values:
+   * PrintBackend::handle-get-supported-values-raw-string:
    * @object: A #PrintBackend.
    * @invocation: A #GDBusMethodInvocation.
    * @arg_printer_name: Argument passed by remote caller.
    * @arg_option_name: Argument passed by remote caller.
    *
-   * Signal emitted when a remote caller is invoking the <link linkend="gdbus-method-org-openprinting-PrintBackend.getSupportedValues">getSupportedValues()</link> D-Bus method.
+   * Signal emitted when a remote caller is invoking the <link linkend="gdbus-method-org-openprinting-PrintBackend.getSupportedValuesRawString">getSupportedValuesRawString()</link> D-Bus method.
    *
-   * If a signal handler returns %TRUE, it means the signal handler will handle the invocation (e.g. take a reference to @invocation and eventually call print_backend_complete_get_supported_values() or e.g. g_dbus_method_invocation_return_error() on it) and no order signal handlers will run. If no signal handler handles the invocation, the %G_DBUS_ERROR_UNKNOWN_METHOD error is returned.
+   * If a signal handler returns %TRUE, it means the signal handler will handle the invocation (e.g. take a reference to @invocation and eventually call print_backend_complete_get_supported_values_raw_string() or e.g. g_dbus_method_invocation_return_error() on it) and no order signal handlers will run. If no signal handler handles the invocation, the %G_DBUS_ERROR_UNKNOWN_METHOD error is returned.
    *
    * Returns: %TRUE if the invocation was handled, %FALSE to let other signal handlers run.
    */
-  g_signal_new ("handle-get-supported-values",
+  g_signal_new ("handle-get-supported-values-raw-string",
     G_TYPE_FROM_INTERFACE (iface),
     G_SIGNAL_RUN_LAST,
-    G_STRUCT_OFFSET (PrintBackendIface, handle_get_supported_values),
+    G_STRUCT_OFFSET (PrintBackendIface, handle_get_supported_values_raw_string),
     g_signal_accumulator_true_handled,
     NULL,
     g_cclosure_marshal_generic,
@@ -1669,7 +1669,7 @@ _out:
 }
 
 /**
- * print_backend_call_get_supported_values:
+ * print_backend_call_get_supported_values_raw_string:
  * @proxy: A #PrintBackendProxy.
  * @arg_printer_name: Argument to pass with the method invocation.
  * @arg_option_name: Argument to pass with the method invocation.
@@ -1677,14 +1677,14 @@ _out:
  * @callback: A #GAsyncReadyCallback to call when the request is satisfied or %NULL.
  * @user_data: User data to pass to @callback.
  *
- * Asynchronously invokes the <link linkend="gdbus-method-org-openprinting-PrintBackend.getSupportedValues">getSupportedValues()</link> D-Bus method on @proxy.
+ * Asynchronously invokes the <link linkend="gdbus-method-org-openprinting-PrintBackend.getSupportedValuesRawString">getSupportedValuesRawString()</link> D-Bus method on @proxy.
  * When the operation is finished, @callback will be invoked in the <link linkend="g-main-context-push-thread-default">thread-default main loop</link> of the thread you are calling this method from.
- * You can then call print_backend_call_get_supported_values_finish() to get the result of the operation.
+ * You can then call print_backend_call_get_supported_values_raw_string_finish() to get the result of the operation.
  *
- * See print_backend_call_get_supported_values_sync() for the synchronous, blocking version of this method.
+ * See print_backend_call_get_supported_values_raw_string_sync() for the synchronous, blocking version of this method.
  */
 void
-print_backend_call_get_supported_values (
+print_backend_call_get_supported_values_raw_string (
     PrintBackend *proxy,
     const gchar *arg_printer_name,
     const gchar *arg_option_name,
@@ -1693,7 +1693,7 @@ print_backend_call_get_supported_values (
     gpointer user_data)
 {
   g_dbus_proxy_call (G_DBUS_PROXY (proxy),
-    "getSupportedValues",
+    "getSupportedValuesRawString",
     g_variant_new ("(ss)",
                    arg_printer_name,
                    arg_option_name),
@@ -1705,19 +1705,19 @@ print_backend_call_get_supported_values (
 }
 
 /**
- * print_backend_call_get_supported_values_finish:
+ * print_backend_call_get_supported_values_raw_string_finish:
  * @proxy: A #PrintBackendProxy.
  * @out_num_values: (out): Return location for return parameter or %NULL to ignore.
  * @out_option_values: (out): Return location for return parameter or %NULL to ignore.
- * @res: The #GAsyncResult obtained from the #GAsyncReadyCallback passed to print_backend_call_get_supported_values().
+ * @res: The #GAsyncResult obtained from the #GAsyncReadyCallback passed to print_backend_call_get_supported_values_raw_string().
  * @error: Return location for error or %NULL.
  *
- * Finishes an operation started with print_backend_call_get_supported_values().
+ * Finishes an operation started with print_backend_call_get_supported_values_raw_string().
  *
  * Returns: (skip): %TRUE if the call succeded, %FALSE if @error is set.
  */
 gboolean
-print_backend_call_get_supported_values_finish (
+print_backend_call_get_supported_values_raw_string_finish (
     PrintBackend *proxy,
     gint *out_num_values,
     GVariant **out_option_values,
@@ -1738,7 +1738,7 @@ _out:
 }
 
 /**
- * print_backend_call_get_supported_values_sync:
+ * print_backend_call_get_supported_values_raw_string_sync:
  * @proxy: A #PrintBackendProxy.
  * @arg_printer_name: Argument to pass with the method invocation.
  * @arg_option_name: Argument to pass with the method invocation.
@@ -1747,14 +1747,14 @@ _out:
  * @cancellable: (allow-none): A #GCancellable or %NULL.
  * @error: Return location for error or %NULL.
  *
- * Synchronously invokes the <link linkend="gdbus-method-org-openprinting-PrintBackend.getSupportedValues">getSupportedValues()</link> D-Bus method on @proxy. The calling thread is blocked until a reply is received.
+ * Synchronously invokes the <link linkend="gdbus-method-org-openprinting-PrintBackend.getSupportedValuesRawString">getSupportedValuesRawString()</link> D-Bus method on @proxy. The calling thread is blocked until a reply is received.
  *
- * See print_backend_call_get_supported_values() for the asynchronous version of this method.
+ * See print_backend_call_get_supported_values_raw_string() for the asynchronous version of this method.
  *
  * Returns: (skip): %TRUE if the call succeded, %FALSE if @error is set.
  */
 gboolean
-print_backend_call_get_supported_values_sync (
+print_backend_call_get_supported_values_raw_string_sync (
     PrintBackend *proxy,
     const gchar *arg_printer_name,
     const gchar *arg_option_name,
@@ -1765,7 +1765,7 @@ print_backend_call_get_supported_values_sync (
 {
   GVariant *_ret;
   _ret = g_dbus_proxy_call_sync (G_DBUS_PROXY (proxy),
-    "getSupportedValues",
+    "getSupportedValuesRawString",
     g_variant_new ("(ss)",
                    arg_printer_name,
                    arg_option_name),
@@ -2318,18 +2318,18 @@ print_backend_complete_get_default_value (
 }
 
 /**
- * print_backend_complete_get_supported_values:
+ * print_backend_complete_get_supported_values_raw_string:
  * @object: A #PrintBackend.
  * @invocation: (transfer full): A #GDBusMethodInvocation.
  * @num_values: Parameter to return.
  * @option_values: Parameter to return.
  *
- * Helper function used in service implementations to finish handling invocations of the <link linkend="gdbus-method-org-openprinting-PrintBackend.getSupportedValues">getSupportedValues()</link> D-Bus method. If you instead want to finish handling an invocation by returning an error, use g_dbus_method_invocation_return_error() or similar.
+ * Helper function used in service implementations to finish handling invocations of the <link linkend="gdbus-method-org-openprinting-PrintBackend.getSupportedValuesRawString">getSupportedValuesRawString()</link> D-Bus method. If you instead want to finish handling an invocation by returning an error, use g_dbus_method_invocation_return_error() or similar.
  *
  * This method will free @invocation, you cannot use it afterwards.
  */
 void
-print_backend_complete_get_supported_values (
+print_backend_complete_get_supported_values_raw_string (
     PrintBackend *object,
     GDBusMethodInvocation *invocation,
     gint num_values,

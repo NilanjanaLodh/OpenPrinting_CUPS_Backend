@@ -14,10 +14,10 @@ genback:
 %.o: %.c
 	gcc -o $@ $^ -c $(FLAGS)
 
-print_backend_cups: print_backend_cups.o backend_interface.o print_data_structures.o
+print_backend_cups: print_backend_cups.o backend_interface.o common_helper.o backend_helper.o
 	gcc -o $@ $^ $(FLAGS) -lcups
 
-print_frontend: print_frontend.o backend_interface.o frontend_interface.o print_data_structures.o 
+print_frontend: print_frontend.o backend_interface.o frontend_interface.o common_helper.o frontend_helper.o
 	gcc -o $@ $^ $(FLAGS)
 
 clean_gen:

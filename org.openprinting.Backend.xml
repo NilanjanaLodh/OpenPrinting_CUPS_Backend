@@ -7,6 +7,7 @@
             <arg name="printer_make_and_model" type="s" />
             <arg name="printer_is_accepting_jobs" type="s" />
             <arg name="printer_state" direction="out" type="s" />
+            <arg name="auth_info_reqd" direction="out" type="s"/>
             <!--Send Basic Info along with this-->
         </signal>
         <signal name="PrinterRemoved">
@@ -38,7 +39,7 @@
             <arg name="option_name" direction="in" type="s"/>
             <arg name="option_value" direction="out" type="s" />
         </method>
-        <method name="getSupportedValues">
+        <method name="getSupportedValuesRawString">
             <arg name="printer_name" direction="in" type="s" />
             <arg name="option_name" direction="in" type="s"/>
             <arg name="num_values" direction="out" type="i"/>

@@ -1,14 +1,9 @@
-#ifndef _PRINT_DATA_STRUCTURES_H_
-#define _PRINT_DATA_STRUCTURES_H_
+#ifndef _FRONTEND_HELPER_H_
+#define _FRONTEND_HELPER_H_
 
-#define STOP_BACKEND_SIGNAL "StopListing"
-#define ACTIVATE_BACKEND_SIGNAL "GetBackend"
-#define REFRESH_BACKEND_SIGNAL "RefreshBackend"
-#define PRINTER_ADDED_SIGNAL "PrinterAdded"
-#define PRINTER_REMOVED_SIGNAL "PrinterRemoved"
 #include <glib.h>
 
-gboolean get_boolean(gchar *);
+
 
 /**********Supportedvalues**************************************/
 typedef struct _SupportedValues SupportedValues;
@@ -44,40 +39,6 @@ void get_printer_supported_quality(FrontendObj *, gchar *);
 void get_printer_supported_orientation(FrontendObj *, gchar *);
 /***************************************************************/
 
-/*********LISTING OF ALL POSSIBLE OPTIONS*****/
-//Rename these to something better if needed
-/// replace these with #defines maybe ?
-
-#define MEDIA_A4 "A4"
-#define MEDIA_A3 "A3"
-#define MEDIA_A5 "A5"
-#define MEDIA_A6 "A6"
-#define MEDIA_LEGAL "LEGAL"
-#define MEDIA_LETTER "LETTER"
-#define MEDIA_PHOTO "PHOTO"
-#define MEDIA_TABLOID "TABLOID"
-#define MEDIA_ENV "ENV10"
-
-#define COLOR_MODE_COLOR "color"
-#define COLOR_MODE_BW "monochrome"
-#define COLOR_MODE_AUTO "auto"
-
-
-#define QUALITY_DRAFT "draft"
-#define QUALITY_NORMAL "normal"
-#define QUALITY_HIGH "high"
-
-#define SIDES_ONE_SIDED "one-sided"
-#define SIDES_TWO_SIDED_SHORT "two-sided-short"
-#define SIDES_TWO_SIDED_LONG "two-sided-long"
-
-#define ORIENTATION_PORTRAIT "portrait"
-#define ORIENTATION_LANDSCAPE "landscape"
-
-#define PRIOIRITY_URGENT "urgent"
-#define PRIOIRITY_HIGH "high"
-#define PRIOIRITY_MEDIUM "medium"
-#define PRIOIRITY_LOW "low"
 
 
 #endif

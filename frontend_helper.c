@@ -2,17 +2,12 @@
 #include <string.h>
 #include <stdlib.h>
 #include <glib.h>
-#include "print_data_structures.h"
+#include "frontend_helper.h"
+#include "common_helper.h"
 #include "backend_interface.h"
 #include "frontend_interface.h"
 
-gboolean get_boolean(gchar *g)
-{
-    if (g_str_equal(g, "true"))
-        return TRUE;
 
-    return FALSE;
-}
 struct _SupportedValues
 {
     int num_media;
@@ -155,14 +150,14 @@ void get_option_default(PrinterObj *p, gchar *option_name)
     g_message("%s", value);
     // this only prints the value to screen.. edit it so that it sets the actual value
 }
-void get_supported_values(PrinterObj *p, gchar *option_name)
+void get_supported_values_raw(PrinterObj *p, gchar *option_name)
 {
     GError *error = NULL;
     int num_values;
     GVariant *values;
-    print_backend_call_get_supported_values_sync(p->backend_proxy, p->name,
-                                                 option_name, &num_values, &values,
-                                                 NULL, &error);
+    print_backend_call_get_supported_values_raw_string_sync(p->backend_proxy, p->name,
+                                                            option_name, &num_values, &values,
+                                                            NULL, &error);
     g_assert_no_error(error);
     g_message("%d supported values", num_values);
     int i;
@@ -333,12 +328,12 @@ void get_printer_option_default(FrontendObj *f, gchar *printer_name, gchar *opti
     get_option_default(p, option_name);
 }
 
-void get_printer_supported_values(FrontendObj *f, gchar *printer_name, gchar *option_name)
+void get_printer_supported_values_raw(FrontendObj *f, gchar *printer_name, gchar *option_name)
 {
     PrinterObj *p = g_hash_table_lookup(f->printer, printer_name);
     g_assert_nonnull(p);
 
-    get_supported_values(p, option_name);
+    get_supported_values_raw(p, option_name);
 }
 void get_printer_supported_media(FrontendObj *f, gchar *printer_name)
 {

@@ -4,7 +4,8 @@
 #include <string.h>
 #include <cups/cups.h>
 #include "backend_interface.h"
-#include "print_data_structures.h"
+#include "common_helper.h"
+#include "backend_helper.h"
 
 #define _CUPS_NO_DEPRECATED 1
 #define BUS_NAME "org.openprinting.Backend.CUPS"
@@ -133,7 +134,7 @@ on_name_acquired(GDBusConnection *connection,
                      G_CALLBACK(on_handle_get_default_value), //callback
                      NULL);
     g_signal_connect(skeleton,                                   //instance
-                     "handle-get-supported-values",              //signal name
+                     "handle-get-supported-values-raw-string",   //signal name
                      G_CALLBACK(on_handle_get_supported_values), //callback
                      NULL);
     g_signal_connect(skeleton,                                  //instance
@@ -473,12 +474,35 @@ static gboolean on_handle_get_default_value(PrintBackend *interface,
     }
     else
     {
+
         if (ippGetCount(def_attr))
-            value = ippGetString(def_attr, 0, NULL);
+        {
+            if(ippGetValueTag(def_attr)==IPP_TAG_STRING)
+                value = ippGetString(def_attr, 0, NULL);
+
+            else if(ippGetValueTag(def_attr)==IPP_TAG_INTEGER)
+            {
+                value = malloc(sizeof(char) * 10);
+                sprintf(value, "%d", ippGetInteger(def_attr, 0));
+            }
+            else if(ippGetValueTag(def_attr)==IPP_TAG_INTEGER)
+            {
+                value = malloc(sizeof(char) * 10);
+                sprintf(value, "%d", ippGetInteger(def_attr, 0));
+            }
+            else if(ippGetValueTag(def_attr)==IPP_TAG_BOOLEAN)
+            {
+                value = malloc(sizeof(char) * 5);
+                sprintf(value, "%d", ippGetBoolean(def_attr, 0));
+            }
+        }
+
         printf("%s\n", value);
     }
     print_backend_complete_get_default_value(interface, invocation,
                                              value);
+
+    //free memory leaks
     return TRUE;
 }
 
@@ -510,8 +534,8 @@ static gboolean on_handle_get_supported_values(PrintBackend *interface,
 
     values = g_variant_new("a(s)", builder);
     //unref this later
-    print_backend_complete_get_supported_values(interface, invocation,
-                                                count, values);
+    print_backend_complete_get_supported_values_raw_string(interface, invocation,
+                                                           count, values);
 
     return TRUE;
 }
@@ -647,7 +671,7 @@ static gboolean on_handle_get_supported_orientation(PrintBackend *interface,
 
     int x;
     char *str;
-    int c=0;
+    int c = 0;
     for (i = 0; i < count; i++)
     {
         x = ippGetInteger(attrs, i);
@@ -686,85 +710,7 @@ void set_up_mappings()
     g_hash_table_insert(print_quality_mappings, GINT_TO_POINTER(atoi(CUPS_PRINT_QUALITY_HIGH)), QUALITY_HIGH);
     g_hash_table_insert(print_quality_mappings, GINT_TO_POINTER(atoi(CUPS_PRINT_QUALITY_NORMAL)), QUALITY_NORMAL);
 
-     orientation_mappings = g_hash_table_new(g_direct_hash, g_direct_equal);
-    g_hash_table_insert(orientation_mappings,  GINT_TO_POINTER(atoi(CUPS_ORIENTATION_LANDSCAPE)), ORIENTATION_LANDSCAPE);
-    g_hash_table_insert(orientation_mappings,  GINT_TO_POINTER(atoi(CUPS_ORIENTATION_PORTRAIT)), ORIENTATION_PORTRAIT);
+    orientation_mappings = g_hash_table_new(g_direct_hash, g_direct_equal);
+    g_hash_table_insert(orientation_mappings, GINT_TO_POINTER(atoi(CUPS_ORIENTATION_LANDSCAPE)), ORIENTATION_LANDSCAPE);
+    g_hash_table_insert(orientation_mappings, GINT_TO_POINTER(atoi(CUPS_ORIENTATION_PORTRAIT)), ORIENTATION_PORTRAIT);
 }
-
-static gboolean on_handle_get_detailed_options(PrintBackend *interface,
-                                               GDBusMethodInvocation *invocation,
-                                               const gchar *printer_name,
-                                               gpointer user_data)
-{
-    /**
-        old basic things ..
-        ____________
-        Check supported ..
-
-
-        (u need to get the defaults/set options here)
-        AVAILABLE OPTIONS
-        CUPS_COPIES
-        CUPS_MEDIA:
-        CUPS_MEDIA_type
-        CUPS_NUMBER_UP 
-        CUPS_ORIENTATION 
-        CUPS_PRINT_COLOR_MODE
-        CUPS_PRINT_QUALITY
-        CUPS_SIDES 
-
-        Operations regarding these options
-        cupsCheckDestSupported : see if the option is supported (capabilities)
-        cupsFindDestSupported : get possible values for each 
-
-        job-creation-attributes can be queried to get a list of supported options
-        
-
-    **/
-}
-// gpointer find_removed_printers(gpointer not_used)
-// {
-//     g_message("Starting find_removed_printers thread ..\n");
-//     GHashTable *set[2];
-//     set[0] = g_hash_table_new(g_str_hash, g_str_equal);
-//     set[1] = g_hash_table_new(g_str_hash, g_str_equal);
-//     int curr = 0, prev = 1;
-//     GHashTableIter iter;
-//     gpointer key;
-//     while (num_frontends > 0)
-//     {
-//         //fix memory leaks
-//         // g_message("curr,prev = %d,%d",curr,prev);
-//         g_hash_table_remove_all(set[curr]);
-//         cupsEnumDests(CUPS_DEST_FLAGS_NONE,
-//                       4500,                //timeout in ms
-//                       NULL,                //cancel variable
-//                       0,                   //TYPE
-//                       0,                   //MASK
-//                       add_printer_to_list, // Callback function
-//                       set[curr]);          //user_data
-
-//         g_hash_table_iter_init(&iter, set[prev]);
-//         while (g_hash_table_iter_next(&iter, &key, NULL))
-//         {
-//             //g_message("                                             .. %s ..\n",(gchar*)key);
-//             if (!g_hash_table_contains(set[curr], (gchar *)key))
-//             {
-//                 g_message("Printer %s removed\n", (char *)key);
-//                 print_backend_emit_printer_removed(skeleton, (char *)key);
-//             }
-//         }
-//         curr = 1 - curr; //switching it over 0<-->1; so that the curr becomes prev and prev becomes curr
-//         prev = 1 - prev;
-//     }
-//     g_hash_table_destroy(set[0]);
-//     g_hash_table_destroy(set[1]);
-
-//     g_message("find_removed_printers thread exited\n");
-// }
-// int add_printer_to_list(void *user_data, unsigned flags, cups_dest_t *dest)
-// {
-//     GHashTable *h = (GHashTable *)user_data;
-//     char *printername = strdup(dest->name);
-//     g_hash_table_add(h, printername);
-// }
