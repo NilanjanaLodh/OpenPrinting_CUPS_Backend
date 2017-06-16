@@ -305,6 +305,16 @@ void set_resolution(PrinterObj *p, int xres, int yres)
         p->current.res.yres = yres;
     }
 }
+void get_orientation(PrinterObj *p)
+{
+    GError *error = NULL;
+    print_backend_call_get_orientation_sync(p->backend_proxy, p->name,
+                                           &p->current.orientation,
+                                           NULL, &error);
+    g_assert_no_error(error);
+
+    g_message("current orientation: %s", p->current.orientation);
+}
 /************************************************* FrontendObj********************************************/
 struct _FrontendObj
 {
@@ -427,4 +437,11 @@ void set_printer_resolution(FrontendObj *f, gchar *printer_name, int xres, int y
     g_assert_nonnull(p);
 
     set_resolution(p, xres, yres);
+}
+void get_printer_orientation(FrontendObj *f, gchar *printer_name)
+{
+    PrinterObj *p = g_hash_table_lookup(f->printer, printer_name);
+    g_assert_nonnull(p);
+
+    get_orientation(p);
 }

@@ -28,8 +28,8 @@ void get_state(PrinterObj *);
 void is_accepting_jobs(PrinterObj *);
 void get_media(PrinterObj *); //to do
 void set_media(PrinterObj *, gchar *); /// research about custom media size // to do
-void get_resolution(PrinterObj *); //to do
-void set_resolution(PrinterObj *, int , int); //to do
+void get_resolution(PrinterObj *); 
+void set_resolution(PrinterObj *, int , int); 
 void get_orientation(PrinterObj *); //to do 
 void set_orientation(PrinterObj *, gchar *); //to do
 void get_quality(PrinterObj *); // to to
