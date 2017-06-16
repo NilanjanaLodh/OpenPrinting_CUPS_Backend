@@ -13,9 +13,6 @@
         <signal name="PrinterRemoved">
             <arg name="printer_name" type="s" />
         </signal>
-        <signal name="PrinterStatusChanged">
-            <arg name="printer_name" type="s" />
-        </signal>
         <method name="listBasicOptions">
             <arg name="printer_name" direction="in" type="s"/>
             <arg name="printer_info" direction="out" type="s"/>
@@ -74,10 +71,65 @@
             <arg name="num_values" direction="out" type="i"/>
             <arg name="values" direction="out" type="a(s)" />
         </method>
+        <method name="getSupportedResolution">
+            <arg name="printer_name" direction="in" type="s" />
+            <arg name="num_values" direction="out" type="i"/>
+            <arg name="values" direction="out" type="a(ii)" />
+        </method>
         <method name="getResolution">
             <arg name="printer_name" direction="in" type="s" />
             <arg name="x_res" direction="out" type="i"/>
-            <arg name="y_res" direction="out" type="i"/>               
+            <arg name="y_res" direction="out" type="i"/>
+        </method>
+        <method name="checkResolution">
+            <arg name="printer_name" direction="in" type="s" />
+            <arg name="x_res" direction="in" type="i"/>
+            <arg name="y_res" direction="in" type="i"/>
+            <arg name="possible" direction="out" type="b"/>
+        </method>
+        <method name="getMedia">
+            <arg name="printer_name" direction="in" type="s" />
+            <arg name="media_name" direction="out" type="s"/>
+        </method>
+        <method name="checkMedia">
+            <arg name="printer_name" direction="in" type="s" />
+            <arg name="media_name" direction="in" type="s"/>
+            <arg name="possible" direction="out" type="b"/>            
+        </method>
+        <method name="getOrientation">
+            <arg name="printer_name" direction="in" type="s" />
+            <arg name="orientation" direction="out" type="s"/>                        
+        </method>
+        <method name="checkOrientation">
+            <arg name="printer_name" direction="in" type="s" />
+            <arg name="orientation" direction="in" type="s"/>                        
+            <arg name="possible" direction="out" type="b"/>                        
+        </method>
+        <method name="getPageRange">
+            <arg name="printer_name" direction="in" type="s" />
+            <arg name="ranges" direction="out" type="a(ii)"/>            
+        </method>
+        <method name="getQuality">
+            <arg name="printer_name" direction="in" type="s" />
+            <arg name="quality" direction="out" type="s"/>                        
+        </method>
+        <method name="checkQuality">
+            <arg name="printer_name" direction="in" type="s" />
+            <arg name="quality" direction="in" type="s"/>        
+            <arg name="possible" direction="out" type="b"/>                            
+        </method>
+         <method name="getColor">
+            <arg name="printer_name" direction="in" type="s" />
+            <arg name="color_mode" direction="out" type="s"/>                        
+        </method>
+        <method name="checkColor">
+            <arg name="printer_name" direction="in" type="s" />
+            <arg name="color_mode" direction="in" type="s"/>        
+            <arg name="possible" direction="out" type="b"/>                            
+        </method>
+        <method name="applySettings">
+            <arg name="printer_name" direction="in" type="s" />
+            <!-- add arguments here-->            
         </method>
     </interface>
 </node>

@@ -589,6 +589,7 @@ static gboolean on_handle_get_supported_quality(PrintBackend *interface,
     for (i = 0; i < count; i++)
     {
         x = ippGetInteger(attrs, i);
+        printf("%d\n",x);
         if (g_hash_table_contains(print_quality_mappings, GINT_TO_POINTER(x)))
         {
             str = (char *)g_hash_table_lookup(print_quality_mappings, GINT_TO_POINTER(x));

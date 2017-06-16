@@ -293,6 +293,10 @@ void is_accepting_jobs(PrinterObj *p)
 
     g_message("%d", p->is_accepting_jobs);
 }
+void set_resolution(PrinterObj *p, int xres, int yres)
+{
+
+}
 /************************************************* FrontendObj********************************************/
 struct _FrontendObj
 {
