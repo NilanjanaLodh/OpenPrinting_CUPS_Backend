@@ -283,7 +283,7 @@ void get_resolution(PrinterObj *p)
     g_assert_no_error(error);
 
     /// To do : set the other boolean flags too
-    g_message("%d x %d", p->current.res.xres , p->current.res.yres);
+    g_message("%d x %d", p->current.res.xres, p->current.res.yres);
 }
 void is_accepting_jobs(PrinterObj *p)
 {
@@ -295,7 +295,15 @@ void is_accepting_jobs(PrinterObj *p)
 }
 void set_resolution(PrinterObj *p, int xres, int yres)
 {
-
+    gboolean possible;
+    print_backend_call_check_resolution_sync(p->backend_proxy, p->name,
+                                             xres, yres, &possible,
+                                             NULL, NULL);
+    if(possible)
+    {
+        p->current.res.xres = xres;
+        p->current.res.yres = yres;
+    }
 }
 /************************************************* FrontendObj********************************************/
 struct _FrontendObj
@@ -412,4 +420,11 @@ void get_printer_resolution(FrontendObj *f, gchar *printer_name)
     g_assert_nonnull(p);
 
     get_resolution(p);
+}
+void set_printer_resolution(FrontendObj *f, gchar *printer_name, int xres, int yres)
+{
+    PrinterObj *p = g_hash_table_lookup(f->printer, printer_name);
+    g_assert_nonnull(p);
+
+    set_resolution(p, xres, yres);
 }
