@@ -444,4 +444,4 @@ void get_printer_orientation(FrontendObj *f, gchar *printer_name)
     g_assert_nonnull(p);
 
     get_orientation(p);
-}
+}   

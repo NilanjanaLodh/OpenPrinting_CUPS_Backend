@@ -24,6 +24,7 @@ static void on_printer_removed(GDBusConnection *connection,
                                const gchar *signal_name,
                                GVariant *parameters,
                                gpointer user_data);
+void display_help();
 gpointer parse_commands(gpointer user_data);
 FrontendObj *f;
 int main()
@@ -120,6 +121,8 @@ gpointer parse_commands(gpointer user_data)
     char buf[100];
     while (1)
     {
+        printf("> ");
+        fflush(stdout);
         scanf("%s", buf);
         if (strcmp(buf, "stop") == 0)
         {
@@ -130,7 +133,7 @@ gpointer parse_commands(gpointer user_data)
         else if (strcmp(buf, "refresh") == 0)
         {
             print_frontend_emit_refresh_backend(skeleton);
-            g_message("Sending refresh request..\n");
+            g_message("Getting changes in printer list..\n");
         }
         else if (strcmp(buf, "update-basic") == 0)
         {
@@ -200,5 +203,28 @@ gpointer parse_commands(gpointer user_data)
             scanf("%s", printer_name);
             get_printer_resolution(f, printer_name);
         }
+        else if (strcmp(buf, "help")==0)
+        {
+            display_help();
+        }
     }
+}
+void display_help()
+{
+    g_message("Available commands .. ");
+    printf("%s\n","stop");
+    printf("%s\n","refresh");
+    printf("%s\n","update-basic <printer name>");
+    printf("%s\n","get-capabilities <printer name>");
+    printf("%s\n","get-option-default <printer name> <option name>");
+    printf("%s\n","get-supported-raw <printer name> <option name>");
+    printf("%s\n","get-supported-media <printer name>");
+    printf("%s\n","get-supported-color <printer name>");
+    printf("%s\n","get-supported-quality <printer name>");
+    printf("%s\n","get-supported-orientation <printer name>");
+    printf("%s\n","get-state <printer name>");
+    printf("%s\n","get-resolution <printer name>");    
+    printf("%s\n","is-accepting-jobs <printer name>");
+ 
+    
 }

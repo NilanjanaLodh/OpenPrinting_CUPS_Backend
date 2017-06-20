@@ -10,7 +10,7 @@ typedef struct _SupportedValues SupportedValues;
 /**********PrinterCapabilities**********************************/
 typedef struct _PrinterCapabilities PrinterCapabilities;
 /**********PrinterObj definitions*******************************/
-// Don't use these functions directly
+// Don't use these functions directly use the Fr
 typedef struct _PrinterObj PrinterObj;
 PrinterObj *get_new_PrinterObj();
 void fill_basic_options(PrinterObj *, GVariant *);
@@ -30,7 +30,7 @@ void get_media(PrinterObj *); //to do
 void set_media(PrinterObj *, gchar *); /// research about custom media size // to do
 void get_resolution(PrinterObj *); 
 void set_resolution(PrinterObj *, int , int); 
-void get_orientation(PrinterObj *); //to do 
+void get_orientation(PrinterObj *); 
 void set_orientation(PrinterObj *, gchar *); //to do
 void get_quality(PrinterObj *); // to to
 void set_quality(PrinterObj *, gchar *); //todo
@@ -55,13 +55,14 @@ void get_printer_state(FrontendObj *, gchar *);
 void printer_is_accepting_jobs(FrontendObj *, gchar *);
 void get_printer_resolution(FrontendObj *, gchar *);
 void set_printer_resolution(FrontendObj *, gchar *, int , int); //to do
-void get_printer_orientation(FrontendObj *, gchar *); //to do 
+void get_printer_orientation(FrontendObj *, gchar *); 
 void set_printer_orientation(FrontendObj *, gchar *, gchar *); //to do
 void get_printer_quality(FrontendObj *, gchar *); // to to
 void set_printer_quality(FrontendObj *, gchar *, gchar *); //todo
 void get_printer_color_mode(FrontendObj *, gchar *); //todo
 void set_printer_color_mode(FrontendObj *, gchar *, gchar *); //to do
 void apply_printer_settings(FrontendObj *, gchar *);
+void print_job(FrontendObj *, gchar *);
 /***************************************************************/
 
 
