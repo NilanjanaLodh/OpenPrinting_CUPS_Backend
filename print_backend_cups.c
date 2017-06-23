@@ -192,17 +192,19 @@ int send_printer_added(void *_dialog_name, unsigned flags, cups_dest_t *dest)
 
     GHashTable *g = g_hash_table_lookup(dialog_printers, dialog_name);
     g_assert_nonnull(g);
-
+    
     if (g_hash_table_contains(g, dest->name))
     {
         g_message("%s already sent.\n", dest->name);
         return 1;
     }
-    cups_ptype_t pt = *cupsGetOption("printer-type", dest->num_options, dest->options);
+
+    // cups_ptype_t pt = *cupsGetOption("printer-type", dest->num_options, dest->options);
 
     char *t = malloc(sizeof(gchar) * (strlen(dest->name) + 1));
     strcpy(t, dest->name);
     g_hash_table_add(g, t);
+
     GVariant *gv = g_variant_new("(ssssbs)",
                                  t,
                                  cupsGetOption("printer-info", dest->num_options, dest->options),
@@ -237,7 +239,7 @@ static void on_refresh_backend(GDBusConnection *connection,
     int *cancel = (int *)(g_hash_table_lookup(dialog_cancel, sender_name));
     *cancel = 1;
     //fix memory leak here
-    GHashTable *g = g_hash_table_new(g_str_hash, g_str_equal);
+    GHashTable *new = g_hash_table_new(g_str_hash, g_str_equal);
     GHashTableIter iter;
     gpointer key;
     GHashTable *prev = g_hash_table_lookup(dialog_printers, sender_name);
@@ -247,12 +249,13 @@ static void on_refresh_backend(GDBusConnection *connection,
                   0,                   //TYPE
                   0,                   //MASK
                   add_printer_to_list, //function
-                  g);                  //user_data
+                  new);                //user_data
+
     g_hash_table_iter_init(&iter, prev);
     while (g_hash_table_iter_next(&iter, &key, NULL))
     {
         //g_message("                                             .. %s ..\n", (gchar *)key);
-        if (!g_hash_table_contains(g, (gchar *)key))
+        if (!g_hash_table_contains(new, (gchar *)key))
         {
             g_message("Printer %s removed\n", (char *)key);
             //print_backend_emit_printer_removed(skeleton, (char *)key);
@@ -266,9 +269,18 @@ static void on_refresh_backend(GDBusConnection *connection,
         }
     }
 
+    ////refactor -- duplicated code!!!
+    g_hash_table_iter_init(&iter, new);
+    while (g_hash_table_iter_next(&iter, &key, NULL))
+    {
+        printf("trying %s\n", (char *)key);
+        send_printer_added(sender_name,
+                           CUPS_DEST_FLAGS_NONE, 
+                           cupsGetNamedDest(CUPS_HTTP_DEFAULT, (char *)key, NULL));
+    }
     char *t = malloc(sizeof(gchar) * (strlen(sender_name) + 1));
     strcpy(t, sender_name);
-    g_hash_table_replace(dialog_printers, t, g);
+    g_hash_table_replace(dialog_printers, t, new);
     g_thread_new(NULL, list_printers, t);
     //g_message("Hi\n");
     ///call cupsEnumDests once .. check with current hash table.
@@ -322,7 +334,7 @@ static gboolean on_handle_get_printer_capabilities(PrintBackend *interface,
     cups_dinfo_t *dinfo = cupsCopyDestInfo(http, dest);
     g_assert_nonnull(dinfo);
 
-    gboolean copies, media, n_up, orientation, color_mode, quality, sides , res;
+    gboolean copies, media, n_up, orientation, color_mode, quality, sides, res;
 
     copies = media = n_up = orientation = color_mode = quality = sides = res = FALSE;
 
@@ -379,7 +391,7 @@ static gboolean on_handle_get_printer_capabilities(PrintBackend *interface,
         {
             sides = TRUE;
         }
-        else if(strcmp(str,"printer-resolution")==0)
+        else if (strcmp(str, "printer-resolution") == 0)
         {
             res = TRUE;
         }
@@ -589,7 +601,7 @@ static gboolean on_handle_get_supported_quality(PrintBackend *interface,
     for (i = 0; i < count; i++)
     {
         x = ippGetInteger(attrs, i);
-        printf("%d\n",x);
+        printf("%d\n", x);
         if (g_hash_table_contains(print_quality_mappings, GINT_TO_POINTER(x)))
         {
             str = (char *)g_hash_table_lookup(print_quality_mappings, GINT_TO_POINTER(x));
@@ -670,7 +682,7 @@ static gboolean on_handle_get_resolution(PrintBackend *interface,
     cups_dest_t *dest = cupsGetNamedDest(CUPS_HTTP_DEFAULT, printer_name, NULL);
     g_assert_nonnull(dest);
     int xres, yres;
-    getResolution(dest, &xres, &yres);
+    cups_get_Resolution(dest, &xres, &yres);
     print_backend_complete_get_resolution(interface, invocation, xres, yres);
     return TRUE;
 }

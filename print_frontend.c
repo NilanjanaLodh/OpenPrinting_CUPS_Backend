@@ -7,7 +7,7 @@
 #include "frontend_helper.h"
 #include "common_helper.h"
 
-#define DIALOG_BUS_NAME "org.openprinting.PrintFrontend"
+#define DIALOG_BUS_NAME "org.openprinting.PrintFrontend1"
 #define DIALOG_OBJ_PATH "/"
 static void on_name_acquired(GDBusConnection *connection, const gchar *name, gpointer user_data);
 static void on_printer_added(GDBusConnection *connection,

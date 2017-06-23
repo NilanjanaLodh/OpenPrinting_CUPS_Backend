@@ -1,7 +1,7 @@
 FLAGS=$(shell pkg-config --libs --cflags gio-2.0 gio-unix-2.0 glib-2.0)
 .PHONY:all gen lib
 
-all: print_backend_cups print_frontend
+all: print_backend_cups print_frontend print_backend_cups_new
 
 gen:genback genfront
 
@@ -20,6 +20,8 @@ print_backend_cups: print_backend_cups.o backend_interface.o common_helper.o bac
 print_frontend: print_frontend.o backend_interface.o frontend_interface.o common_helper.o frontend_helper.o
 	gcc -o $@ $^ $(FLAGS)
 
+print_backend_cups_new: print_backend_cups_new.o backend_interface.o common_helper.o backend_helper.o
+	gcc -o $@ $^ $(FLAGS) -lcups
 clean_gen:
 	rm -f backend_interface.* frontend_interface.*
 

@@ -8,6 +8,10 @@
 
 gboolean get_boolean(gchar *g)
 {
+    if(!g)
+        return FALSE;
+    
+    printf("get boolean");
     if (g_str_equal(g, "true"))
         return TRUE;
 
