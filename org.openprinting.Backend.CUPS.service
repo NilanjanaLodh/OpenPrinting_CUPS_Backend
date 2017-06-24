@@ -1,0 +1,4 @@
+[D-BUS Service]
+Name=org.openprinting.Backend.CUPS
+Exec=/usr/bin/print-backends/cups
+User=hermoinil

@@ -1,19 +1,14 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <glib.h>
-#include <string.h>
-#include <cups/cups.h>
-#include "backend_interface.h"
 #include "backend_helper.h"
-#include <glib.h>
 
 BackendObj *get_new_BackendObj()
 {
     BackendObj *b = (BackendObj *)(malloc(sizeof(BackendObj)));
     b->dbus_connection = NULL;
     b->dialog_printers = g_hash_table_new(g_str_hash, g_str_equal);
+    b->dialog_cancel = g_hash_table_new(g_str_hash, g_str_equal);
     b->num_frontends = 0;
 }
+
 void connect_to_dbus(BackendObj *b, char *obj_path)
 {
     GError *error = NULL;
@@ -24,6 +19,22 @@ void connect_to_dbus(BackendObj *b, char *obj_path)
     g_assert_no_error(error);
 }
 
+void add_frontend(BackendObj *b, const char *_dialog_name)
+{
+    char *dialog_name = get_string_copy(_dialog_name);
+    int *cancel = malloc(sizeof(int));
+    *cancel = 0;
+    g_hash_table_insert(b->dialog_cancel, dialog_name, cancel); //memory issues
+
+    GHashTable *printers = g_hash_table_new(g_str_hash, g_str_equal);
+    g_hash_table_insert(b->dialog_printers, dialog_name, printers);
+}
+
+int *get_dialog_cancel(BackendObj *b, const char *dialog_name)
+{
+    int *cancel = (int *)(g_hash_table_lookup(b->dialog_cancel, dialog_name));
+    return cancel;
+}
 /*********Mappings********/
 Mappings *get_new_Mappings()
 {
@@ -33,8 +44,8 @@ char *cups_printer_state(cups_dest_t *dest)
 {
     //cups_dest_t *dest = cupsGetNamedDest(CUPS_HTTP_DEFAULT, printer_name, NULL);
     g_assert_nonnull(dest);
-    char *state = cupsGetOption("printer-state", dest->num_options,
-                                dest->options);
+    const char *state = cupsGetOption("printer-state", dest->num_options,
+                                      dest->options);
     if (state == NULL)
         return "NA";
 
@@ -56,8 +67,8 @@ gboolean cups_is_accepting_jobs(cups_dest_t *dest)
 {
 
     g_assert_nonnull(dest);
-    char *val = cupsGetOption("printer-is-accepting-jobs", dest->num_options,
-                              dest->options);
+    const char *val = cupsGetOption("printer-is-accepting-jobs", dest->num_options,
+                                    dest->options);
 
     return get_boolean(val);
 }

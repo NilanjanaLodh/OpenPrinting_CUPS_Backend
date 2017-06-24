@@ -6,14 +6,21 @@
 #include "backend_interface.h"
 #include "frontend_interface.h"
 
-gboolean get_boolean(gchar *g)
+gboolean get_boolean(const char *g)
 {
-    if(!g)
+    if (!g)
         return FALSE;
-    
+
     printf("get boolean");
     if (g_str_equal(g, "true"))
         return TRUE;
 
     return FALSE;
+}
+
+char *get_string_copy(const char *str)
+{
+    char *s = malloc(sizeof(char) * (strlen(str) + 1));
+    strcpy(s, str);
+    return s;
 }

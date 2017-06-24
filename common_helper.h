@@ -18,7 +18,6 @@
 #define COLOR_MODE_BW "monochrome"
 #define COLOR_MODE_AUTO "auto"
 
-
 #define QUALITY_DRAFT "draft"
 #define QUALITY_NORMAL "normal"
 #define QUALITY_HIGH "high"
@@ -40,11 +39,10 @@
 #define STATE_STOPPED "stopped"
 
 #define STOP_BACKEND_SIGNAL "StopListing"
-#define ACTIVATE_BACKEND_SIGNAL "GetBackend"
 #define REFRESH_BACKEND_SIGNAL "RefreshBackend"
 #define PRINTER_ADDED_SIGNAL "PrinterAdded"
 #define PRINTER_REMOVED_SIGNAL "PrinterRemoved"
 
-gboolean get_boolean(gchar *);
-
+gboolean get_boolean(const char *);
+char *get_string_copy(const char *);
 #endif

@@ -1,8 +1,17 @@
 #ifndef _FRONTEND_HELPER_H_
 #define _FRONTEND_HELPER_H_
 
+#include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
 #include <glib.h>
+#include <dirent.h>
+#include "common_helper.h"
+#include "backend_interface.h"
+#include "frontend_interface.h"
 
+#define DBUS_DIR "/etc/print-backends"
+#define BACKEND_PREFIX "org.openprinting.Backend"
 
 typedef struct _CurrentValues CurrentValues;
 /**********Supportedvalues**************************************/
@@ -17,7 +26,7 @@ void fill_basic_options(PrinterObj *, GVariant *);
 void print_basic_options(PrinterObj *);
 void update_basic_options(PrinterObj *);
 void get_capabilities(PrinterObj *);
-void print_capabilities(PrinterObj *); 
+void print_capabilities(PrinterObj *);
 void get_option_default(PrinterObj *, gchar *);
 void get_supported_values_raw(PrinterObj *, gchar *);
 void get_supported_media(PrinterObj *);
@@ -26,15 +35,15 @@ void get_supported_quality(PrinterObj *);
 void get_supported_orientation(PrinterObj *);
 void get_state(PrinterObj *);
 void is_accepting_jobs(PrinterObj *);
-void get_media(PrinterObj *); //to do
+void get_media(PrinterObj *);          //to do
 void set_media(PrinterObj *, gchar *); /// research about custom media size // to do
-void get_resolution(PrinterObj *); 
-void set_resolution(PrinterObj *, int , int); 
-void get_orientation(PrinterObj *); 
+void get_resolution(PrinterObj *);
+void set_resolution(PrinterObj *, int, int);
+void get_orientation(PrinterObj *);
 void set_orientation(PrinterObj *, gchar *); //to do
-void get_quality(PrinterObj *); // to to
-void set_quality(PrinterObj *, gchar *); //todo
-void get_color_mode(PrinterObj *); //todo
+void get_quality(PrinterObj *);              // to to
+void set_quality(PrinterObj *, gchar *);     //todo
+void get_color_mode(PrinterObj *);           //todo
 void set_color_mode(PrinterObj *, gchar *);
 void apply_settings(PrinterObj *);
 
@@ -42,6 +51,8 @@ void apply_settings(PrinterObj *);
 typedef struct _FrontendObj FrontendObj;
 
 FrontendObj *get_new_FrontendObj();
+void activate_backends(FrontendObj *);
+PrintBackend *add_backend(FrontendObj *, const char *);
 gboolean add_printer(FrontendObj *, PrinterObj *, gchar *, gchar *); ///think about this definition a little more
 void update_basic_printer_options(FrontendObj *, gchar *);
 void get_printer_capabilities(FrontendObj *, gchar *);
@@ -54,17 +65,15 @@ void get_printer_supported_orientation(FrontendObj *, gchar *);
 void get_printer_state(FrontendObj *, gchar *);
 void printer_is_accepting_jobs(FrontendObj *, gchar *);
 void get_printer_resolution(FrontendObj *, gchar *);
-void set_printer_resolution(FrontendObj *, gchar *, int , int); //to do
-void get_printer_orientation(FrontendObj *, gchar *); 
+void set_printer_resolution(FrontendObj *, gchar *, int, int); //to do
+void get_printer_orientation(FrontendObj *, gchar *);
 void set_printer_orientation(FrontendObj *, gchar *, gchar *); //to do
-void get_printer_quality(FrontendObj *, gchar *); // to to
-void set_printer_quality(FrontendObj *, gchar *, gchar *); //todo
-void get_printer_color_mode(FrontendObj *, gchar *); //todo
-void set_printer_color_mode(FrontendObj *, gchar *, gchar *); //to do
+void get_printer_quality(FrontendObj *, gchar *);              // to to
+void set_printer_quality(FrontendObj *, gchar *, gchar *);     //todo
+void get_printer_color_mode(FrontendObj *, gchar *);           //todo
+void set_printer_color_mode(FrontendObj *, gchar *, gchar *);  //to do
 void apply_printer_settings(FrontendObj *, gchar *);
 void print_job(FrontendObj *, gchar *);
 /***************************************************************/
-
-
 
 #endif

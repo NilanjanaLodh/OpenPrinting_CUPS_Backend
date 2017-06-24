@@ -29,6 +29,10 @@ struct _PrintBackendIface
   GTypeInterface parent_iface;
 
 
+  gboolean (*handle_activate_backend) (
+    PrintBackend *object,
+    GDBusMethodInvocation *invocation);
+
   gboolean (*handle_apply_settings) (
     PrintBackend *object,
     GDBusMethodInvocation *invocation,
@@ -174,6 +178,10 @@ guint print_backend_override_properties (GObjectClass *klass, guint property_id_
 
 
 /* D-Bus method call completion functions: */
+void print_backend_complete_activate_backend (
+    PrintBackend *object,
+    GDBusMethodInvocation *invocation);
+
 void print_backend_complete_list_basic_options (
     PrintBackend *object,
     GDBusMethodInvocation *invocation,
@@ -325,6 +333,22 @@ void print_backend_emit_printer_removed (
 
 
 /* D-Bus method calls: */
+void print_backend_call_activate_backend (
+    PrintBackend *proxy,
+    GCancellable *cancellable,
+    GAsyncReadyCallback callback,
+    gpointer user_data);
+
+gboolean print_backend_call_activate_backend_finish (
+    PrintBackend *proxy,
+    GAsyncResult *res,
+    GError **error);
+
+gboolean print_backend_call_activate_backend_sync (
+    PrintBackend *proxy,
+    GCancellable *cancellable,
+    GError **error);
+
 void print_backend_call_list_basic_options (
     PrintBackend *proxy,
     const gchar *arg_printer_name,

@@ -79,8 +79,8 @@ on_name_acquired(GDBusConnection *connection,
     g_dbus_interface_skeleton_export(G_DBUS_INTERFACE_SKELETON(skeleton), connection, DIALOG_OBJ_PATH, &error);
     g_assert_no_error(error);
 
-    print_frontend_emit_get_backend(skeleton);
-
+    //print_frontend_emit_get_backend(skeleton);
+    activate_backends(f);
     /**
     I have created the following thread just for testing purpose.
     In reality you don't need a separate thread to parse commands because you already have a GUI. 

@@ -15,6 +15,10 @@ static void acquire_session_bus_name();
 static void on_name_acquired(GDBusConnection *connection,
                              const gchar *name,
                              gpointer not_used);
+static gboolean on_handle_activate_backend(PrintBackend *interface,
+                                           GDBusMethodInvocation *invocation,
+                                           gpointer not_used);
+gpointer list_printers(gpointer _dialog_name);
 void connect_to_signals();
 
 BackendObj *b;
@@ -23,7 +27,7 @@ int main()
 {
     b = get_new_BackendObj();
     m = get_new_Mappings();
-    
+
     acquire_session_bus_name(BUS_NAME);
     GMainLoop *loop = g_main_loop_new(NULL, FALSE);
     g_main_loop_run(loop);
@@ -49,14 +53,46 @@ on_name_acquired(GDBusConnection *connection,
     b->dbus_connection = connection;
     b->skeleton = print_backend_skeleton_new();
     connect_to_signals();
-    connect_to_dbus(b,OBJECT_PATH);
-    GError *error = NULL;
-    g_assert_no_error(error);
+    connect_to_dbus(b, OBJECT_PATH);
+}
+static gboolean on_handle_activate_backend(PrintBackend *interface,
+                                           GDBusMethodInvocation *invocation,
+                                           gpointer not_used)
+{
+    /**
+    This function starts the backend and starts sending the printers
+    **/
+    const char *dialog_name = g_dbus_method_invocation_get_sender(invocation); /// potential risk
+    add_frontend(b, dialog_name);
+    g_thread_new(NULL, list_printers, (gpointer)dialog_name);
+    return TRUE;
+}
+
+gpointer list_printers(gpointer _dialog_name)
+{
+    char *dialog_name = (char *)_dialog_name;
+    g_message("New thread for dialog at %s\n", dialog_name);
+    int *cancel = get_dialog_cancel(b, dialog_name);
+
+    cupsEnumDests(CUPS_DEST_FLAGS_NONE,
+                  -1, //NO timeout
+                  cancel,
+                  0,    //TYPE
+                  0,    //MASK
+                  NULL, //send_printer_added
+                  _dialog_name);
+
+    g_message("Exiting thread for dialog at %s\n", dialog_name);
 }
 
 void connect_to_signals()
 {
     PrintBackend *skeleton = b->skeleton;
+    g_signal_connect(skeleton,                               //instance
+                     "handle-activate-backend",              //signal name
+                     G_CALLBACK(on_handle_activate_backend), //callback
+                     NULL);
+
     // g_signal_connect(skeleton,                                 //instance
     //                  "handle-list-basic-options",              //signal name
     //                  G_CALLBACK(on_handle_list_basic_options), //callback

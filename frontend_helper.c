@@ -1,11 +1,4 @@
-#include <stdio.h>
-#include <string.h>
-#include <stdlib.h>
-#include <glib.h>
 #include "frontend_helper.h"
-#include "common_helper.h"
-#include "backend_interface.h"
-#include "frontend_interface.h"
 
 typedef struct _Resolution
 {
@@ -299,7 +292,7 @@ void set_resolution(PrinterObj *p, int xres, int yres)
     print_backend_call_check_resolution_sync(p->backend_proxy, p->name,
                                              xres, yres, &possible,
                                              NULL, NULL);
-    if(possible)
+    if (possible)
     {
         p->current.res.xres = xres;
         p->current.res.yres = yres;
@@ -309,8 +302,8 @@ void get_orientation(PrinterObj *p)
 {
     GError *error = NULL;
     print_backend_call_get_orientation_sync(p->backend_proxy, p->name,
-                                           &p->current.orientation,
-                                           NULL, &error);
+                                            &p->current.orientation,
+                                            NULL, &error);
     g_assert_no_error(error);
 
     g_message("current orientation: %s", p->current.orientation);
@@ -333,6 +326,51 @@ FrontendObj *get_new_FrontendObj()
     f->printer = g_hash_table_new(g_str_hash, g_str_equal);
     return f;
 }
+void activate_backends(FrontendObj *f)
+{
+    DIR *d;
+    struct dirent *dir;
+    d = opendir(DBUS_DIR);
+    int len = strlen(BACKEND_PREFIX);
+    PrintBackend *proxy;
+    if (d)
+    {
+        while ((dir = readdir(d)) != NULL)
+        {
+            if (strncmp(BACKEND_PREFIX, dir->d_name, len) == 0)
+            {
+                printf("Found backend %s\n", dir->d_name);
+                proxy = add_backend(f, dir->d_name);
+                print_backend_call_activate_backend(proxy, NULL, NULL, NULL);
+            }
+        }
+
+        closedir(d);
+    }
+}
+
+PrintBackend *add_backend(FrontendObj *f, const char *backend_file_name)
+{
+    PrintBackend *proxy;
+    if (g_hash_table_contains(f->backend, backend_file_name))
+        return proxy;
+
+    char *backend_name = get_string_copy(backend_file_name);
+    ///what about this arbitrary limit?
+    char path[1000];
+    sprintf(path, "%s/%s", DBUS_DIR, backend_file_name);
+    FILE *file = fopen(path, "r");
+    char obj_path[200]; // arbit :/
+    fscanf(file, "%s", obj_path);
+
+    GError *error = NULL;
+    proxy = print_backend_proxy_new_for_bus_sync(G_BUS_TYPE_SESSION, 0,
+                                                 backend_name, obj_path, NULL, &error);
+    g_assert_no_error(error);
+    g_hash_table_insert(f->backend, backend_name, proxy);
+    return proxy;
+}
+
 gboolean add_printer(FrontendObj *f, PrinterObj *p, gchar *backend_name, gchar *obj_path)
 {
     //g_message("backend name and object path : %s %s", backend_name, obj_path);
@@ -444,4 +482,4 @@ void get_printer_orientation(FrontendObj *f, gchar *printer_name)
     g_assert_nonnull(p);
 
     get_orientation(p);
-}   
+}
