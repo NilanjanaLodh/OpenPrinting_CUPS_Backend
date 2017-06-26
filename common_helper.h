@@ -1,8 +1,10 @@
 #ifndef _COMMON_HELPER_H_
 #define _COMMON_HELPER_H_
 
+#define PRINTER_ADDED_ARGS "(ssssbs)"
 /*********LISTING OF ALL POSSIBLE OPTIONS*****/
 //Rename these to something better if needed
+
 
 #define MEDIA_A4 "A4"
 #define MEDIA_A3 "A3"

@@ -19,6 +19,14 @@ static gboolean on_handle_activate_backend(PrintBackend *interface,
                                            GDBusMethodInvocation *invocation,
                                            gpointer not_used);
 gpointer list_printers(gpointer _dialog_name);
+int send_printer_added(void *_dialog_name, unsigned flags, cups_dest_t *dest);
+static void on_stop_backend(GDBusConnection *connection,
+                            const gchar *sender_name,
+                            const gchar *object_path,
+                            const gchar *interface_name,
+                            const gchar *signal_name,
+                            GVariant *parameters,
+                            gpointer not_used);
 void connect_to_signals();
 
 BackendObj *b;
@@ -79,11 +87,48 @@ gpointer list_printers(gpointer _dialog_name)
                   cancel,
                   0,    //TYPE
                   0,    //MASK
-                  NULL, //send_printer_added
+                  send_printer_added, 
                   _dialog_name);
 
     g_message("Exiting thread for dialog at %s\n", dialog_name);
 }
+int send_printer_added(void *_dialog_name, unsigned flags, cups_dest_t *dest)
+{
+
+    char *dialog_name = (char *)_dialog_name;
+    char *printer_name = dest->name;
+
+    if (dialog_contains_printer(b,dialog_name,printer_name))
+    {
+        g_message("%s already sent.\n", printer_name);
+        return 1;
+    }
+
+    add_printer_to_dialog(b,dialog_name,printer_name);
+    send_printer_added_signal(b,dialog_name,dest);
+    g_message("     Sent notification for printer %s\n", printer_name);
+
+    ///fix memory leaks
+    return 1; //continue enumeration
+}
+static void on_stop_backend(GDBusConnection *connection,
+                            const gchar *sender_name,
+                            const gchar *object_path,
+                            const gchar *interface_name,
+                            const gchar *signal_name,
+                            GVariant *parameters,
+                            gpointer not_used)
+{
+     g_message("Stop backend signal from %s\n", sender_name);
+     set_dialog_cancel(b,sender_name);
+     remove_frontend(b,sender_name);
+     if(no_frontends(b))
+     {
+         g_message("No frontends connected .. exiting backend.\n");
+         exit(EXIT_SUCCESS);
+     }
+}
+
 
 void connect_to_signals()
 {
@@ -139,26 +184,17 @@ void connect_to_signals()
     //                  G_CALLBACK(on_handle_get_resolution), //callback
     //                  NULL);
     // /**subscribe to signals **/
-    // g_dbus_connection_signal_subscribe(dbus_connection,
-    //                                    NULL,                             //Sender name
-    //                                    "org.openprinting.PrintFrontend", //Sender interface
-    //                                    ACTIVATE_BACKEND_SIGNAL,          //Signal name
-    //                                    NULL,                             /**match on all object paths**/
-    //                                    NULL,                             /**match on all arguments**/
-    //                                    0,                                //Flags
-    //                                    on_activate_backend,              //callback
-    //                                    NULL,                             //user_data
-    //                                    NULL);
-    // g_dbus_connection_signal_subscribe(dbus_connection,
-    //                                    NULL,                             //Sender name
-    //                                    "org.openprinting.PrintFrontend", //Sender interface
-    //                                    STOP_BACKEND_SIGNAL,              //Signal name
-    //                                    NULL,                             /**match on all object paths**/
-    //                                    NULL,                             /**match on all arguments**/
-    //                                    0,                                //Flags
-    //                                    on_stop_backend,                  //callback
-    //                                    NULL,                             //user_data
-    //                                    NULL);
+    
+    g_dbus_connection_signal_subscribe(b->dbus_connection,
+                                       NULL,                             //Sender name
+                                       "org.openprinting.PrintFrontend", //Sender interface
+                                       STOP_BACKEND_SIGNAL,              //Signal name
+                                       NULL,                             /**match on all object paths**/
+                                       NULL,                             /**match on all arguments**/
+                                       0,                                //Flags
+                                       on_stop_backend,                  //callback
+                                       NULL,                             //user_data
+                                       NULL);
     // g_dbus_connection_signal_subscribe(dbus_connection,
     //                                    NULL,                             //Sender name
     //                                    "org.openprinting.PrintFrontend", //Sender interface

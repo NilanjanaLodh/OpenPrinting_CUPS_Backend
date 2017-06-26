@@ -7,10 +7,12 @@ BackendObj *get_new_BackendObj()
     b->dialog_printers = g_hash_table_new(g_str_hash, g_str_equal);
     b->dialog_cancel = g_hash_table_new(g_str_hash, g_str_equal);
     b->num_frontends = 0;
+    b->obj_path = NULL;
 }
 
 void connect_to_dbus(BackendObj *b, char *obj_path)
 {
+    b->obj_path = obj_path;
     GError *error = NULL;
     g_dbus_interface_skeleton_export(G_DBUS_INTERFACE_SKELETON(b->skeleton),
                                      b->dbus_connection,
@@ -28,12 +30,92 @@ void add_frontend(BackendObj *b, const char *_dialog_name)
 
     GHashTable *printers = g_hash_table_new(g_str_hash, g_str_equal);
     g_hash_table_insert(b->dialog_printers, dialog_name, printers);
+    b->num_frontends ++;
 }
+void remove_frontend(BackendObj *b, const char *dialog_name)
+{
+    //mem management
+    int *cancel = get_dialog_cancel(b, dialog_name);
+    g_hash_table_remove(b->dialog_cancel, dialog_name);
+    free(cancel);
 
+    GHashTable *p = (GHashTable *)(g_hash_table_lookup(b->dialog_printers, dialog_name));
+    g_hash_table_remove(b->dialog_printers, dialog_name);
+    g_hash_table_destroy(p);
+    b->num_frontends --;
+    g_message("removed Frontend entry for %s", dialog_name);
+}
+gboolean no_frontends(BackendObj *b)
+{
+    if ((b->num_frontends) == 0)
+        return TRUE;
+    return FALSE;
+}
 int *get_dialog_cancel(BackendObj *b, const char *dialog_name)
 {
     int *cancel = (int *)(g_hash_table_lookup(b->dialog_cancel, dialog_name));
     return cancel;
+}
+void set_dialog_cancel(BackendObj *b, const char *dialog_name)
+{
+    int *x = get_dialog_cancel(b, dialog_name);
+    *x = 1;
+}
+void reset_dialog_cancel(BackendObj *b, const char *dialog_name)
+{
+    int *x = get_dialog_cancel(b, dialog_name);
+    *x = 0;
+}
+gboolean dialog_contains_printer(BackendObj *b, const char *dialog_name, const char *printer_name)
+{
+    GHashTable *printers = g_hash_table_lookup(b->dialog_printers, dialog_name);
+    if (printers == NULL)
+        return FALSE;
+    if (g_hash_table_contains(printers, printer_name))
+        return TRUE;
+    return FALSE;
+}
+
+void add_printer_to_dialog(BackendObj *b, const char *dialog_name, const char *printer_name)
+{
+    GHashTable *printers = g_hash_table_lookup(b->dialog_printers, dialog_name);
+    if (printers == NULL)
+    {
+        g_message("Invalid dialog name");
+        exit(0);
+    }
+
+    char *pname = get_string_copy(printer_name); ///mem
+    g_hash_table_add(printers, pname);
+}
+void send_printer_added_signal(BackendObj *b, const char *dialog_name, cups_dest_t *dest)
+{
+    ///see if this works well for remote printers too
+    char *printer_name = get_string_copy(dest->name);
+    GVariant *gv = g_variant_new(PRINTER_ADDED_ARGS,
+                                 printer_name,
+                                 cupsGetOption("printer-info", dest->num_options, dest->options),
+                                 cupsGetOption("printer-location", dest->num_options, dest->options),
+                                 cupsGetOption("printer-make-and-model", dest->num_options, dest->options),
+                                 cups_is_accepting_jobs(dest),
+                                 cups_printer_state(dest));
+
+    GError *error = NULL;
+    g_dbus_connection_emit_signal(b->dbus_connection,
+                                  dialog_name,
+                                  b->obj_path,
+                                  "org.openprinting.PrintBackend",
+                                  PRINTER_ADDED_SIGNAL,
+                                  gv,
+                                  &error);
+    g_assert_no_error(error);
+}
+/***************************PrinterObj********************************/
+PrinterObj *get_new_PrinterObj(cups_dest_t *dest)
+{
+    PrinterObj *p = (PrinterObj *)(malloc(sizeof(PrinterObj)));
+    p->dest = dest;
+    p->name = dest->name;
 }
 /*********Mappings********/
 Mappings *get_new_Mappings()

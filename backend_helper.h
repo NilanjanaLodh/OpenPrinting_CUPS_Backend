@@ -23,7 +23,8 @@ typedef struct _BackendObj
 {
     GDBusConnection *dbus_connection;
     PrintBackend *skeleton;
-    GHashTable *dialog_printers; /**the hash table to map from dialog name (char*) to the set of printers(PrinterObjs) **/
+    char *obj_path;
+    GHashTable *dialog_printers; /**the hash table to map from dialog name (char*) to the set of printer names(char *) **/
     GHashTable *dialog_cancel;   /**hash table to map from dialog name (char*) to the variable controlling when the enumeration is cancelled**/
     int num_frontends;
 } BackendObj;
@@ -40,7 +41,18 @@ typedef struct _Mappings
 BackendObj *get_new_BackendObj();
 void connect_to_dbus(BackendObj *, char *obj_path);
 void add_frontend(BackendObj *, const char *dialog_name);
+void remove_frontend(BackendObj *, const char *dialog_name);
+gboolean no_frontends(BackendObj *);
 int *get_dialog_cancel(BackendObj *, const char *dialog_name);
+void set_dialog_cancel(BackendObj *, const char *dialog_name); //make cancel = 0
+void reset_dialog_cancel(BackendObj *, const char *dialog_name);//make cancel = 1
+gboolean dialog_contains_printer(BackendObj *,const char *dialog_name ,const char* printer_name );
+void add_printer_to_dialog(BackendObj *,const char *dialog_name ,const char* printer_name);
+void send_printer_added_signal(BackendObj *b,const char *dialog_name,cups_dest_t *dest);
+
+/*********Printer related functions******************/
+PrinterObj *get_new_PrinterObj(cups_dest_t *dest);
+
 /**********Mapping related functions*****************/
 Mappings *get_new_Mappings();
 /*************CUPS RELATED FUNCTIONS******************/

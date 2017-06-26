@@ -68,7 +68,7 @@ PrinterObj *get_new_PrinterObj()
 }
 void fill_basic_options(PrinterObj *p, GVariant *gv)
 {
-    g_variant_get(gv, "(ssssbs)",
+    g_variant_get(gv, PRINTER_ADDED_ARGS,
                   &(p->name),
                   &(p->info),
                   &(p->location),
