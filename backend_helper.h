@@ -44,11 +44,16 @@ void add_frontend(BackendObj *, const char *dialog_name);
 void remove_frontend(BackendObj *, const char *dialog_name);
 gboolean no_frontends(BackendObj *);
 int *get_dialog_cancel(BackendObj *, const char *dialog_name);
-void set_dialog_cancel(BackendObj *, const char *dialog_name); //make cancel = 0
-void reset_dialog_cancel(BackendObj *, const char *dialog_name);//make cancel = 1
-gboolean dialog_contains_printer(BackendObj *,const char *dialog_name ,const char* printer_name );
-void add_printer_to_dialog(BackendObj *,const char *dialog_name ,const char* printer_name);
-void send_printer_added_signal(BackendObj *b,const char *dialog_name,cups_dest_t *dest);
+void set_dialog_cancel(BackendObj *, const char *dialog_name);   //make cancel = 0
+void reset_dialog_cancel(BackendObj *, const char *dialog_name); //make cancel = 1
+gboolean dialog_contains_printer(BackendObj *, const char *dialog_name, const char *printer_name);
+void add_printer_to_dialog(BackendObj *, const char *dialog_name, cups_dest_t *dest);
+void remove_printer_from_dialog(BackendObj *, const char *dialog_name, const char *printer_name);
+void send_printer_added_signal(BackendObj *b, const char *dialog_name, cups_dest_t *dest);
+void send_printer_removed_signal(BackendObj *b, const char *dialog_name, const char *printer_name);
+void notify_removed_printers(BackendObj *b, const char *dialog_name , GHashTable *new_table);
+void notify_added_printers(BackendObj *b, const char *dialog_name , GHashTable *new_table);
+void replace_printers(BackendObj *b, const char *dialog_name , GHashTable *new_table);
 
 /*********Printer related functions******************/
 PrinterObj *get_new_PrinterObj(cups_dest_t *dest);
@@ -59,5 +64,6 @@ Mappings *get_new_Mappings();
 char *cups_printer_state(cups_dest_t *dest);
 gboolean cups_is_accepting_jobs(cups_dest_t *dest);
 void cups_get_Resolution(cups_dest_t *dest, int *xres, int *yres);
+GHashTable *cups_get_all_printers();
 
 #endif
