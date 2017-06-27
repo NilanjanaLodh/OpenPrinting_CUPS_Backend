@@ -6,6 +6,7 @@ BackendObj *get_new_BackendObj()
     b->dbus_connection = NULL;
     b->dialog_printers = g_hash_table_new(g_str_hash, g_str_equal);
     b->dialog_cancel = g_hash_table_new(g_str_hash, g_str_equal);
+    b->dialog_hide_remote = g_hash_table_new(g_str_hash, g_str_equal);
     b->num_frontends = 0;
     b->obj_path = NULL;
 }
@@ -28,6 +29,10 @@ void add_frontend(BackendObj *b, const char *_dialog_name)
     *cancel = 0;
     g_hash_table_insert(b->dialog_cancel, dialog_name, cancel); //memory issues
 
+    int *hide_rem = malloc(sizeof(gboolean));
+    *hide_rem = FALSE;
+    g_hash_table_insert(b->dialog_hide_remote, dialog_name, hide_rem); //memory issues
+
     GHashTable *printers = g_hash_table_new(g_str_hash, g_str_equal);
     g_hash_table_insert(b->dialog_printers, dialog_name, printers);
     b->num_frontends++;
@@ -39,10 +44,15 @@ void remove_frontend(BackendObj *b, const char *dialog_name)
     g_hash_table_remove(b->dialog_cancel, dialog_name);
     free(cancel);
 
+    gboolean *hide_rem =  (gboolean *)(g_hash_table_lookup(b->dialog_hide_remote, dialog_name));
+    g_hash_table_remove(b->dialog_hide_remote, dialog_name);
+    free(hide_rem);
+
     GHashTable *p = (GHashTable *)(g_hash_table_lookup(b->dialog_printers, dialog_name));
     g_hash_table_remove(b->dialog_printers, dialog_name);
     g_hash_table_destroy(p);
     b->num_frontends--;
+
     g_message("removed Frontend entry for %s", dialog_name);
 }
 gboolean no_frontends(BackendObj *b)
@@ -65,6 +75,16 @@ void reset_dialog_cancel(BackendObj *b, const char *dialog_name)
 {
     int *x = get_dialog_cancel(b, dialog_name);
     *x = 0;
+}
+void set_hide_remote_printers(BackendObj *b, const char *dialog_name)
+{
+    gboolean *hide_rem = (gboolean *)(g_hash_table_lookup(b->dialog_hide_remote, dialog_name));
+    *hide_rem = TRUE;
+}
+void unset_hide_remote_printers(BackendObj *b, const char *dialog_name)
+{
+    gboolean *hide_rem = (gboolean *)(g_hash_table_lookup(b->dialog_hide_remote, dialog_name));
+    *hide_rem = FALSE;
 }
 gboolean dialog_contains_printer(BackendObj *b, const char *dialog_name, const char *printer_name)
 {
@@ -107,7 +127,7 @@ void send_printer_added_signal(BackendObj *b, const char *dialog_name, cups_dest
 {
     ///see if this works well for remote printers too
 
-    if(dest == NULL)
+    if (dest == NULL)
     {
         printf("dest is NULL, can't send signal\n");
         exit(EXIT_FAILURE);
@@ -120,7 +140,6 @@ void send_printer_added_signal(BackendObj *b, const char *dialog_name, cups_dest
                                  cupsGetOption("printer-make-and-model", dest->num_options, dest->options),
                                  cups_is_accepting_jobs(dest),
                                  cups_printer_state(dest));
-    
 
     GError *error = NULL;
     g_dbus_connection_emit_signal(b->dbus_connection,
@@ -146,7 +165,7 @@ void send_printer_removed_signal(BackendObj *b, const char *dialog_name, const c
     g_assert_no_error(error);
 }
 
-void notify_removed_printers(BackendObj *b, const char *dialog_name, GHashTable *new_table)
+void    notify_removed_printers(BackendObj *b, const char *dialog_name, GHashTable *new_table)
 {
     GHashTableIter iter;
     GHashTable *prev = g_hash_table_lookup(b->dialog_printers, dialog_name);
@@ -155,7 +174,7 @@ void notify_removed_printers(BackendObj *b, const char *dialog_name, GHashTable 
     g_hash_table_iter_init(&iter, prev);
     while (g_hash_table_iter_next(&iter, &printer_name, NULL))
     {
-        //g_message("                                             .. %s ..\n", (gchar *)printer_name);
+        g_message("                                             .. %s ..\n", (gchar *)printer_name);
         if (!g_hash_table_contains(new_table, (gchar *)printer_name))
         {
             g_message("Printer %s removed\n", (char *)printer_name);
@@ -186,6 +205,23 @@ void notify_added_printers(BackendObj *b, const char *dialog_name, GHashTable *n
 void replace_printers(BackendObj *b, const char *dialog_name, GHashTable *new_table)
 {
     g_hash_table_replace(b->dialog_printers, (gpointer)dialog_name, new_table);
+}
+
+gboolean get_hide_remote(BackendObj *b, char *dialog_name)
+{
+    gboolean *hide_rem = (gboolean *)(g_hash_table_lookup(b->dialog_hide_remote, dialog_name));
+    return (*hide_rem);
+}
+void refresh_printer_list(BackendObj *b, char *dialog_name)
+{
+    GHashTable *new_printers;
+    if (get_hide_remote(b, dialog_name))
+        new_printers = cups_get_local_printers();
+    else
+        new_printers = cups_get_all_printers();
+    notify_removed_printers(b, dialog_name, new_printers);
+    notify_added_printers(b, dialog_name, new_printers);
+    replace_printers(b, dialog_name, new_printers);
 }
 /***************************PrinterObj********************************/
 PrinterObj *get_new_PrinterObj(cups_dest_t *dest)
@@ -253,14 +289,29 @@ int add_printer_to_ht(void *user_data, unsigned flags, cups_dest_t *dest)
 }
 GHashTable *cups_get_all_printers()
 {
+    printf("all printers\n");
     GHashTable *printers_ht = g_hash_table_new(g_str_hash, g_str_equal);
     cupsEnumDests(CUPS_DEST_FLAGS_NONE,
-                  800,               //timeout
+                  3000,               //timeout
                   NULL,              //cancel
                   0,                 //TYPE
                   0,                 //MASK
                   add_printer_to_ht, //function
                   printers_ht);      //user_data
+
+    return printers_ht;
+}
+GHashTable *cups_get_local_printers()
+{
+    printf("local printers\n");
+    GHashTable *printers_ht = g_hash_table_new(g_str_hash, g_str_equal);
+    cupsEnumDests(CUPS_DEST_FLAGS_NONE,
+                  1200,                 //timeout
+                  NULL,                //cancel
+                  CUPS_PRINTER_LOCAL,  //TYPE
+                  CUPS_PRINTER_REMOTE, //MASK
+                  add_printer_to_ht,   //function
+                  printers_ht);        //user_data
 
     return printers_ht;
 }

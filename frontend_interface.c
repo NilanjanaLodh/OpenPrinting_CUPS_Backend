@@ -196,11 +196,23 @@ static const _ExtendedGDBusSignalInfo _print_frontend_signal_info_hide_remote_pr
   "hide-remote-printers-cups"
 };
 
+static const _ExtendedGDBusSignalInfo _print_frontend_signal_info_unhide_remote_printers_cups =
+{
+  {
+    -1,
+    (gchar *) "UnhideRemotePrintersCUPS",
+    NULL,
+    NULL
+  },
+  "unhide-remote-printers-cups"
+};
+
 static const _ExtendedGDBusSignalInfo * const _print_frontend_signal_info_pointers[] =
 {
   &_print_frontend_signal_info_refresh_backend,
   &_print_frontend_signal_info_stop_listing,
   &_print_frontend_signal_info_hide_remote_printers_cups,
+  &_print_frontend_signal_info_unhide_remote_printers_cups,
   NULL
 };
 
@@ -261,6 +273,7 @@ print_frontend_override_properties (GObjectClass *klass, guint property_id_begin
  * @hide_remote_printers_cups: Handler for the #PrintFrontend::hide-remote-printers-cups signal.
  * @refresh_backend: Handler for the #PrintFrontend::refresh-backend signal.
  * @stop_listing: Handler for the #PrintFrontend::stop-listing signal.
+ * @unhide_remote_printers_cups: Handler for the #PrintFrontend::unhide-remote-printers-cups signal.
  *
  * Virtual table for the D-Bus interface <link linkend="gdbus-interface-org-openprinting-PrintFrontend.top_of_page">org.openprinting.PrintFrontend</link>.
  */
@@ -326,6 +339,24 @@ print_frontend_default_init (PrintFrontendIface *iface)
     G_TYPE_NONE,
     0);
 
+  /**
+   * PrintFrontend::unhide-remote-printers-cups:
+   * @object: A #PrintFrontend.
+   *
+   * On the client-side, this signal is emitted whenever the D-Bus signal <link linkend="gdbus-signal-org-openprinting-PrintFrontend.UnhideRemotePrintersCUPS">"UnhideRemotePrintersCUPS"</link> is received.
+   *
+   * On the service-side, this signal can be used with e.g. g_signal_emit_by_name() to make the object emit the D-Bus signal.
+   */
+  g_signal_new ("unhide-remote-printers-cups",
+    G_TYPE_FROM_INTERFACE (iface),
+    G_SIGNAL_RUN_LAST,
+    G_STRUCT_OFFSET (PrintFrontendIface, unhide_remote_printers_cups),
+    NULL,
+    NULL,
+    g_cclosure_marshal_generic,
+    G_TYPE_NONE,
+    0);
+
 }
 
 /**
@@ -365,6 +396,19 @@ print_frontend_emit_hide_remote_printers_cups (
     PrintFrontend *object)
 {
   g_signal_emit_by_name (object, "hide-remote-printers-cups");
+}
+
+/**
+ * print_frontend_emit_unhide_remote_printers_cups:
+ * @object: A #PrintFrontend.
+ *
+ * Emits the <link linkend="gdbus-signal-org-openprinting-PrintFrontend.UnhideRemotePrintersCUPS">"UnhideRemotePrintersCUPS"</link> D-Bus signal.
+ */
+void
+print_frontend_emit_unhide_remote_printers_cups (
+    PrintFrontend *object)
+{
+  g_signal_emit_by_name (object, "unhide-remote-printers-cups");
 }
 
 /* ------------------------------------------------------------------------ */
@@ -988,6 +1032,28 @@ _print_frontend_on_signal_hide_remote_printers_cups (
   g_list_free_full (connections, g_object_unref);
 }
 
+static void
+_print_frontend_on_signal_unhide_remote_printers_cups (
+    PrintFrontend *object)
+{
+  PrintFrontendSkeleton *skeleton = PRINT_FRONTEND_SKELETON (object);
+
+  GList      *connections, *l;
+  GVariant   *signal_variant;
+  connections = g_dbus_interface_skeleton_get_connections (G_DBUS_INTERFACE_SKELETON (skeleton));
+
+  signal_variant = g_variant_ref_sink (g_variant_new ("()"));
+  for (l = connections; l != NULL; l = l->next)
+    {
+      GDBusConnection *connection = l->data;
+      g_dbus_connection_emit_signal (connection,
+        NULL, g_dbus_interface_skeleton_get_object_path (G_DBUS_INTERFACE_SKELETON (skeleton)), "org.openprinting.PrintFrontend", "UnhideRemotePrintersCUPS",
+        signal_variant, NULL);
+    }
+  g_variant_unref (signal_variant);
+  g_list_free_full (connections, g_object_unref);
+}
+
 static void print_frontend_skeleton_iface_init (PrintFrontendIface *iface);
 #if GLIB_VERSION_MAX_ALLOWED >= GLIB_VERSION_2_38
 G_DEFINE_TYPE_WITH_CODE (PrintFrontendSkeleton, print_frontend_skeleton, G_TYPE_DBUS_INTERFACE_SKELETON,
@@ -1050,6 +1116,7 @@ print_frontend_skeleton_iface_init (PrintFrontendIface *iface)
   iface->refresh_backend = _print_frontend_on_signal_refresh_backend;
   iface->stop_listing = _print_frontend_on_signal_stop_listing;
   iface->hide_remote_printers_cups = _print_frontend_on_signal_hide_remote_printers_cups;
+  iface->unhide_remote_printers_cups = _print_frontend_on_signal_unhide_remote_printers_cups;
 }
 
 /**

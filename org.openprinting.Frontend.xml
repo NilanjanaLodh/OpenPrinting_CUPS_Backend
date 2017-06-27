@@ -3,5 +3,6 @@
         <signal name="RefreshBackend" />
         <signal name="StopListing"/>
         <signal name="HideRemotePrintersCUPS"/>
+        <signal name="UnhideRemotePrintersCUPS"/>
     </interface>
 </node>

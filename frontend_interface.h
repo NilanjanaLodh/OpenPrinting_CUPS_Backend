@@ -37,6 +37,9 @@ struct _PrintFrontendIface
   void (*stop_listing) (
     PrintFrontend *object);
 
+  void (*unhide_remote_printers_cups) (
+    PrintFrontend *object);
+
 };
 
 GType print_frontend_get_type (void) G_GNUC_CONST;
@@ -53,6 +56,9 @@ void print_frontend_emit_stop_listing (
     PrintFrontend *object);
 
 void print_frontend_emit_hide_remote_printers_cups (
+    PrintFrontend *object);
+
+void print_frontend_emit_unhide_remote_printers_cups (
     PrintFrontend *object);
 
 

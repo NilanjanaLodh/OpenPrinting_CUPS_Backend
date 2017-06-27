@@ -34,10 +34,18 @@ static void on_refresh_backend(GDBusConnection *connection,
                                const gchar *signal_name,
                                GVariant *parameters,
                                gpointer not_used);
+static void on_hide_remote_printers(GDBusConnection *connection,
+                                    const gchar *sender_name,
+                                    const gchar *object_path,
+                                    const gchar *interface_name,
+                                    const gchar *signal_name,
+                                    GVariant *parameters,
+                                    gpointer not_used);
 void connect_to_signals();
 
 BackendObj *b;
 Mappings *m;
+
 int main()
 {
     b = get_new_BackendObj();
@@ -146,13 +154,24 @@ static void on_refresh_backend(GDBusConnection *connection,
     char *dialog_name = strdup(sender_name);
     g_message("Refresh backend signal from %s\n", dialog_name);
     set_dialog_cancel(b, dialog_name); /// this stops the enumeration of printers
-    GHashTable *new_printers = cups_get_all_printers();
-    notify_removed_printers(b, dialog_name, new_printers);
-    notify_added_printers(b, dialog_name, new_printers); ///buggy
-    replace_printers(b, dialog_name, new_printers);
-
-    reset_dialog_cancel(b, dialog_name);
-    g_thread_new(NULL, list_printers, (gpointer)dialog_name); // risky - dup it??
+    refresh_printer_list(b,dialog_name);
+}
+static void on_hide_remote_printers(GDBusConnection *connection,
+                                    const gchar *sender_name,
+                                    const gchar *object_path,
+                                    const gchar *interface_name,
+                                    const gchar *signal_name,
+                                    GVariant *parameters,
+                                    gpointer not_used)
+{
+    char *dialog_name = strdup(sender_name);
+    g_message("%s signal from %s\n",HIDE_REMOTE_CUPS_SIGNAL, dialog_name);
+    if(!get_hide_remote(b,dialog_name))
+    {
+        set_dialog_cancel(b, dialog_name); 
+        set_hide_remote_printers(b, dialog_name);
+        refresh_printer_list(b,dialog_name);    
+    }
 }
 
 void connect_to_signals()
@@ -228,6 +247,16 @@ void connect_to_signals()
                                        NULL,                             /**match on all arguments**/
                                        0,                                //Flags
                                        on_refresh_backend,               //callback
+                                       NULL,                             //user_data
+                                       NULL);
+    g_dbus_connection_signal_subscribe(b->dbus_connection,
+                                       NULL,                             //Sender name
+                                       "org.openprinting.PrintFrontend", //Sender interface
+                                       HIDE_REMOTE_CUPS_SIGNAL,          //Signal name
+                                       NULL,                             /**match on all object paths**/
+                                       NULL,                             /**match on all arguments**/
+                                       0,                                //Flags
+                                       on_hide_remote_printers,          //callback
                                        NULL,                             //user_data
                                        NULL);
 }

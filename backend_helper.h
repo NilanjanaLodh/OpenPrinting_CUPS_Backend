@@ -26,6 +26,7 @@ typedef struct _BackendObj
     char *obj_path;
     GHashTable *dialog_printers; /**the hash table to map from dialog name (char*) to the set of printer names(char *) **/
     GHashTable *dialog_cancel;   /**hash table to map from dialog name (char*) to the variable controlling when the enumeration is cancelled**/
+    GHashTable *dialog_hide_remote;
     int num_frontends;
 } BackendObj;
 
@@ -46,6 +47,9 @@ gboolean no_frontends(BackendObj *);
 int *get_dialog_cancel(BackendObj *, const char *dialog_name);
 void set_dialog_cancel(BackendObj *, const char *dialog_name);   //make cancel = 0
 void reset_dialog_cancel(BackendObj *, const char *dialog_name); //make cancel = 1
+gboolean get_hide_remote(BackendObj *b, char *dialog_name);
+void set_hide_remote_printers(BackendObj *, const char *dialog_name);   
+void unset_hide_remote_printers(BackendObj *, const char *dialog_name);   
 gboolean dialog_contains_printer(BackendObj *, const char *dialog_name, const char *printer_name);
 void add_printer_to_dialog(BackendObj *, const char *dialog_name, cups_dest_t *dest);
 void remove_printer_from_dialog(BackendObj *, const char *dialog_name, const char *printer_name);
@@ -54,6 +58,7 @@ void send_printer_removed_signal(BackendObj *b, const char *dialog_name, const c
 void notify_removed_printers(BackendObj *b, const char *dialog_name , GHashTable *new_table);
 void notify_added_printers(BackendObj *b, const char *dialog_name , GHashTable *new_table);
 void replace_printers(BackendObj *b, const char *dialog_name , GHashTable *new_table);
+void refresh_printer_list(BackendObj *b, char *dialog_name);
 
 /*********Printer related functions******************/
 PrinterObj *get_new_PrinterObj(cups_dest_t *dest);
@@ -65,5 +70,5 @@ char *cups_printer_state(cups_dest_t *dest);
 gboolean cups_is_accepting_jobs(cups_dest_t *dest);
 void cups_get_Resolution(cups_dest_t *dest, int *xres, int *yres);
 GHashTable *cups_get_all_printers();
-
+GHashTable *cups_get_local_printers();
 #endif
