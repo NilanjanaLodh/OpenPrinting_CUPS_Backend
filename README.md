@@ -3,10 +3,10 @@ Contains implementation of the CUPS and IPP Backends for the Common Printing Dia
 
 Build and installation
 ----
-$ make gen
-$ make 
-$ sudo chmod u+x install.sh
-$ sudo ./install.sh
+- make gen
+- make 
+- sudo chmod u+x install.sh
+- sudo ./install.sh
 
 
 
