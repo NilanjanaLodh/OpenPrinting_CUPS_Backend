@@ -140,6 +140,11 @@ gpointer parse_commands(gpointer user_data)
             print_frontend_emit_hide_remote_printers_cups(skeleton);
             g_message("Hiding remote printers discovered by the cups backend..\n");
         }
+        else if (strcmp(buf, "unhide-remote-cups") == 0)
+        {
+            print_frontend_emit_unhide_remote_printers_cups(skeleton);
+            g_message("Unhiding remote printers discovered by the cups backend..\n");
+        }
         else if (strcmp(buf, "update-basic") == 0)
         {
             char printer_name[100];
@@ -219,7 +224,8 @@ void display_help()
     g_message("Available commands .. ");
     printf("%s\n","stop");
     printf("%s\n","refresh");
-    printf("%s\n","hide-remote-cups");    
+    printf("%s\n","hide-remote-cups");  
+    printf("%s\n","unhide-remote-cups");    
     // printf("%s\n","update-basic <printer name>");
     // printf("%s\n","get-capabilities <printer name>");
     // printf("%s\n","get-option-default <printer name> <option name>");

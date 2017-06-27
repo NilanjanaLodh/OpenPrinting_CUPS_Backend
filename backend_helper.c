@@ -174,7 +174,7 @@ void    notify_removed_printers(BackendObj *b, const char *dialog_name, GHashTab
     g_hash_table_iter_init(&iter, prev);
     while (g_hash_table_iter_next(&iter, &printer_name, NULL))
     {
-        g_message("                                             .. %s ..\n", (gchar *)printer_name);
+        //g_message("                                             .. %s ..\n", (gchar *)printer_name);
         if (!g_hash_table_contains(new_table, (gchar *)printer_name))
         {
             g_message("Printer %s removed\n", (char *)printer_name);

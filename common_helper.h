@@ -45,7 +45,7 @@
 #define PRINTER_ADDED_SIGNAL "PrinterAdded"
 #define PRINTER_REMOVED_SIGNAL "PrinterRemoved"
 #define HIDE_REMOTE_CUPS_SIGNAL "HideRemotePrintersCUPS"
-#define UNHIDE_REMOTE_CUPS_SIGNAL "HideRemotePrintersCUPS"
+#define UNHIDE_REMOTE_CUPS_SIGNAL "UnhideRemotePrintersCUPS"
 
 gboolean get_boolean(const char *);
 char *get_string_copy(const char *);
