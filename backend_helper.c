@@ -24,7 +24,7 @@ void connect_to_dbus(BackendObj *b, char *obj_path)
 
 void add_frontend(BackendObj *b, const char *_dialog_name)
 {
-    char *dialog_name = strdup(_dialog_name);
+    char *dialog_name = get_string_copy(_dialog_name);
     int *cancel = malloc(sizeof(int));
     *cancel = 0;
     g_hash_table_insert(b->dialog_cancel, dialog_name, cancel); //memory issues
@@ -102,7 +102,7 @@ gboolean dialog_contains_printer(BackendObj *b, const char *dialog_name, const c
 
 void add_printer_to_dialog(BackendObj *b, const char *dialog_name, cups_dest_t *dest)
 {
-    char *printer_name = strdup(dest->name);
+    char *printer_name = get_string_copy(dest->name);
     GHashTable *printers = g_hash_table_lookup(b->dialog_printers, dialog_name);
     if (printers == NULL)
     {
@@ -133,12 +133,12 @@ void send_printer_added_signal(BackendObj *b, const char *dialog_name, cups_dest
         printf("dest is NULL, can't send signal\n");
         exit(EXIT_FAILURE);
     }
-    char *printer_name = strdup(dest->name);
+    char *printer_name = get_string_copy(dest->name);
     GVariant *gv = g_variant_new(PRINTER_ADDED_ARGS,
                                  printer_name,
-                                 cupsGetOption("printer-info", dest->num_options, dest->options),
-                                 cupsGetOption("printer-location", dest->num_options, dest->options),
-                                 cupsGetOption("printer-make-and-model", dest->num_options, dest->options),
+                                 cups_retrieve_string(dest,"printer-info"),
+                                 cups_retrieve_string(dest,"printer-location"),
+                                 cups_retrieve_string(dest,"printer-make-and-model"),
                                  cups_is_accepting_jobs(dest),
                                  cups_printer_state(dest));
 
@@ -305,7 +305,7 @@ void cups_get_Resolution(cups_dest_t *dest, int *xres, int *yres)
 int add_printer_to_ht(void *user_data, unsigned flags, cups_dest_t *dest)
 {
     GHashTable *h = (GHashTable *)user_data;
-    char *printername = strdup(dest->name);
+    char *printername = get_string_copy(dest->name);
     cups_dest_t *dest_copy = NULL;
     cupsCopyDest(dest, 0, &dest_copy);
     g_hash_table_insert(h, printername, dest_copy);
@@ -337,4 +337,19 @@ GHashTable *cups_get_local_printers()
                   printers_ht);        //user_data
 
     return printers_ht;
+}
+char *cups_retrieve_string(cups_dest_t *dest, const char *option_name)
+{
+    /** this funtion is kind of a wrapper , to ensure that the return value is never NULL
+    , as that can cause the backend to segFault
+    **/
+    g_assert_nonnull(dest);
+    g_assert_nonnull(option_name);
+    char *ans = NULL;
+    ans = get_string_copy(cupsGetOption(option_name, dest->num_options, dest->options));
+
+    if (ans)
+        return ans;
+
+    return "NA";
 }

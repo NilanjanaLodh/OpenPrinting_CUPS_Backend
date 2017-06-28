@@ -120,7 +120,8 @@ int send_printer_added(void *_dialog_name, unsigned flags, cups_dest_t *dest)
 
     if (dialog_contains_printer(b, dialog_name, printer_name))
     {
-        //g_message("%s already sent.\n", printer_name);
+        g_message("%s already sent.\n", printer_name);
+        //send_printer_added_signal(b, dialog_name, dest);
         return 1;
     }
 
@@ -156,7 +157,7 @@ static void on_refresh_backend(GDBusConnection *connection,
                                GVariant *parameters,
                                gpointer not_used)
 {
-    char *dialog_name = strdup(sender_name);
+    char *dialog_name = get_string_copy(sender_name);
     g_message("Refresh backend signal from %s\n", dialog_name);
     set_dialog_cancel(b, dialog_name); /// this stops the enumeration of printers
     refresh_printer_list(b, dialog_name);
@@ -169,7 +170,7 @@ static void on_hide_remote_printers(GDBusConnection *connection,
                                     GVariant *parameters,
                                     gpointer not_used)
 {
-    char *dialog_name = strdup(sender_name);
+    char *dialog_name = get_string_copy(sender_name);
     g_message("%s signal from %s\n", HIDE_REMOTE_CUPS_SIGNAL, dialog_name);
     if (!get_hide_remote(b, dialog_name))
     {
@@ -186,7 +187,7 @@ static void on_unhide_remote_printers(GDBusConnection *connection,
                                       GVariant *parameters,
                                       gpointer not_used)
 {
-    char *dialog_name = strdup(sender_name);
+    char *dialog_name = get_string_copy(sender_name);
     g_message("%s signal from %s\n", UNHIDE_REMOTE_CUPS_SIGNAL, dialog_name);
     if (get_hide_remote(b, dialog_name))
     {
@@ -202,12 +203,12 @@ gboolean on_handle_list_basic_options(PrintBackend *interface,
 {
     g_message("Listing basic options for %s", printer_name);
     const char *dialog_name = g_dbus_method_invocation_get_sender(invocation); /// potential risk
-    cups_dest_t *dest = get_dest_by_name(b,dialog_name,printer_name);
+    cups_dest_t *dest = get_dest_by_name(b, dialog_name, printer_name);
     g_assert_nonnull(dest);
     print_backend_complete_list_basic_options(interface, invocation,
-                                              cupsGetOption("printer-info", dest->num_options, dest->options),
-                                              cupsGetOption("printer-location", dest->num_options, dest->options),
-                                              cupsGetOption("printer-make-and-model", dest->num_options, dest->options),
+                                              cups_retrieve_string(dest, "printer-info"),
+                                              cups_retrieve_string(dest, "printer-location"),
+                                              cups_retrieve_string(dest, "printer-make-and-model"),
                                               cups_is_accepting_jobs(dest),
                                               cups_printer_state(dest));
     return TRUE;

@@ -72,4 +72,5 @@ gboolean cups_is_accepting_jobs(cups_dest_t *dest);
 void cups_get_Resolution(cups_dest_t *dest, int *xres, int *yres);
 GHashTable *cups_get_all_printers();
 GHashTable *cups_get_local_printers();
+char *cups_retrieve_string(cups_dest_t *dest, const char* option_name);
 #endif

@@ -19,6 +19,8 @@ gboolean get_boolean(const char *g)
 
 char *get_string_copy(const char *str)
 {
+    if(str==NULL)
+        return NULL;
     char *s = malloc(sizeof(char) * (strlen(str) + 1));
     strcpy(s, str);
     return s;
