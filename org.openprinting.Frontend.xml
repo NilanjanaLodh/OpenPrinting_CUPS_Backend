@@ -4,5 +4,7 @@
         <signal name="StopListing"/>
         <signal name="HideRemotePrintersCUPS"/>
         <signal name="UnhideRemotePrintersCUPS"/>
+        <signal name="HideTemporaryPrintersCUPS"/>
+        <signal name="UnhideTemporaryPrintersCUPS"/>
     </interface>
 </node>

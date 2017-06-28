@@ -1625,6 +1625,17 @@ static const _ExtendedGDBusArgInfo _print_backend_signal_info_printer_added_ARG_
   FALSE
 };
 
+static const _ExtendedGDBusArgInfo _print_backend_signal_info_printer_added_ARG_printer_uri =
+{
+  {
+    -1,
+    (gchar *) "printer_uri",
+    (gchar *) "s",
+    NULL
+  },
+  FALSE
+};
+
 static const _ExtendedGDBusArgInfo _print_backend_signal_info_printer_added_ARG_printer_is_accepting_jobs =
 {
   {
@@ -1653,6 +1664,7 @@ static const _ExtendedGDBusArgInfo * const _print_backend_signal_info_printer_ad
   &_print_backend_signal_info_printer_added_ARG_printer_info,
   &_print_backend_signal_info_printer_added_ARG_printer_location,
   &_print_backend_signal_info_printer_added_ARG_printer_make_and_model,
+  &_print_backend_signal_info_printer_added_ARG_printer_uri,
   &_print_backend_signal_info_printer_added_ARG_printer_is_accepting_jobs,
   &_print_backend_signal_info_printer_added_ARG_printer_state,
   NULL
@@ -2362,6 +2374,7 @@ print_backend_default_init (PrintBackendIface *iface)
    * @arg_printer_info: Argument.
    * @arg_printer_location: Argument.
    * @arg_printer_make_and_model: Argument.
+   * @arg_printer_uri: Argument.
    * @arg_printer_is_accepting_jobs: Argument.
    * @arg_printer_state: Argument.
    *
@@ -2377,7 +2390,7 @@ print_backend_default_init (PrintBackendIface *iface)
     NULL,
     g_cclosure_marshal_generic,
     G_TYPE_NONE,
-    6, G_TYPE_STRING, G_TYPE_STRING, G_TYPE_STRING, G_TYPE_STRING, G_TYPE_BOOLEAN, G_TYPE_STRING);
+    7, G_TYPE_STRING, G_TYPE_STRING, G_TYPE_STRING, G_TYPE_STRING, G_TYPE_STRING, G_TYPE_BOOLEAN, G_TYPE_STRING);
 
   /**
    * PrintBackend::printer-removed:
@@ -2407,6 +2420,7 @@ print_backend_default_init (PrintBackendIface *iface)
  * @arg_printer_info: Argument to pass with the signal.
  * @arg_printer_location: Argument to pass with the signal.
  * @arg_printer_make_and_model: Argument to pass with the signal.
+ * @arg_printer_uri: Argument to pass with the signal.
  * @arg_printer_is_accepting_jobs: Argument to pass with the signal.
  * @arg_printer_state: Argument to pass with the signal.
  *
@@ -2419,10 +2433,11 @@ print_backend_emit_printer_added (
     const gchar *arg_printer_info,
     const gchar *arg_printer_location,
     const gchar *arg_printer_make_and_model,
+    const gchar *arg_printer_uri,
     gboolean arg_printer_is_accepting_jobs,
     const gchar *arg_printer_state)
 {
-  g_signal_emit_by_name (object, "printer-added", arg_printer_name, arg_printer_info, arg_printer_location, arg_printer_make_and_model, arg_printer_is_accepting_jobs, arg_printer_state);
+  g_signal_emit_by_name (object, "printer-added", arg_printer_name, arg_printer_info, arg_printer_location, arg_printer_make_and_model, arg_printer_uri, arg_printer_is_accepting_jobs, arg_printer_state);
 }
 
 /**
@@ -6188,6 +6203,7 @@ _print_backend_on_signal_printer_added (
     const gchar *arg_printer_info,
     const gchar *arg_printer_location,
     const gchar *arg_printer_make_and_model,
+    const gchar *arg_printer_uri,
     gboolean arg_printer_is_accepting_jobs,
     const gchar *arg_printer_state)
 {
@@ -6197,11 +6213,12 @@ _print_backend_on_signal_printer_added (
   GVariant   *signal_variant;
   connections = g_dbus_interface_skeleton_get_connections (G_DBUS_INTERFACE_SKELETON (skeleton));
 
-  signal_variant = g_variant_ref_sink (g_variant_new ("(ssssbs)",
+  signal_variant = g_variant_ref_sink (g_variant_new ("(sssssbs)",
                    arg_printer_name,
                    arg_printer_info,
                    arg_printer_location,
                    arg_printer_make_and_model,
+                   arg_printer_uri,
                    arg_printer_is_accepting_jobs,
                    arg_printer_state));
   for (l = connections; l != NULL; l = l->next)

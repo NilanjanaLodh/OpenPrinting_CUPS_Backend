@@ -34,7 +34,7 @@ int main(int argc, char **argv)
     char *dialog_bus_name = malloc(300);
     if (argc > 1) //this is for creating multiple instances of a dialog simultaneously
         sprintf(dialog_bus_name, "%s%s", DIALOG_BUS_NAME, argv[1]);
-    else 
+    else
         sprintf(dialog_bus_name, "%s", DIALOG_BUS_NAME);
     f = get_new_FrontendObj();
     g_bus_own_name(G_BUS_TYPE_SESSION,
@@ -149,6 +149,16 @@ gpointer parse_commands(gpointer user_data)
             print_frontend_emit_unhide_remote_printers_cups(skeleton);
             g_message("Unhiding remote printers discovered by the cups backend..\n");
         }
+        else if (strcmp(buf, "hide-temporary-cups") == 0)
+        {
+            print_frontend_emit_hide_temporary_printers_cups(skeleton);
+            g_message("Hiding remote printers discovered by the cups backend..\n");
+        }
+        else if (strcmp(buf, "unhide-temporary-cups") == 0)
+        {
+            print_frontend_emit_unhide_temporary_printers_cups(skeleton);
+            g_message("Unhiding remote printers discovered by the cups backend..\n");
+        }
         else if (strcmp(buf, "update-basic") == 0)
         {
             char printer_name[100];
@@ -223,6 +233,7 @@ gpointer parse_commands(gpointer user_data)
         }
     }
 }
+
 void display_help()
 {
     g_message("Available commands .. ");
@@ -231,6 +242,8 @@ void display_help()
     printf("%s\n", "hide-remote-cups");
     printf("%s\n", "unhide-remote-cups");
     printf("%s\n", "update-basic <printer name>");
+    printf("%s\n", "hide-temporary-cups");
+    printf("%s\n", "unhide-temporary-cups");
     // printf("%s\n","get-capabilities <printer name>");
     // printf("%s\n","get-option-default <printer name> <option name>");
     // printf("%s\n","get-supported-raw <printer name> <option name>");

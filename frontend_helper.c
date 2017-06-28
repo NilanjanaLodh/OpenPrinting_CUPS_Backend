@@ -11,6 +11,7 @@ void fill_basic_options(PrinterObj *p, GVariant *gv)
                   &(p->info),
                   &(p->location),
                   &(p->make_and_model),
+                  &(p->uri),
                   &(p->is_accepting_jobs),
                   &(p->state));
 }
@@ -20,10 +21,11 @@ void print_basic_options(PrinterObj *p)
                 location : %s\n\
                 info : %s\n\
                 make and model : %s\n\
+                uri : %s\n\
                 accepting_jobs : %d\n\
                 state : %s\n",
               p->name,
-              p->location, p->info, p->make_and_model, p->is_accepting_jobs, p->state);
+              p->location, p->info, p->make_and_model,p->uri, p->is_accepting_jobs, p->state);
 }
 
 void update_basic_options(PrinterObj *p)

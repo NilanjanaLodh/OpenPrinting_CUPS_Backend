@@ -162,6 +162,7 @@ struct _PrintBackendIface
     const gchar *arg_printer_info,
     const gchar *arg_printer_location,
     const gchar *arg_printer_make_and_model,
+    const gchar *arg_printer_uri,
     gboolean arg_printer_is_accepting_jobs,
     const gchar *arg_printer_state);
 
@@ -323,6 +324,7 @@ void print_backend_emit_printer_added (
     const gchar *arg_printer_info,
     const gchar *arg_printer_location,
     const gchar *arg_printer_make_and_model,
+    const gchar *arg_printer_uri,
     gboolean arg_printer_is_accepting_jobs,
     const gchar *arg_printer_state);
 

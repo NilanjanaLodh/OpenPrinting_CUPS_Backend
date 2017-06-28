@@ -7,6 +7,7 @@ BackendObj *get_new_BackendObj()
     b->dialog_printers = g_hash_table_new(g_str_hash, g_str_equal);
     b->dialog_cancel = g_hash_table_new(g_str_hash, g_str_equal);
     b->dialog_hide_remote = g_hash_table_new(g_str_hash, g_str_equal);
+    b->dialog_hide_temp = g_hash_table_new(g_str_hash, g_str_equal);
     b->num_frontends = 0;
     b->obj_path = NULL;
 }
@@ -32,6 +33,10 @@ void add_frontend(BackendObj *b, const char *_dialog_name)
     int *hide_rem = malloc(sizeof(gboolean));
     *hide_rem = FALSE;
     g_hash_table_insert(b->dialog_hide_remote, dialog_name, hide_rem); //memory issues
+
+    int *hide_temp = malloc(sizeof(gboolean));
+    *hide_temp = FALSE;
+    g_hash_table_insert(b->dialog_hide_temp, dialog_name, hide_temp); //memory issues
 
     GHashTable *printers = g_hash_table_new(g_str_hash, g_str_equal);
     g_hash_table_insert(b->dialog_printers, dialog_name, printers);
@@ -86,6 +91,16 @@ void unset_hide_remote_printers(BackendObj *b, const char *dialog_name)
     gboolean *hide_rem = (gboolean *)(g_hash_table_lookup(b->dialog_hide_remote, dialog_name));
     *hide_rem = FALSE;
 }
+void set_hide_temp_printers(BackendObj *b, const char *dialog_name)
+{
+    gboolean *hide_temp = (gboolean *)(g_hash_table_lookup(b->dialog_hide_temp, dialog_name));
+    *hide_temp = TRUE;
+}
+void unset_hide_temp_printers(BackendObj *b, const char *dialog_name)
+{
+    gboolean *hide_temp = (gboolean *)(g_hash_table_lookup(b->dialog_hide_temp, dialog_name));
+    *hide_temp = FALSE;
+}
 gboolean dialog_contains_printer(BackendObj *b, const char *dialog_name, const char *printer_name)
 {
     GHashTable *printers = g_hash_table_lookup(b->dialog_printers, dialog_name);
@@ -136,9 +151,10 @@ void send_printer_added_signal(BackendObj *b, const char *dialog_name, cups_dest
     char *printer_name = get_string_copy(dest->name);
     GVariant *gv = g_variant_new(PRINTER_ADDED_ARGS,
                                  printer_name,
-                                 cups_retrieve_string(dest,"printer-info"),
-                                 cups_retrieve_string(dest,"printer-location"),
-                                 cups_retrieve_string(dest,"printer-make-and-model"),
+                                 cups_retrieve_string(dest, "printer-info"),
+                                 cups_retrieve_string(dest, "printer-location"),
+                                 cups_retrieve_string(dest, "printer-make-and-model"),
+                                 cups_retrieve_string(dest, "printer-uri-supported"),
                                  cups_is_accepting_jobs(dest),
                                  cups_printer_state(dest));
 
@@ -213,13 +229,15 @@ gboolean get_hide_remote(BackendObj *b, char *dialog_name)
     gboolean *hide_rem = (gboolean *)(g_hash_table_lookup(b->dialog_hide_remote, dialog_name));
     return (*hide_rem);
 }
+gboolean get_hide_temp(BackendObj *b, char *dialog_name)
+{
+    gboolean *hide_temp = (gboolean *)(g_hash_table_lookup(b->dialog_hide_temp, dialog_name));
+    return (*hide_temp);
+}
 void refresh_printer_list(BackendObj *b, char *dialog_name)
 {
     GHashTable *new_printers;
-    if (get_hide_remote(b, dialog_name))
-        new_printers = cups_get_local_printers();
-    else
-        new_printers = cups_get_all_printers();
+    new_printers = cups_get_printers(get_hide_temp(b, dialog_name), get_hide_remote(b, dialog_name));
     notify_removed_printers(b, dialog_name, new_printers);
     notify_added_printers(b, dialog_name, new_printers);
     replace_printers(b, dialog_name, new_printers);
@@ -309,6 +327,45 @@ int add_printer_to_ht(void *user_data, unsigned flags, cups_dest_t *dest)
     cups_dest_t *dest_copy = NULL;
     cupsCopyDest(dest, 0, &dest_copy);
     g_hash_table_insert(h, printername, dest_copy);
+
+    return 1;
+}
+int add_printer_to_ht_no_temp(void *user_data, unsigned flags, cups_dest_t *dest)
+{
+    if (cups_is_temporary(dest))
+        return 1;
+    GHashTable *h = (GHashTable *)user_data;
+    char *printername = get_string_copy(dest->name);
+    cups_dest_t *dest_copy = NULL;
+    cupsCopyDest(dest, 0, &dest_copy);
+    g_hash_table_insert(h, printername, dest_copy);
+    return 1;
+}
+
+GHashTable *cups_get_printers(gboolean notemp, gboolean noremote)
+{
+    cups_dest_cb_t cb = add_printer_to_ht;
+    unsigned type = 0, mask = 0;
+    if (noremote)
+    {
+        type = CUPS_PRINTER_LOCAL;
+        mask = CUPS_PRINTER_REMOTE;
+    }
+    if (notemp)
+    {
+        cb = add_printer_to_ht_no_temp;
+    }
+
+    GHashTable *printers_ht = g_hash_table_new(g_str_hash, g_str_equal);
+    cupsEnumDests(CUPS_DEST_FLAGS_NONE,
+                  1000,         //timeout
+                  NULL,         //cancel
+                  type,         //TYPE
+                  mask,         //MASK
+                  cb,           //function
+                  printers_ht); //user_data
+
+    return printers_ht;
 }
 GHashTable *cups_get_all_printers()
 {
@@ -352,4 +409,12 @@ char *cups_retrieve_string(cups_dest_t *dest, const char *option_name)
         return ans;
 
     return "NA";
+}
+
+gboolean cups_is_temporary(cups_dest_t *dest)
+{
+    g_assert_nonnull(dest);
+    if (cupsGetOption("printer-uri-supported", dest->num_options, dest->options))
+        return FALSE;
+    return TRUE;
 }

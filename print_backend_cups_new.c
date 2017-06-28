@@ -121,7 +121,6 @@ int send_printer_added(void *_dialog_name, unsigned flags, cups_dest_t *dest)
     if (dialog_contains_printer(b, dialog_name, printer_name))
     {
         g_message("%s already sent.\n", printer_name);
-        //send_printer_added_signal(b, dialog_name, dest);
         return 1;
     }
 
@@ -193,6 +192,40 @@ static void on_unhide_remote_printers(GDBusConnection *connection,
     {
         set_dialog_cancel(b, dialog_name);
         unset_hide_remote_printers(b, dialog_name);
+        refresh_printer_list(b, dialog_name);
+    }
+}
+static void on_hide_temp_printers(GDBusConnection *connection,
+                                    const gchar *sender_name,
+                                    const gchar *object_path,
+                                    const gchar *interface_name,
+                                    const gchar *signal_name,
+                                    GVariant *parameters,
+                                    gpointer not_used)
+{
+    char *dialog_name = get_string_copy(sender_name);
+    g_message("%s signal from %s\n", HIDE_TEMP_CUPS_SIGNAL, dialog_name);
+    if (!get_hide_temp(b, dialog_name))
+    {
+        set_dialog_cancel(b, dialog_name);
+        set_hide_temp_printers(b, dialog_name);
+        refresh_printer_list(b, dialog_name);
+    }
+}
+static void on_unhide_temp_printers(GDBusConnection *connection,
+                                      const gchar *sender_name,
+                                      const gchar *object_path,
+                                      const gchar *interface_name,
+                                      const gchar *signal_name,
+                                      GVariant *parameters,
+                                      gpointer not_used)
+{
+    char *dialog_name = get_string_copy(sender_name);
+    g_message("%s signal from %s\n", UNHIDE_TEMP_CUPS_SIGNAL, dialog_name);
+    if (get_hide_temp(b, dialog_name))
+    {
+        set_dialog_cancel(b, dialog_name);
+        unset_hide_temp_printers(b, dialog_name);
         refresh_printer_list(b, dialog_name);
     }
 }
@@ -306,6 +339,26 @@ void connect_to_signals()
                                        NULL,                             /**match on all arguments**/
                                        0,                                //Flags
                                        on_unhide_remote_printers,        //callback
+                                       NULL,                             //user_data
+                                       NULL);
+    g_dbus_connection_signal_subscribe(b->dbus_connection,
+                                       NULL,                             //Sender name
+                                       "org.openprinting.PrintFrontend", //Sender interface
+                                       HIDE_TEMP_CUPS_SIGNAL,            //Signal name
+                                       NULL,                             /**match on all object paths**/
+                                       NULL,                             /**match on all arguments**/
+                                       0,                                //Flags
+                                       on_hide_temp_printers,          //callback
+                                       NULL,                             //user_data
+                                       NULL);
+    g_dbus_connection_signal_subscribe(b->dbus_connection,
+                                       NULL,                             //Sender name
+                                       "org.openprinting.PrintFrontend", //Sender interface
+                                       UNHIDE_TEMP_CUPS_SIGNAL,          //Signal name
+                                       NULL,                             /**match on all object paths**/
+                                       NULL,                             /**match on all arguments**/
+                                       0,                                //Flags
+                                       on_unhide_temp_printers,        //callback
                                        NULL,                             //user_data
                                        NULL);
 }

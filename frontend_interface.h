@@ -31,6 +31,9 @@ struct _PrintFrontendIface
   void (*hide_remote_printers_cups) (
     PrintFrontend *object);
 
+  void (*hide_temporary_printers_cups) (
+    PrintFrontend *object);
+
   void (*refresh_backend) (
     PrintFrontend *object);
 
@@ -38,6 +41,9 @@ struct _PrintFrontendIface
     PrintFrontend *object);
 
   void (*unhide_remote_printers_cups) (
+    PrintFrontend *object);
+
+  void (*unhide_temporary_printers_cups) (
     PrintFrontend *object);
 
 };
@@ -59,6 +65,12 @@ void print_frontend_emit_hide_remote_printers_cups (
     PrintFrontend *object);
 
 void print_frontend_emit_unhide_remote_printers_cups (
+    PrintFrontend *object);
+
+void print_frontend_emit_hide_temporary_printers_cups (
+    PrintFrontend *object);
+
+void print_frontend_emit_unhide_temporary_printers_cups (
     PrintFrontend *object);
 
 

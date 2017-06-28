@@ -27,6 +27,7 @@ typedef struct _BackendObj
     GHashTable *dialog_printers; /**the hash table to map from dialog name (char*) to the set of printer names(char *) **/
     GHashTable *dialog_cancel;   /**hash table to map from dialog name (char*) to the variable controlling when the enumeration is cancelled**/
     GHashTable *dialog_hide_remote;
+    GHashTable *dialog_hide_temp;
     int num_frontends;
 } BackendObj;
 
@@ -48,19 +49,22 @@ int *get_dialog_cancel(BackendObj *, const char *dialog_name);
 void set_dialog_cancel(BackendObj *, const char *dialog_name);   //make cancel = 0
 void reset_dialog_cancel(BackendObj *, const char *dialog_name); //make cancel = 1
 gboolean get_hide_remote(BackendObj *b, char *dialog_name);
-void set_hide_remote_printers(BackendObj *, const char *dialog_name);   
-void unset_hide_remote_printers(BackendObj *, const char *dialog_name);   
+void set_hide_remote_printers(BackendObj *, const char *dialog_name);
+void unset_hide_remote_printers(BackendObj *, const char *dialog_name);
+gboolean get_hide_temp(BackendObj *b, char *dialog_name);
+void set_hide_temp_printers(BackendObj *, const char *dialog_name);
+void unset_hide_temp_printers(BackendObj *, const char *dialog_name);
 gboolean dialog_contains_printer(BackendObj *, const char *dialog_name, const char *printer_name);
 void add_printer_to_dialog(BackendObj *, const char *dialog_name, cups_dest_t *dest);
 void remove_printer_from_dialog(BackendObj *, const char *dialog_name, const char *printer_name);
 void send_printer_added_signal(BackendObj *b, const char *dialog_name, cups_dest_t *dest);
 void send_printer_removed_signal(BackendObj *b, const char *dialog_name, const char *printer_name);
-void notify_removed_printers(BackendObj *b, const char *dialog_name , GHashTable *new_table);
-void notify_added_printers(BackendObj *b, const char *dialog_name , GHashTable *new_table);
-void replace_printers(BackendObj *b, const char *dialog_name , GHashTable *new_table);
+void notify_removed_printers(BackendObj *b, const char *dialog_name, GHashTable *new_table);
+void notify_added_printers(BackendObj *b, const char *dialog_name, GHashTable *new_table);
+void replace_printers(BackendObj *b, const char *dialog_name, GHashTable *new_table);
 void refresh_printer_list(BackendObj *b, char *dialog_name);
 GHashTable *get_dialog_printers(BackendObj *b, const char *dialog_name);
-cups_dest_t * get_dest_by_name(BackendObj *b, const char *dialog_name ,const char * printer_name );
+cups_dest_t *get_dest_by_name(BackendObj *b, const char *dialog_name, const char *printer_name);
 /*********Printer related functions******************/
 PrinterObj *get_new_PrinterObj(cups_dest_t *dest);
 
@@ -72,5 +76,7 @@ gboolean cups_is_accepting_jobs(cups_dest_t *dest);
 void cups_get_Resolution(cups_dest_t *dest, int *xres, int *yres);
 GHashTable *cups_get_all_printers();
 GHashTable *cups_get_local_printers();
-char *cups_retrieve_string(cups_dest_t *dest, const char* option_name);
+char *cups_retrieve_string(cups_dest_t *dest, const char *option_name);
+gboolean cups_is_temporary(cups_dest_t *dest);
+GHashTable *cups_get_printers(gboolean notemp, gboolean noremote);
 #endif

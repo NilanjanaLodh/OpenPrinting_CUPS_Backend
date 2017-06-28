@@ -5,6 +5,7 @@
             <arg name="printer_info" direction="out" type="s" />
             <arg name="printer_location" direction="out" type="s" />
             <arg name="printer_make_and_model" direction="out" type="s" />
+            <arg name="printer_uri" direction="out" type="s" />
             <arg name="printer_is_accepting_jobs" direction="out" type="b" />
             <arg name="printer_state" direction="out" type="s" />
             <!--<arg name="auth_info_reqd" direction="out" type="s"/> -->

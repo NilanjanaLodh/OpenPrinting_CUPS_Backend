@@ -136,7 +136,6 @@ struct _PrinterObj
     char *state; //to do : change the boolean state variables too when you inp
     gboolean is_printing;
     gboolean is_accepting_jobs;
-
     PrinterCapabilities capabilities;
     SupportedValues supported;
     CurrentValues current;

@@ -1,7 +1,7 @@
 #ifndef _COMMON_HELPER_H_
 #define _COMMON_HELPER_H_
 
-#define PRINTER_ADDED_ARGS "(ssssbs)"
+#define PRINTER_ADDED_ARGS "(sssssbs)"
 /*********LISTING OF ALL POSSIBLE OPTIONS*****/
 //Rename these to something better if needed
 
@@ -46,7 +46,8 @@
 #define PRINTER_REMOVED_SIGNAL "PrinterRemoved"
 #define HIDE_REMOTE_CUPS_SIGNAL "HideRemotePrintersCUPS"
 #define UNHIDE_REMOTE_CUPS_SIGNAL "UnhideRemotePrintersCUPS"
-
+#define HIDE_TEMP_CUPS_SIGNAL "HideTemporaryPrintersCUPS"
+#define UNHIDE_TEMP_CUPS_SIGNAL "UnhideTemporaryPrintersCUPS"
 gboolean get_boolean(const char *);
 char *get_string_copy(const char *);
 #endif
