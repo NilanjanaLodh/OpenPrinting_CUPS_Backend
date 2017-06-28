@@ -27,14 +27,18 @@ static void on_printer_removed(GDBusConnection *connection,
 void display_help();
 gpointer parse_commands(gpointer user_data);
 FrontendObj *f;
-int main()
+int main(int argc, char **argv)
 {
     // printers = g_hash_table_new(g_str_hash, g_str_equal);
     //backends = g_hash_table_new(g_str_hash, g_str_equal);
-
+    char *dialog_bus_name = malloc(300);
+    if (argc > 1) //this is for creating multiple instances of a dialog simultaneously
+        sprintf(dialog_bus_name, "%s%s", DIALOG_BUS_NAME, argv[1]);
+    else 
+        sprintf(dialog_bus_name, "%s", DIALOG_BUS_NAME);
     f = get_new_FrontendObj();
     g_bus_own_name(G_BUS_TYPE_SESSION,
-                   DIALOG_BUS_NAME,
+                   dialog_bus_name,
                    0,                //flags
                    NULL,             //bus_acquired_handler
                    on_name_acquired, //name acquired handler
@@ -213,7 +217,7 @@ gpointer parse_commands(gpointer user_data)
             scanf("%s", printer_name);
             get_printer_resolution(f, printer_name);
         }
-        else if (strcmp(buf, "help")==0)
+        else if (strcmp(buf, "help") == 0)
         {
             display_help();
         }
@@ -222,11 +226,11 @@ gpointer parse_commands(gpointer user_data)
 void display_help()
 {
     g_message("Available commands .. ");
-    printf("%s\n","stop");
-    printf("%s\n","refresh");
-    printf("%s\n","hide-remote-cups");  
-    printf("%s\n","unhide-remote-cups");    
-    // printf("%s\n","update-basic <printer name>");
+    printf("%s\n", "stop");
+    printf("%s\n", "refresh");
+    printf("%s\n", "hide-remote-cups");
+    printf("%s\n", "unhide-remote-cups");
+    printf("%s\n", "update-basic <printer name>");
     // printf("%s\n","get-capabilities <printer name>");
     // printf("%s\n","get-option-default <printer name> <option name>");
     // printf("%s\n","get-supported-raw <printer name> <option name>");
@@ -235,8 +239,6 @@ void display_help()
     // printf("%s\n","get-supported-quality <printer name>");
     // printf("%s\n","get-supported-orientation <printer name>");
     // printf("%s\n","get-state <printer name>");
-    // printf("%s\n","get-resolution <printer name>");    
+    // printf("%s\n","get-resolution <printer name>");
     // printf("%s\n","is-accepting-jobs <printer name>");
- 
-    
 }

@@ -59,7 +59,8 @@ void notify_removed_printers(BackendObj *b, const char *dialog_name , GHashTable
 void notify_added_printers(BackendObj *b, const char *dialog_name , GHashTable *new_table);
 void replace_printers(BackendObj *b, const char *dialog_name , GHashTable *new_table);
 void refresh_printer_list(BackendObj *b, char *dialog_name);
-
+GHashTable *get_dialog_printers(BackendObj *b, const char *dialog_name);
+cups_dest_t * get_dest_by_name(BackendObj *b, const char *dialog_name ,const char * printer_name );
 /*********Printer related functions******************/
 PrinterObj *get_new_PrinterObj(cups_dest_t *dest);
 

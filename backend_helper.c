@@ -44,7 +44,7 @@ void remove_frontend(BackendObj *b, const char *dialog_name)
     g_hash_table_remove(b->dialog_cancel, dialog_name);
     free(cancel);
 
-    gboolean *hide_rem =  (gboolean *)(g_hash_table_lookup(b->dialog_hide_remote, dialog_name));
+    gboolean *hide_rem = (gboolean *)(g_hash_table_lookup(b->dialog_hide_remote, dialog_name));
     g_hash_table_remove(b->dialog_hide_remote, dialog_name);
     free(hide_rem);
 
@@ -111,6 +111,7 @@ void add_printer_to_dialog(BackendObj *b, const char *dialog_name, cups_dest_t *
     }
     cups_dest_t *dest_copy = NULL;
     cupsCopyDest(dest, 0, &dest_copy);
+    g_assert_nonnull(dest_copy);
     g_hash_table_insert(printers, printer_name, dest_copy); ///mem
 }
 void remove_printer_from_dialog(BackendObj *b, const char *dialog_name, const char *printer_name)
@@ -165,7 +166,7 @@ void send_printer_removed_signal(BackendObj *b, const char *dialog_name, const c
     g_assert_no_error(error);
 }
 
-void    notify_removed_printers(BackendObj *b, const char *dialog_name, GHashTable *new_table)
+void notify_removed_printers(BackendObj *b, const char *dialog_name, GHashTable *new_table)
 {
     GHashTableIter iter;
     GHashTable *prev = g_hash_table_lookup(b->dialog_printers, dialog_name);
@@ -223,6 +224,28 @@ void refresh_printer_list(BackendObj *b, char *dialog_name)
     notify_added_printers(b, dialog_name, new_printers);
     replace_printers(b, dialog_name, new_printers);
 }
+GHashTable *get_dialog_printers(BackendObj *b, const char *dialog_name)
+{
+    GHashTable *printers = (g_hash_table_lookup(b->dialog_printers, dialog_name));
+    if (printers == NULL)
+    {
+        printf("Invalid dialog name %s . Printers not found.\n", dialog_name);
+        exit(EXIT_FAILURE);
+    }
+    return printers;
+}
+cups_dest_t *get_dest_by_name(BackendObj *b, const char *dialog_name, const char *printer_name)
+{
+    GHashTable *printers = get_dialog_printers(b, dialog_name);
+    g_assert_nonnull(printers);
+    cups_dest_t *dest = (g_hash_table_lookup(printers, printer_name));
+    if (dest == NULL)
+    {
+        printf("Printer '%s' does not exist for the dialog %s.\n", printer_name, dialog_name);
+    }
+    return dest;
+}
+
 /***************************PrinterObj********************************/
 PrinterObj *get_new_PrinterObj(cups_dest_t *dest)
 {
@@ -292,7 +315,7 @@ GHashTable *cups_get_all_printers()
     printf("all printers\n");
     GHashTable *printers_ht = g_hash_table_new(g_str_hash, g_str_equal);
     cupsEnumDests(CUPS_DEST_FLAGS_NONE,
-                  3000,               //timeout
+                  3000,              //timeout
                   NULL,              //cancel
                   0,                 //TYPE
                   0,                 //MASK
@@ -306,7 +329,7 @@ GHashTable *cups_get_local_printers()
     printf("local printers\n");
     GHashTable *printers_ht = g_hash_table_new(g_str_hash, g_str_equal);
     cupsEnumDests(CUPS_DEST_FLAGS_NONE,
-                  1200,                 //timeout
+                  1200,                //timeout
                   NULL,                //cancel
                   CUPS_PRINTER_LOCAL,  //TYPE
                   CUPS_PRINTER_REMOTE, //MASK

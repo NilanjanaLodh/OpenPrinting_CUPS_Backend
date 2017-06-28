@@ -21,8 +21,14 @@ The list of printers discovered should start appearing automatically.
 type __help__ to get a list of available commands at the backend.
 
 
+To run multiple frontends simultaneously, supply an extra argument denoting the instance number. For example:
+-  ./print_frontend 1
+In another terminal: 
+-  ./print_frontend 2
+
+
 **NOTE** : 
-- Make sure you exit the frontend using the __stop__ command only; otherwise the backend doesn't get notified and keeps running in the background, hogging resources.
+- Make sure you exit all the frontends using the __stop__ command only; otherwise the backend doesn't get notified and keeps running in the background, hogging resources.
 - Apart from the autoactivating method, you can also run the backend first in one terminal and then run the frontend in another. Doing this will allow you to see the debug statements at the backend.
 
 

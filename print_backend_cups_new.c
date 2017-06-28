@@ -41,7 +41,11 @@ static void on_hide_remote_printers(GDBusConnection *connection,
                                     const gchar *signal_name,
                                     GVariant *parameters,
                                     gpointer not_used);
-                                    
+static gboolean on_handle_list_basic_options(PrintBackend *interface,
+                                             GDBusMethodInvocation *invocation,
+                                             const gchar *printer_name,
+                                             gpointer user_data);
+
 void connect_to_signals();
 
 BackendObj *b;
@@ -175,12 +179,12 @@ static void on_hide_remote_printers(GDBusConnection *connection,
     }
 }
 static void on_unhide_remote_printers(GDBusConnection *connection,
-                                    const gchar *sender_name,
-                                    const gchar *object_path,
-                                    const gchar *interface_name,
-                                    const gchar *signal_name,
-                                    GVariant *parameters,
-                                    gpointer not_used)
+                                      const gchar *sender_name,
+                                      const gchar *object_path,
+                                      const gchar *interface_name,
+                                      const gchar *signal_name,
+                                      GVariant *parameters,
+                                      gpointer not_used)
 {
     char *dialog_name = strdup(sender_name);
     g_message("%s signal from %s\n", UNHIDE_REMOTE_CUPS_SIGNAL, dialog_name);
@@ -191,6 +195,23 @@ static void on_unhide_remote_printers(GDBusConnection *connection,
         refresh_printer_list(b, dialog_name);
     }
 }
+gboolean on_handle_list_basic_options(PrintBackend *interface,
+                                      GDBusMethodInvocation *invocation,
+                                      const gchar *printer_name,
+                                      gpointer user_data)
+{
+    g_message("Listing basic options for %s", printer_name);
+    const char *dialog_name = g_dbus_method_invocation_get_sender(invocation); /// potential risk
+    cups_dest_t *dest = get_dest_by_name(b,dialog_name,printer_name);
+    g_assert_nonnull(dest);
+    print_backend_complete_list_basic_options(interface, invocation,
+                                              cupsGetOption("printer-info", dest->num_options, dest->options),
+                                              cupsGetOption("printer-location", dest->num_options, dest->options),
+                                              cupsGetOption("printer-make-and-model", dest->num_options, dest->options),
+                                              cups_is_accepting_jobs(dest),
+                                              cups_printer_state(dest));
+    return TRUE;
+}
 void connect_to_signals()
 {
     PrintBackend *skeleton = b->skeleton;
@@ -199,10 +220,10 @@ void connect_to_signals()
                      G_CALLBACK(on_handle_activate_backend), //callback
                      NULL);
 
-    // g_signal_connect(skeleton,                                 //instance
-    //                  "handle-list-basic-options",              //signal name
-    //                  G_CALLBACK(on_handle_list_basic_options), //callback
-    //                  NULL);                                    //user_data
+    g_signal_connect(skeleton,                                 //instance
+                     "handle-list-basic-options",              //signal name
+                     G_CALLBACK(on_handle_list_basic_options), //callback
+                     NULL);                                    //user_data
 
     // g_signal_connect(skeleton,                                       //instance
     //                  "handle-get-printer-capabilities",              //signal name
@@ -279,11 +300,11 @@ void connect_to_signals()
     g_dbus_connection_signal_subscribe(b->dbus_connection,
                                        NULL,                             //Sender name
                                        "org.openprinting.PrintFrontend", //Sender interface
-                                       UNHIDE_REMOTE_CUPS_SIGNAL,          //Signal name
+                                       UNHIDE_REMOTE_CUPS_SIGNAL,        //Signal name
                                        NULL,                             /**match on all object paths**/
                                        NULL,                             /**match on all arguments**/
                                        0,                                //Flags
-                                       on_unhide_remote_printers,          //callback
+                                       on_unhide_remote_printers,        //callback
                                        NULL,                             //user_data
                                        NULL);
 }
