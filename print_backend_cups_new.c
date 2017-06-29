@@ -196,12 +196,12 @@ static void on_unhide_remote_printers(GDBusConnection *connection,
     }
 }
 static void on_hide_temp_printers(GDBusConnection *connection,
-                                    const gchar *sender_name,
-                                    const gchar *object_path,
-                                    const gchar *interface_name,
-                                    const gchar *signal_name,
-                                    GVariant *parameters,
-                                    gpointer not_used)
+                                  const gchar *sender_name,
+                                  const gchar *object_path,
+                                  const gchar *interface_name,
+                                  const gchar *signal_name,
+                                  GVariant *parameters,
+                                  gpointer not_used)
 {
     char *dialog_name = get_string_copy(sender_name);
     g_message("%s signal from %s\n", HIDE_TEMP_CUPS_SIGNAL, dialog_name);
@@ -213,12 +213,12 @@ static void on_hide_temp_printers(GDBusConnection *connection,
     }
 }
 static void on_unhide_temp_printers(GDBusConnection *connection,
-                                      const gchar *sender_name,
-                                      const gchar *object_path,
-                                      const gchar *interface_name,
-                                      const gchar *signal_name,
-                                      GVariant *parameters,
-                                      gpointer not_used)
+                                    const gchar *sender_name,
+                                    const gchar *object_path,
+                                    const gchar *interface_name,
+                                    const gchar *signal_name,
+                                    GVariant *parameters,
+                                    gpointer not_used)
 {
     char *dialog_name = get_string_copy(sender_name);
     g_message("%s signal from %s\n", UNHIDE_TEMP_CUPS_SIGNAL, dialog_name);
@@ -246,6 +246,25 @@ gboolean on_handle_list_basic_options(PrintBackend *interface,
                                               cups_printer_state(dest));
     return TRUE;
 }
+static gboolean on_handle_get_printer_capabilities(PrintBackend *interface,
+                                                   GDBusMethodInvocation *invocation,
+                                                   const gchar *printer_name,
+                                                   gpointer user_data)
+{
+    g_message("Listing basic options for %s", printer_name);
+    const char *dialog_name = g_dbus_method_invocation_get_sender(invocation); /// potential risk
+    PrinterCUPS *p = get_printer_by_name(b, dialog_name, printer_name);
+    int capabilities = get_printer_capabilities(p);
+    print_backend_complete_get_printer_capabilities(interface, invocation,
+                                                    (capabilities & CAPABILITY_COPIES),
+                                                    (capabilities & CAPABILITY_MEDIA),
+                                                    (capabilities & CAPABILITY_NUMBER_UP),
+                                                    (capabilities & CAPABILITY_ORIENTATION),
+                                                    (capabilities & CAPABILITY_COLOR_MODE),
+                                                    (capabilities & CAPABILITY_QUALITY),
+                                                    (capabilities & CAPABILITY_SIDES),
+                                                    (capabilities & CAPABILITY_RESOLUTION));
+}
 void connect_to_signals()
 {
     PrintBackend *skeleton = b->skeleton;
@@ -259,10 +278,10 @@ void connect_to_signals()
                      G_CALLBACK(on_handle_list_basic_options), //callback
                      NULL);                                    //user_data
 
-    // g_signal_connect(skeleton,                                       //instance
-    //                  "handle-get-printer-capabilities",              //signal name
-    //                  G_CALLBACK(on_handle_get_printer_capabilities), //callback
-    //                  NULL);
+    g_signal_connect(skeleton,                                       //instance
+                     "handle-get-printer-capabilities",              //signal name
+                     G_CALLBACK(on_handle_get_printer_capabilities), //callback
+                     NULL);
     // g_signal_connect(skeleton,                                //instance
     //                  "handle-get-default-value",              //signal name
     //                  G_CALLBACK(on_handle_get_default_value), //callback
@@ -348,7 +367,7 @@ void connect_to_signals()
                                        NULL,                             /**match on all object paths**/
                                        NULL,                             /**match on all arguments**/
                                        0,                                //Flags
-                                       on_hide_temp_printers,          //callback
+                                       on_hide_temp_printers,            //callback
                                        NULL,                             //user_data
                                        NULL);
     g_dbus_connection_signal_subscribe(b->dbus_connection,
@@ -358,7 +377,7 @@ void connect_to_signals()
                                        NULL,                             /**match on all object paths**/
                                        NULL,                             /**match on all arguments**/
                                        0,                                //Flags
-                                       on_unhide_temp_printers,        //callback
+                                       on_unhide_temp_printers,          //callback
                                        NULL,                             //user_data
                                        NULL);
 }

@@ -10,7 +10,7 @@
 #include "backend_interface.h"
 #include "frontend_interface.h"
 
-#define DBUS_DIR "/etc/print-backends"
+#define DBUS_DIR "/usr/share/print-backends"
 #define BACKEND_PREFIX "org.openprinting.Backend"
 
 typedef struct _CurrentValues CurrentValues;

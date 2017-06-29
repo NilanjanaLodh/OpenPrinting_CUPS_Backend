@@ -10,6 +10,15 @@
 #include "common_helper.h"
 #include <glib.h>
 
+#define CAPABILITY_COPIES (1)
+#define CAPABILITY_MEDIA (1 << 1)
+#define CAPABILITY_NUMBER_UP (1 << 2)
+#define CAPABILITY_ORIENTATION (1 << 3)
+#define CAPABILITY_COLOR_MODE (1 << 4)
+#define CAPABILITY_QUALITY (1 << 5)
+#define CAPABILITY_SIDES (1 << 6)
+#define CAPABILITY_RESOLUTION (1 << 7)
+
 typedef struct _PrinterCUPS
 {
     gchar *name;
@@ -67,8 +76,11 @@ void replace_printers(BackendObj *b, const char *dialog_name, GHashTable *new_ta
 void refresh_printer_list(BackendObj *b, char *dialog_name);
 GHashTable *get_dialog_printers(BackendObj *b, const char *dialog_name);
 cups_dest_t *get_dest_by_name(BackendObj *b, const char *dialog_name, const char *printer_name);
+PrinterCUPS *get_printer_by_name(BackendObj *b, const char *dialog_name, const char *printer_name);
 /*********Printer related functions******************/
 PrinterCUPS *get_new_PrinterCUPS(cups_dest_t *dest);
+void ensure_printer_connection(PrinterCUPS *p);
+int get_printer_capabilities(PrinterCUPS *);
 
 /**********Mapping related functions*****************/
 Mappings *get_new_Mappings();
@@ -81,4 +93,5 @@ GHashTable *cups_get_local_printers();
 char *cups_retrieve_string(cups_dest_t *dest, const char *option_name);
 gboolean cups_is_temporary(cups_dest_t *dest);
 GHashTable *cups_get_printers(gboolean notemp, gboolean noremote);
+
 #endif

@@ -244,7 +244,7 @@ void display_help()
     printf("%s\n", "update-basic <printer name>");
     printf("%s\n", "hide-temporary-cups");
     printf("%s\n", "unhide-temporary-cups");
-    // printf("%s\n","get-capabilities <printer name>");
+    printf("%s\n","get-capabilities <printer name>");
     // printf("%s\n","get-option-default <printer name> <option name>");
     // printf("%s\n","get-supported-raw <printer name> <option name>");
     // printf("%s\n","get-supported-media <printer name>");

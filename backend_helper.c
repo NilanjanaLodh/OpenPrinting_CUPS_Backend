@@ -189,7 +189,7 @@ void notify_removed_printers(BackendObj *b, const char *dialog_name, GHashTable 
     GHashTable *prev = g_hash_table_lookup(b->dialog_printers, dialog_name);
     GList *prevlist = g_hash_table_get_keys(prev);
     printf("Notifying removed printers.\n");
-    gpointer printer_name=NULL;
+    gpointer printer_name = NULL;
     while (prevlist)
     {
         printer_name = (char *)(prevlist->data);
@@ -198,7 +198,7 @@ void notify_removed_printers(BackendObj *b, const char *dialog_name, GHashTable 
         {
             g_message("Printer %s removed\n", (char *)printer_name);
             send_printer_removed_signal(b, dialog_name, (char *)printer_name);
-            remove_printer_from_dialog(b,dialog_name,(char *)printer_name);
+            remove_printer_from_dialog(b, dialog_name, (char *)printer_name);
         }
         prevlist = prevlist->next;
     }
@@ -221,7 +221,7 @@ void notify_added_printers(BackendObj *b, const char *dialog_name, GHashTable *n
             g_message("Printer %s added\n", (char *)printer_name);
             dest = (cups_dest_t *)value;
             send_printer_added_signal(b, dialog_name, dest);
-            add_printer_to_dialog(b,dialog_name,dest);
+            add_printer_to_dialog(b, dialog_name, dest);
         }
     }
 }
@@ -258,7 +258,18 @@ GHashTable *get_dialog_printers(BackendObj *b, const char *dialog_name)
     }
     return printers;
 }
-
+PrinterCUPS *get_printer_by_name(BackendObj *b, const char *dialog_name, const char *printer_name)
+{
+    GHashTable *printers = get_dialog_printers(b, dialog_name);
+    g_assert_nonnull(printers);
+    PrinterCUPS *p = (g_hash_table_lookup(printers, printer_name));
+    if (p == NULL)
+    {
+        printf("Printer '%s' does not exist for the dialog %s.\n", printer_name, dialog_name);
+        exit(EXIT_FAILURE);
+    }
+    return p;
+}
 cups_dest_t *get_dest_by_name(BackendObj *b, const char *dialog_name, const char *printer_name)
 {
     GHashTable *printers = get_dialog_printers(b, dialog_name);
@@ -291,6 +302,53 @@ void ensure_printer_connection(PrinterCUPS *p)
     p->dinfo = cupsCopyDestInfo(p->http, p->dest);
     g_assert_nonnull(p->dinfo);
 }
+int get_printer_capabilities(PrinterCUPS *p)
+{
+    ensure_printer_connection(p);
+    int capabilities = 0;
+    ipp_attribute_t *attrs = cupsFindDestSupported(p->http, p->dest, p->dinfo,
+                                                   "job-creation-attributes");
+    int num_options = ippGetCount(attrs);
+    char *str;
+    for (int i = 0; i < num_options; i++)
+    {
+        str = (char*)ippGetString(attrs, i, NULL);
+        if (strcmp(str, CUPS_COPIES) == 0)
+        {
+            capabilities |= CAPABILITY_COPIES;
+        }
+        else if (strcmp(str, CUPS_MEDIA) == 0)
+        {
+            capabilities |= CAPABILITY_MEDIA;
+        }
+        else if (strcmp(str, CUPS_NUMBER_UP) == 0)
+        {
+            capabilities |= CAPABILITY_NUMBER_UP;
+        }
+        else if (strcmp(str, CUPS_ORIENTATION) == 0)
+        {
+            capabilities |= CAPABILITY_ORIENTATION;
+        }
+        else if (strcmp(str, CUPS_PRINT_COLOR_MODE) == 0)
+        {
+            capabilities |= CAPABILITY_COLOR_MODE;
+        }
+        else if (strcmp(str, CUPS_PRINT_QUALITY) == 0)
+        {
+            capabilities |= CAPABILITY_QUALITY;
+        }
+        else if (strcmp(str, CUPS_SIDES) == 0)
+        {
+            capabilities |= CAPABILITY_SIDES;
+        }
+        else if (strcmp(str, "printer-resolution") == 0)
+        {
+            capabilities |= CAPABILITY_RESOLUTION;
+        }
+    }
+    return capabilities;
+}
+
 /*********Mappings********/
 Mappings *get_new_Mappings()
 {
