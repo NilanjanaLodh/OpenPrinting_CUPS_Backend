@@ -115,7 +115,7 @@ gboolean dialog_contains_printer(BackendObj *b, const char *dialog_name, const c
     return FALSE;
 }
 
-void add_printer_to_dialog(BackendObj *b, const char *dialog_name, cups_dest_t *dest)
+void add_printer_to_dialog(BackendObj *b, const char *dialog_name, const cups_dest_t *dest)
 {
     char *printer_name = get_string_copy(dest->name);
     GHashTable *printers = g_hash_table_lookup(b->dialog_printers, dialog_name);
@@ -125,9 +125,10 @@ void add_printer_to_dialog(BackendObj *b, const char *dialog_name, cups_dest_t *
         exit(0);
     }
     cups_dest_t *dest_copy = NULL;
-    cupsCopyDest(dest, 0, &dest_copy);
+    cupsCopyDest((cups_dest_t *)dest, 0, &dest_copy);
     g_assert_nonnull(dest_copy);
-    g_hash_table_insert(printers, printer_name, dest_copy); ///mem
+    PrinterCUPS *p = get_new_PrinterCUPS(dest_copy);
+    g_hash_table_insert(printers, printer_name, p); ///mem
 }
 void remove_printer_from_dialog(BackendObj *b, const char *dialog_name, const char *printer_name)
 {
@@ -137,6 +138,7 @@ void remove_printer_from_dialog(BackendObj *b, const char *dialog_name, const ch
         g_message("Invalid dialog name: remove %s from %s\n", printer_name, dialog_name);
         exit(0);
     }
+    //to do: deallocate the memory occupied by the particular printer
     g_hash_table_remove(printers, printer_name);
 }
 void send_printer_added_signal(BackendObj *b, const char *dialog_name, cups_dest_t *dest)
@@ -184,19 +186,21 @@ void send_printer_removed_signal(BackendObj *b, const char *dialog_name, const c
 
 void notify_removed_printers(BackendObj *b, const char *dialog_name, GHashTable *new_table)
 {
-    GHashTableIter iter;
     GHashTable *prev = g_hash_table_lookup(b->dialog_printers, dialog_name);
+    GList *prevlist = g_hash_table_get_keys(prev);
     printf("Notifying removed printers.\n");
-    gpointer printer_name;
-    g_hash_table_iter_init(&iter, prev);
-    while (g_hash_table_iter_next(&iter, &printer_name, NULL))
+    gpointer printer_name=NULL;
+    while (prevlist)
     {
+        printer_name = (char *)(prevlist->data);
         //g_message("                                             .. %s ..\n", (gchar *)printer_name);
         if (!g_hash_table_contains(new_table, (gchar *)printer_name))
         {
             g_message("Printer %s removed\n", (char *)printer_name);
             send_printer_removed_signal(b, dialog_name, (char *)printer_name);
+            remove_printer_from_dialog(b,dialog_name,(char *)printer_name);
         }
+        prevlist = prevlist->next;
     }
 }
 
@@ -206,15 +210,18 @@ void notify_added_printers(BackendObj *b, const char *dialog_name, GHashTable *n
     GHashTable *prev = g_hash_table_lookup(b->dialog_printers, dialog_name);
     printf("Notifying added printers.\n");
     gpointer printer_name;
-    gpointer dest_struct;
+    gpointer value;
+    cups_dest_t *dest = NULL;
     g_hash_table_iter_init(&iter, new_table);
-    while (g_hash_table_iter_next(&iter, &printer_name, &dest_struct))
+    while (g_hash_table_iter_next(&iter, &printer_name, &value))
     {
         //g_message("                                             .. %s ..\n", (gchar *)printer_name);
         if (!g_hash_table_contains(prev, (gchar *)printer_name))
         {
             g_message("Printer %s added\n", (char *)printer_name);
-            send_printer_added_signal(b, dialog_name, (cups_dest_t *)dest_struct);
+            dest = (cups_dest_t *)value;
+            send_printer_added_signal(b, dialog_name, dest);
+            add_printer_to_dialog(b,dialog_name,dest);
         }
     }
 }
@@ -240,7 +247,6 @@ void refresh_printer_list(BackendObj *b, char *dialog_name)
     new_printers = cups_get_printers(get_hide_temp(b, dialog_name), get_hide_remote(b, dialog_name));
     notify_removed_printers(b, dialog_name, new_printers);
     notify_added_printers(b, dialog_name, new_printers);
-    replace_printers(b, dialog_name, new_printers);
 }
 GHashTable *get_dialog_printers(BackendObj *b, const char *dialog_name)
 {
@@ -252,24 +258,38 @@ GHashTable *get_dialog_printers(BackendObj *b, const char *dialog_name)
     }
     return printers;
 }
+
 cups_dest_t *get_dest_by_name(BackendObj *b, const char *dialog_name, const char *printer_name)
 {
     GHashTable *printers = get_dialog_printers(b, dialog_name);
     g_assert_nonnull(printers);
-    cups_dest_t *dest = (g_hash_table_lookup(printers, printer_name));
-    if (dest == NULL)
+    PrinterCUPS *p = (g_hash_table_lookup(printers, printer_name));
+    if (p == NULL)
     {
         printf("Printer '%s' does not exist for the dialog %s.\n", printer_name, dialog_name);
     }
-    return dest;
+    return p->dest;
 }
 
 /***************************PrinterObj********************************/
-PrinterObj *get_new_PrinterObj(cups_dest_t *dest)
+PrinterCUPS *get_new_PrinterCUPS(cups_dest_t *dest)
 {
-    PrinterObj *p = (PrinterObj *)(malloc(sizeof(PrinterObj)));
+    PrinterCUPS *p = (PrinterCUPS *)(malloc(sizeof(PrinterCUPS)));
     p->dest = dest;
     p->name = dest->name;
+    p->http = NULL;
+    p->dinfo = NULL;
+
+    return p;
+}
+void ensure_printer_connection(PrinterCUPS *p)
+{
+    if (p->http)
+        return;
+    p->http = cupsConnectDest(p->dest, CUPS_DEST_FLAGS_NONE, 300, NULL, NULL, 0, NULL, NULL);
+    g_assert_nonnull(p->http);
+    p->dinfo = cupsCopyDestInfo(p->http, p->dest);
+    g_assert_nonnull(p->dinfo);
 }
 /*********Mappings********/
 Mappings *get_new_Mappings()
@@ -370,6 +390,7 @@ GHashTable *cups_get_printers(gboolean notemp, gboolean noremote)
 GHashTable *cups_get_all_printers()
 {
     printf("all printers\n");
+    // to do : fix
     GHashTable *printers_ht = g_hash_table_new(g_str_hash, g_str_equal);
     cupsEnumDests(CUPS_DEST_FLAGS_NONE,
                   3000,              //timeout
@@ -384,6 +405,7 @@ GHashTable *cups_get_all_printers()
 GHashTable *cups_get_local_printers()
 {
     printf("local printers\n");
+    //to do: fix
     GHashTable *printers_ht = g_hash_table_new(g_str_hash, g_str_equal);
     cupsEnumDests(CUPS_DEST_FLAGS_NONE,
                   1200,                //timeout

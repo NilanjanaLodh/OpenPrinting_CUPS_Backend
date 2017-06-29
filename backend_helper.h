@@ -10,14 +10,16 @@
 #include "common_helper.h"
 #include <glib.h>
 
-typedef struct _PrinterObj
+typedef struct _PrinterCUPS
 {
     gchar *name;
     cups_dest_t *dest;
+    http_t *http;
+    cups_dinfo_t *dinfo;
     // add rest of the members soon .. like http connection , dinfo , ipp_attributes etc
     // Infact, you can use these members to store the aettings the frontend supplies to you
     // and later use these to send print jobs
-} PrinterObj;
+} PrinterCUPS;
 
 typedef struct _BackendObj
 {
@@ -55,7 +57,7 @@ gboolean get_hide_temp(BackendObj *b, char *dialog_name);
 void set_hide_temp_printers(BackendObj *, const char *dialog_name);
 void unset_hide_temp_printers(BackendObj *, const char *dialog_name);
 gboolean dialog_contains_printer(BackendObj *, const char *dialog_name, const char *printer_name);
-void add_printer_to_dialog(BackendObj *, const char *dialog_name, cups_dest_t *dest);
+void add_printer_to_dialog(BackendObj *, const char *dialog_name, const cups_dest_t *dest);
 void remove_printer_from_dialog(BackendObj *, const char *dialog_name, const char *printer_name);
 void send_printer_added_signal(BackendObj *b, const char *dialog_name, cups_dest_t *dest);
 void send_printer_removed_signal(BackendObj *b, const char *dialog_name, const char *printer_name);
@@ -66,7 +68,7 @@ void refresh_printer_list(BackendObj *b, char *dialog_name);
 GHashTable *get_dialog_printers(BackendObj *b, const char *dialog_name);
 cups_dest_t *get_dest_by_name(BackendObj *b, const char *dialog_name, const char *printer_name);
 /*********Printer related functions******************/
-PrinterObj *get_new_PrinterObj(cups_dest_t *dest);
+PrinterCUPS *get_new_PrinterCUPS(cups_dest_t *dest);
 
 /**********Mapping related functions*****************/
 Mappings *get_new_Mappings();
