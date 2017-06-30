@@ -42,7 +42,7 @@ void update_basic_options(PrinterObj *p)
 
     print_basic_options(p);
 }
-void get_capabilities(PrinterObj *p)
+PrinterCapabilities get_capabilities(PrinterObj *p)
 {
     GError *error = NULL;
     print_backend_call_get_printer_capabilities_sync(p->backend_proxy, p->name,
@@ -56,8 +56,10 @@ void get_capabilities(PrinterObj *p)
                                                      &(p->capabilities.resolution),
                                                      NULL, &error);
 
-    print_capabilities(p);
     g_assert_no_error(error);
+    print_capabilities(p);
+    return p->capabilities;
+    
 }
 void print_capabilities(PrinterObj *p)
 {
@@ -389,19 +391,21 @@ void get_printer_supported_orientation(FrontendObj *f, gchar *printer_name)
 
     get_supported_orientation(p);
 }
-void get_printer_state(FrontendObj *f, gchar *printer_name)
+char* get_printer_state(FrontendObj *f, gchar *printer_name)
 {
     PrinterObj *p = g_hash_table_lookup(f->printer, printer_name);
     g_assert_nonnull(p);
 
     get_state(p);
+    return p->state;
 }
-void printer_is_accepting_jobs(FrontendObj *f, gchar *printer_name)
+gboolean printer_is_accepting_jobs(FrontendObj *f, gchar *printer_name)
 {
     PrinterObj *p = g_hash_table_lookup(f->printer, printer_name);
     g_assert_nonnull(p);
 
     is_accepting_jobs(p);
+    return p->is_accepting_jobs;
 }
 void get_printer_resolution(FrontendObj *f, gchar *printer_name)
 {

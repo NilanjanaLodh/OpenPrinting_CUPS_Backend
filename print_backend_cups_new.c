@@ -265,6 +265,30 @@ static gboolean on_handle_get_printer_capabilities(PrintBackend *interface,
                                                     (capabilities & CAPABILITY_SIDES),
                                                     (capabilities & CAPABILITY_RESOLUTION));
 }
+
+static gboolean on_handle_is_accepting_jobs(PrintBackend *interface,
+                                            GDBusMethodInvocation *invocation,
+                                            const gchar *printer_name,
+                                            gpointer user_data)
+{
+    const char *dialog_name = g_dbus_method_invocation_get_sender(invocation); /// potential risk
+    cups_dest_t *dest = get_dest_by_name(b, dialog_name, printer_name);
+    g_assert_nonnull(dest);
+    print_backend_complete_is_accepting_jobs(interface, invocation, cups_is_accepting_jobs(dest));
+    return TRUE;
+}
+
+static gboolean on_handle_get_printer_state(PrintBackend *interface,
+                                            GDBusMethodInvocation *invocation,
+                                            const gchar *printer_name,
+                                            gpointer user_data)
+{
+    const char *dialog_name = g_dbus_method_invocation_get_sender(invocation); /// potential risk
+    cups_dest_t *dest = get_dest_by_name(b, dialog_name, printer_name);
+    g_assert_nonnull(dest);
+    print_backend_complete_get_printer_state(interface, invocation, cups_printer_state(dest));
+    return TRUE;
+}
 void connect_to_signals()
 {
     PrintBackend *skeleton = b->skeleton;
@@ -306,14 +330,14 @@ void connect_to_signals()
     //                  "handle-get-supported-orientation",              //signal name
     //                  G_CALLBACK(on_handle_get_supported_orientation), //callback
     //                  NULL);
-    // g_signal_connect(skeleton,                                //instance
-    //                  "handle-get-printer-state",              //signal name
-    //                  G_CALLBACK(on_handle_get_printer_state), //callback
-    //                  NULL);
-    // g_signal_connect(skeleton,                                //instance
-    //                  "handle-is-accepting-jobs",              //signal name
-    //                  G_CALLBACK(on_handle_is_accepting_jobs), //callback
-    //                  NULL);
+    g_signal_connect(skeleton,                                //instance
+                     "handle-get-printer-state",              //signal name
+                     G_CALLBACK(on_handle_get_printer_state), //callback
+                     NULL);
+    g_signal_connect(skeleton,                                //instance
+                     "handle-is-accepting-jobs",              //signal name
+                     G_CALLBACK(on_handle_is_accepting_jobs), //callback
+                     NULL);
     // g_signal_connect(skeleton,                             //instance
     //                  "handle-get-resolution",              //signal name
     //                  G_CALLBACK(on_handle_get_resolution), //callback

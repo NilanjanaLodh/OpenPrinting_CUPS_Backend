@@ -251,7 +251,7 @@ void display_help()
     // printf("%s\n","get-supported-color <printer name>");
     // printf("%s\n","get-supported-quality <printer name>");
     // printf("%s\n","get-supported-orientation <printer name>");
-    // printf("%s\n","get-state <printer name>");
+     printf("%s\n","get-state <printer name>");
     // printf("%s\n","get-resolution <printer name>");
-    // printf("%s\n","is-accepting-jobs <printer name>");
+     printf("%s\n","is-accepting-jobs <printer name>");
 }
