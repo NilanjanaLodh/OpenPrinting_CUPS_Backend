@@ -74,16 +74,16 @@ struct _PrintBackendIface
     GDBusMethodInvocation *invocation,
     const gchar *arg_printer_name);
 
+  gboolean (*handle_get_default_media) (
+    PrintBackend *object,
+    GDBusMethodInvocation *invocation,
+    const gchar *arg_printer_name);
+
   gboolean (*handle_get_default_value) (
     PrintBackend *object,
     GDBusMethodInvocation *invocation,
     const gchar *arg_printer_name,
     const gchar *arg_option_name);
-
-  gboolean (*handle_get_media) (
-    PrintBackend *object,
-    GDBusMethodInvocation *invocation,
-    const gchar *arg_printer_name);
 
   gboolean (*handle_get_orientation) (
     PrintBackend *object,
@@ -156,6 +156,11 @@ struct _PrintBackendIface
     GDBusMethodInvocation *invocation,
     const gchar *arg_printer_name);
 
+  gboolean (*handle_ping) (
+    PrintBackend *object,
+    GDBusMethodInvocation *invocation,
+    const gchar *arg_printer_name);
+
   void (*printer_added) (
     PrintBackend *object,
     const gchar *arg_printer_name,
@@ -214,6 +219,15 @@ void print_backend_complete_get_printer_capabilities (
     gboolean sides,
     gboolean resolution);
 
+void print_backend_complete_get_default_media (
+    PrintBackend *object,
+    GDBusMethodInvocation *invocation,
+    const gchar *media_name);
+
+void print_backend_complete_ping (
+    PrintBackend *object,
+    GDBusMethodInvocation *invocation);
+
 void print_backend_complete_get_default_value (
     PrintBackend *object,
     GDBusMethodInvocation *invocation,
@@ -265,11 +279,6 @@ void print_backend_complete_check_resolution (
     PrintBackend *object,
     GDBusMethodInvocation *invocation,
     gboolean possible);
-
-void print_backend_complete_get_media (
-    PrintBackend *object,
-    GDBusMethodInvocation *invocation,
-    const gchar *media_name);
 
 void print_backend_complete_check_media (
     PrintBackend *object,
@@ -450,6 +459,44 @@ gboolean print_backend_call_get_printer_capabilities_sync (
     gboolean *out_print_quality,
     gboolean *out_sides,
     gboolean *out_resolution,
+    GCancellable *cancellable,
+    GError **error);
+
+void print_backend_call_get_default_media (
+    PrintBackend *proxy,
+    const gchar *arg_printer_name,
+    GCancellable *cancellable,
+    GAsyncReadyCallback callback,
+    gpointer user_data);
+
+gboolean print_backend_call_get_default_media_finish (
+    PrintBackend *proxy,
+    gchar **out_media_name,
+    GAsyncResult *res,
+    GError **error);
+
+gboolean print_backend_call_get_default_media_sync (
+    PrintBackend *proxy,
+    const gchar *arg_printer_name,
+    gchar **out_media_name,
+    GCancellable *cancellable,
+    GError **error);
+
+void print_backend_call_ping (
+    PrintBackend *proxy,
+    const gchar *arg_printer_name,
+    GCancellable *cancellable,
+    GAsyncReadyCallback callback,
+    gpointer user_data);
+
+gboolean print_backend_call_ping_finish (
+    PrintBackend *proxy,
+    GAsyncResult *res,
+    GError **error);
+
+gboolean print_backend_call_ping_sync (
+    PrintBackend *proxy,
+    const gchar *arg_printer_name,
     GCancellable *cancellable,
     GError **error);
 
@@ -652,26 +699,6 @@ gboolean print_backend_call_check_resolution_sync (
     gint arg_x_res,
     gint arg_y_res,
     gboolean *out_possible,
-    GCancellable *cancellable,
-    GError **error);
-
-void print_backend_call_get_media (
-    PrintBackend *proxy,
-    const gchar *arg_printer_name,
-    GCancellable *cancellable,
-    GAsyncReadyCallback callback,
-    gpointer user_data);
-
-gboolean print_backend_call_get_media_finish (
-    PrintBackend *proxy,
-    gchar **out_media_name,
-    GAsyncResult *res,
-    GError **error);
-
-gboolean print_backend_call_get_media_sync (
-    PrintBackend *proxy,
-    const gchar *arg_printer_name,
-    gchar **out_media_name,
     GCancellable *cancellable,
     GError **error);
 

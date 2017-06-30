@@ -289,6 +289,18 @@ static gboolean on_handle_get_printer_state(PrintBackend *interface,
     print_backend_complete_get_printer_state(interface, invocation, cups_printer_state(dest));
     return TRUE;
 }
+
+static gboolean on_handle_ping(PrintBackend *interface,
+                               GDBusMethodInvocation *invocation,
+                               const gchar *printer_name,
+                               gpointer user_data)
+{
+    /**this method is just for testing stuff. will be removed soon**/
+    const char *dialog_name = g_dbus_method_invocation_get_sender(invocation); /// potential risk
+    PrinterCUPS *p = get_printer_by_name(b, dialog_name, printer_name);
+    const char *media = get_media_default(p);
+    g_message("Default media for %s is %s", printer_name, media);    
+}
 void connect_to_signals()
 {
     PrintBackend *skeleton = b->skeleton;
@@ -305,6 +317,10 @@ void connect_to_signals()
     g_signal_connect(skeleton,                                       //instance
                      "handle-get-printer-capabilities",              //signal name
                      G_CALLBACK(on_handle_get_printer_capabilities), //callback
+                     NULL);
+    g_signal_connect(skeleton,                   //instance
+                     "handle-ping",              //signal name
+                     G_CALLBACK(on_handle_ping), //callback
                      NULL);
     // g_signal_connect(skeleton,                                //instance
     //                  "handle-get-default-value",              //signal name

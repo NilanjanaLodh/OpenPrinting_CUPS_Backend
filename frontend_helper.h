@@ -74,6 +74,7 @@ void get_printer_color_mode(FrontendObj *, gchar *);           //todo
 void set_printer_color_mode(FrontendObj *, gchar *, gchar *);  //to do
 void apply_printer_settings(FrontendObj *, gchar *);
 void print_job(FrontendObj *, gchar *);
+void pingtest(FrontendObj *, gchar *);
 /***************************************************************/
 
 

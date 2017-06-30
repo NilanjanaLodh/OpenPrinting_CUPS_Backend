@@ -25,7 +25,7 @@ void print_basic_options(PrinterObj *p)
                 accepting_jobs : %d\n\
                 state : %s\n",
               p->name,
-              p->location, p->info, p->make_and_model,p->uri, p->is_accepting_jobs, p->state);
+              p->location, p->info, p->make_and_model, p->uri, p->is_accepting_jobs, p->state);
 }
 
 void update_basic_options(PrinterObj *p)
@@ -59,7 +59,6 @@ PrinterCapabilities get_capabilities(PrinterObj *p)
     g_assert_no_error(error);
     print_capabilities(p);
     return p->capabilities;
-    
 }
 void print_capabilities(PrinterObj *p)
 {
@@ -391,7 +390,7 @@ void get_printer_supported_orientation(FrontendObj *f, gchar *printer_name)
 
     get_supported_orientation(p);
 }
-char* get_printer_state(FrontendObj *f, gchar *printer_name)
+char *get_printer_state(FrontendObj *f, gchar *printer_name)
 {
     PrinterObj *p = g_hash_table_lookup(f->printer, printer_name);
     g_assert_nonnull(p);
@@ -427,4 +426,12 @@ void get_printer_orientation(FrontendObj *f, gchar *printer_name)
     g_assert_nonnull(p);
 
     get_orientation(p);
+}
+
+void pingtest(FrontendObj *f, gchar *printer_name)
+{
+    /**This function is just for debugging and will be removed soon**/
+    PrinterObj *p = g_hash_table_lookup(f->printer, printer_name);
+    g_assert_nonnull(p);
+    print_backend_call_ping_sync(p->backend_proxy, p->name, NULL, NULL);
 }

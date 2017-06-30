@@ -312,7 +312,7 @@ int get_printer_capabilities(PrinterCUPS *p)
     char *str;
     for (int i = 0; i < num_options; i++)
     {
-        str = (char*)ippGetString(attrs, i, NULL);
+        str = (char *)ippGetString(attrs, i, NULL);
         if (strcmp(str, CUPS_COPIES) == 0)
         {
             capabilities |= CAPABILITY_COPIES;
@@ -348,7 +348,22 @@ int get_printer_capabilities(PrinterCUPS *p)
     }
     return capabilities;
 }
+const char *get_media_default(PrinterCUPS *p)
+{
+    cups_size_t size;
+    ensure_printer_connection(p);
+    int x = cupsGetDestMediaDefault(CUPS_HTTP_DEFAULT, p->dest, p->dinfo, 0, &size);
+    if (!x)
+    {
+        printf("failure getting media\n");
+        return "NA";
+    }
 
+    const char *media = cupsLocalizeDestMedia(p->http, p->dest,
+                                              p->dinfo, 0,
+                                              &size);
+    return media;
+}
 /*********Mappings********/
 Mappings *get_new_Mappings()
 {

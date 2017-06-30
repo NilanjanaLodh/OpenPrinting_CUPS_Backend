@@ -231,6 +231,12 @@ gpointer parse_commands(gpointer user_data)
         {
             display_help();
         }
+        else if (strcmp(buf, "ping") == 0)
+        {
+            char printer_name[100];
+            scanf("%s", printer_name);
+            pingtest(f, printer_name);
+        }
     }
 }
 
@@ -244,14 +250,15 @@ void display_help()
     printf("%s\n", "update-basic <printer name>");
     printf("%s\n", "hide-temporary-cups");
     printf("%s\n", "unhide-temporary-cups");
-    printf("%s\n","get-capabilities <printer name>");
+    printf("%s\n", "get-capabilities <printer name>");
+    printf("%s\n", "ping <printer name>");
     // printf("%s\n","get-option-default <printer name> <option name>");
     // printf("%s\n","get-supported-raw <printer name> <option name>");
     // printf("%s\n","get-supported-media <printer name>");
     // printf("%s\n","get-supported-color <printer name>");
     // printf("%s\n","get-supported-quality <printer name>");
     // printf("%s\n","get-supported-orientation <printer name>");
-     printf("%s\n","get-state <printer name>");
+    printf("%s\n", "get-state <printer name>");
     // printf("%s\n","get-resolution <printer name>");
-     printf("%s\n","is-accepting-jobs <printer name>");
+    printf("%s\n", "is-accepting-jobs <printer name>");
 }

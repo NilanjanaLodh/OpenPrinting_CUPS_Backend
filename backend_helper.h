@@ -81,6 +81,7 @@ PrinterCUPS *get_printer_by_name(BackendObj *b, const char *dialog_name, const c
 PrinterCUPS *get_new_PrinterCUPS(cups_dest_t *dest);
 void ensure_printer_connection(PrinterCUPS *p);
 int get_printer_capabilities(PrinterCUPS *);
+const char* get_media_default(PrinterCUPS *p);
 
 /**********Mapping related functions*****************/
 Mappings *get_new_Mappings();
