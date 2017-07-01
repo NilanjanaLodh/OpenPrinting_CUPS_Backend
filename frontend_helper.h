@@ -35,7 +35,7 @@ void get_supported_quality(PrinterObj *);
 void get_supported_orientation(PrinterObj *);
 void get_state(PrinterObj *);
 void is_accepting_jobs(PrinterObj *);
-char* get_media(PrinterObj *);          //to do
+char *get_media(PrinterObj *);         //to do
 void set_media(PrinterObj *, gchar *); /// research about custom media size // to do
 void get_resolution(PrinterObj *);
 void set_resolution(PrinterObj *, int, int);
@@ -54,7 +54,7 @@ FrontendObj *get_new_FrontendObj();
 void activate_backends(FrontendObj *);
 PrintBackend *add_backend(FrontendObj *, const char *);
 gboolean add_printer(FrontendObj *, PrinterObj *, gchar *, gchar *); ///think about this definition a little more
-PrinterObj* update_basic_printer_options(FrontendObj *, gchar *);
+PrinterObj *update_basic_printer_options(FrontendObj *, gchar *);
 void get_printer_capabilities(FrontendObj *, gchar *);
 void get_printer_option_default(FrontendObj *, gchar *, gchar *);
 void get_printer_supported_values_raw(FrontendObj *, gchar *, gchar *);
@@ -62,7 +62,7 @@ void get_printer_supported_media(FrontendObj *, gchar *);
 void get_printer_supported_color(FrontendObj *, gchar *);
 void get_printer_supported_quality(FrontendObj *, gchar *);
 void get_printer_supported_orientation(FrontendObj *, gchar *);
-char* get_printer_state(FrontendObj *, gchar *);
+char *get_printer_state(FrontendObj *, gchar *);
 gboolean printer_is_accepting_jobs(FrontendObj *, gchar *);
 void get_printer_resolution(FrontendObj *, gchar *);
 void set_printer_resolution(FrontendObj *, gchar *, int, int); //to do
@@ -75,11 +75,10 @@ void set_printer_color_mode(FrontendObj *, gchar *, gchar *);  //to do
 void apply_printer_settings(FrontendObj *, gchar *);
 void print_job(FrontendObj *, gchar *);
 void pingtest(FrontendObj *, gchar *);
-void get_printer_default_media(FrontendObj *, gchar *); 
+void get_printer_default_media(FrontendObj *, gchar *);
+char *get_default_printer(FrontendObj *, gchar *);
+
 /***************************************************************/
-
-
-
 
 /************Struvture definitions********************************/
 typedef struct _Resolution
@@ -144,4 +143,12 @@ struct _PrinterObj
     Settings current;
     //add options here
 };
+struct _FrontendObj
+{
+    int num_backends;
+    GHashTable *backend;
+    int num_printers;
+    GHashTable *printer;
+};
+
 #endif

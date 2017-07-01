@@ -40,6 +40,7 @@ typedef struct _BackendObj
     GHashTable *dialog_hide_remote;
     GHashTable *dialog_hide_temp;
     int num_frontends;
+    char *default_printer;
 } BackendObj;
 
 typedef struct _Mappings
@@ -52,6 +53,7 @@ typedef struct _Mappings
 
 /********Backend related functions*******************/
 BackendObj *get_new_BackendObj();
+char *get_default_printer(BackendObj *b);
 void connect_to_dbus(BackendObj *, char *obj_path);
 void add_frontend(BackendObj *, const char *dialog_name);
 void remove_frontend(BackendObj *, const char *dialog_name);

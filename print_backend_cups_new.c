@@ -295,8 +295,9 @@ static gboolean on_handle_ping(PrintBackend *interface,
                                const gchar *printer_name,
                                gpointer user_data)
 {
-    const char *dialog_name = g_dbus_method_invocation_get_sender(invocation); /// potential risk
-    PrinterCUPS *p = get_printer_by_name(b, dialog_name, printer_name);
+    //const char *dialog_name = g_dbus_method_invocation_get_sender(invocation); /// potential risk
+    char *def = get_default_printer(b);
+    printf("%s\n", def);
     print_backend_complete_ping(interface, invocation);
     return TRUE;
 }
@@ -339,6 +340,15 @@ static gboolean on_handle_get_supported_media(PrintBackend *interface,
 
     return TRUE;
 }
+static gboolean on_handle_get_default_printer(PrintBackend *interface,
+                                              GDBusMethodInvocation *invocation,
+                                              gpointer user_data)
+{
+    char *def = get_default_printer(b);
+    printf("%s\n", def);
+    print_backend_complete_get_default_printer(interface, invocation, def);
+    return TRUE;
+}
 void connect_to_signals()
 {
     PrintBackend *skeleton = b->skeleton;
@@ -360,6 +370,10 @@ void connect_to_signals()
                      "handle-ping",              //signal name
                      G_CALLBACK(on_handle_ping), //callback
                      NULL);
+    g_signal_connect(skeleton,                                  //instance
+                     "handle-get-default-printer",              //signal name
+                     G_CALLBACK(on_handle_get_default_printer), //callback
+                     NULL);
     // g_signal_connect(skeleton,                                //instance
     //                  "handle-get-default-value",              //signal name
     //                  G_CALLBACK(on_handle_get_default_value), //callback
@@ -372,8 +386,8 @@ void connect_to_signals()
                      "handle-get-default-media",              //signal name
                      G_CALLBACK(on_handle_get_default_media), //callback
                      NULL);
-    g_signal_connect(skeleton,                                //instance
-                     "handle-get-supported-media",            //signal name
+    g_signal_connect(skeleton,                                  //instance
+                     "handle-get-supported-media",              //signal name
                      G_CALLBACK(on_handle_get_supported_media), //callback
                      NULL);
     // g_signal_connect(skeleton,                                  //instance

@@ -10,8 +10,32 @@ BackendObj *get_new_BackendObj()
     b->dialog_hide_temp = g_hash_table_new(g_str_hash, g_str_equal);
     b->num_frontends = 0;
     b->obj_path = NULL;
+    b->default_printer = NULL;
 }
+char *get_default_printer(BackendObj *b)
+{
+    if (b->default_printer)
+    {
+        return b->default_printer;
+    }
 
+    ipp_t *request = ippNewRequest(IPP_OP_CUPS_GET_DEFAULT);
+    ipp_t *response;
+    ipp_attribute_t *attr;
+    if ((response = cupsDoRequest(CUPS_HTTP_DEFAULT, request, "/")) != NULL)
+    {
+        if ((attr = ippFindAttribute(response, "printer-name",
+                                     IPP_TAG_NAME)) != NULL)
+        {
+            b->default_printer = get_string_copy(ippGetString(attr, 0, NULL));
+            printf("%s \n", b->default_printer);
+            ippDelete(response);
+            return b->default_printer;
+        }
+    }
+    ippDelete(response);
+    return "NA";
+}
 void connect_to_dbus(BackendObj *b, char *obj_path)
 {
     b->obj_path = obj_path;
