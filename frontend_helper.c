@@ -111,20 +111,20 @@ void get_supported_media(PrinterObj *p)
     GVariantIter *iter;
     print_backend_call_get_supported_media_sync(p->backend_proxy, p->name,
                                                 &p->supported.num_media, &values, NULL, &error);
-    p->supported.media = (char **)malloc(sizeof(char *) * p->supported.num_media);
-
+    if (p->supported.num_media)
+        p->supported.media = (char **)malloc(sizeof(char *) * p->supported.num_media);
+    else
+    {
+        printf("No supported media found.\n");
+        p->supported.media = NULL;
+    }
     g_variant_get(values, "a(s)", &iter);
     int i = 0;
-    while (g_variant_iter_loop(iter, "(s)", &str))
+    for (i = 0; i < (p->supported.num_media); i++)
     {
-        p->supported.media[i] = malloc(sizeof(char) * (strlen(str) + 1));
-        strcpy(p->supported.media[i], str);
-        i++;
-    }
-
-    for (i = 0; i < p->supported.num_media; i++)
-    {
-        g_print(" %s\n", p->supported.media[i]);
+        g_variant_iter_loop(iter, "(s)", &str);
+        p->supported.media[i] = get_string_copy(str);
+        printf(" %s\n", p->supported.media[i]);
     }
 }
 void get_supported_color(PrinterObj *p)
@@ -212,12 +212,22 @@ void get_resolution(PrinterObj *p)
 {
     GError *error = NULL;
     print_backend_call_get_resolution_sync(p->backend_proxy, p->name,
-                                           &p->current.res.xres, &p->current.res.yres,
+                                           &p->defaults.res.xres, &p->defaults.res.yres,
                                            NULL, &error);
     g_assert_no_error(error);
 
     /// To do : set the other boolean flags too
-    g_message("%d x %d", p->current.res.xres, p->current.res.yres);
+    g_message("%d x %d", p->defaults.res.xres, p->defaults.res.yres);
+}
+char* get_media(PrinterObj *p)
+{
+    GError *error = NULL;
+    print_backend_call_get_default_media_sync(p->backend_proxy, p->name,
+                                              &p->defaults.media, NULL, NULL);
+    printf("Default media is %s\n", p->defaults.media);
+
+    return p->defaults.media;
+    g_assert_no_error(error);
 }
 void is_accepting_jobs(PrinterObj *p)
 {
@@ -235,19 +245,19 @@ void set_resolution(PrinterObj *p, int xres, int yres)
                                              NULL, NULL);
     if (possible)
     {
-        p->current.res.xres = xres;
-        p->current.res.yres = yres;
+        p->defaults.res.xres = xres;
+        p->defaults.res.yres = yres;
     }
 }
 void get_orientation(PrinterObj *p)
 {
     GError *error = NULL;
     print_backend_call_get_orientation_sync(p->backend_proxy, p->name,
-                                            &p->current.orientation,
+                                            &p->defaults.orientation,
                                             NULL, &error);
     g_assert_no_error(error);
 
-    g_message("current orientation: %s", p->current.orientation);
+    g_message("defaults orientation: %s", p->defaults.orientation);
 }
 /************************************************* FrontendObj********************************************/
 struct _FrontendObj
@@ -362,6 +372,7 @@ void get_printer_supported_values_raw(FrontendObj *f, gchar *printer_name, gchar
 
     get_supported_values_raw(p, option_name);
 }
+
 void get_printer_supported_media(FrontendObj *f, gchar *printer_name)
 {
     PrinterObj *p = g_hash_table_lookup(f->printer, printer_name);
@@ -369,6 +380,7 @@ void get_printer_supported_media(FrontendObj *f, gchar *printer_name)
 
     get_supported_media(p);
 }
+
 void get_printer_supported_color(FrontendObj *f, gchar *printer_name)
 {
     PrinterObj *p = g_hash_table_lookup(f->printer, printer_name);
@@ -427,7 +439,13 @@ void get_printer_orientation(FrontendObj *f, gchar *printer_name)
 
     get_orientation(p);
 }
+void get_printer_default_media(FrontendObj *f, gchar *printer_name)
+{
+    PrinterObj *p = g_hash_table_lookup(f->printer, printer_name);
+    g_assert_nonnull(p);
 
+    get_media(p);
+}
 void pingtest(FrontendObj *f, gchar *printer_name)
 {
     /**This function is just for debugging and will be removed soon**/

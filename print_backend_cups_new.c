@@ -295,11 +295,49 @@ static gboolean on_handle_ping(PrintBackend *interface,
                                const gchar *printer_name,
                                gpointer user_data)
 {
-    /**this method is just for testing stuff. will be removed soon**/
+    const char *dialog_name = g_dbus_method_invocation_get_sender(invocation); /// potential risk
+    PrinterCUPS *p = get_printer_by_name(b, dialog_name, printer_name);
+    print_backend_complete_ping(interface, invocation);
+    return TRUE;
+}
+static gboolean on_handle_get_default_media(PrintBackend *interface,
+                                            GDBusMethodInvocation *invocation,
+                                            const gchar *printer_name,
+                                            gpointer user_data)
+{
     const char *dialog_name = g_dbus_method_invocation_get_sender(invocation); /// potential risk
     PrinterCUPS *p = get_printer_by_name(b, dialog_name, printer_name);
     const char *media = get_media_default(p);
-    g_message("Default media for %s is %s", printer_name, media);    
+    g_message("Default media for %s is %s\n", printer_name, media);
+    print_backend_complete_get_default_media(interface, invocation, media);
+    return TRUE;
+}
+
+static gboolean on_handle_get_supported_media(PrintBackend *interface,
+                                              GDBusMethodInvocation *invocation,
+                                              const gchar *printer_name,
+                                              gpointer user_data)
+{
+    const char *dialog_name = g_dbus_method_invocation_get_sender(invocation); /// potential risk
+    PrinterCUPS *p = get_printer_by_name(b, dialog_name, printer_name);
+    char **supported_media = NULL;
+    int count = get_media_supported(p, &supported_media);
+    GVariantBuilder *builder;
+    GVariant *values;
+    builder = g_variant_builder_new(G_VARIANT_TYPE("a(s)"));
+    for (int i = 0; i < count; i++)
+    {
+        g_message("%s", supported_media[i]);
+        g_variant_builder_add(builder, "(s)", supported_media[i]);
+    }
+
+    if (count == 0)
+        g_variant_builder_add(builder, "(s)", "NA");
+
+    values = g_variant_new("a(s)", builder);
+    print_backend_complete_get_supported_media(interface, invocation, count, values);
+
+    return TRUE;
 }
 void connect_to_signals()
 {
@@ -330,10 +368,14 @@ void connect_to_signals()
     //                  "handle-get-supported-values-raw-string",   //signal name
     //                  G_CALLBACK(on_handle_get_supported_values), //callback
     //                  NULL);
-    // g_signal_connect(skeleton,                                  //instance
-    //                  "handle-get-supported-media",              //signal name
-    //                  G_CALLBACK(on_handle_get_supported_media), //callback
-    //                  NULL);
+    g_signal_connect(skeleton,                                //instance
+                     "handle-get-default-media",              //signal name
+                     G_CALLBACK(on_handle_get_default_media), //callback
+                     NULL);
+    g_signal_connect(skeleton,                                //instance
+                     "handle-get-supported-media",            //signal name
+                     G_CALLBACK(on_handle_get_supported_media), //callback
+                     NULL);
     // g_signal_connect(skeleton,                                  //instance
     //                  "handle-get-supported-color",              //signal name
     //                  G_CALLBACK(on_handle_get_supported_color), //callback

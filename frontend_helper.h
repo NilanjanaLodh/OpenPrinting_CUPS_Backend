@@ -13,7 +13,7 @@
 #define DBUS_DIR "/usr/share/print-backends"
 #define BACKEND_PREFIX "org.openprinting.Backend"
 
-typedef struct _CurrentValues CurrentValues;
+typedef struct _Settings Settings;
 /**********Supportedvalues**************************************/
 typedef struct _SupportedValues SupportedValues;
 /**********PrinterCapabilities**********************************/
@@ -35,7 +35,7 @@ void get_supported_quality(PrinterObj *);
 void get_supported_orientation(PrinterObj *);
 void get_state(PrinterObj *);
 void is_accepting_jobs(PrinterObj *);
-void get_media(PrinterObj *);          //to do
+char* get_media(PrinterObj *);          //to do
 void set_media(PrinterObj *, gchar *); /// research about custom media size // to do
 void get_resolution(PrinterObj *);
 void set_resolution(PrinterObj *, int, int);
@@ -75,6 +75,7 @@ void set_printer_color_mode(FrontendObj *, gchar *, gchar *);  //to do
 void apply_printer_settings(FrontendObj *, gchar *);
 void print_job(FrontendObj *, gchar *);
 void pingtest(FrontendObj *, gchar *);
+void get_printer_default_media(FrontendObj *, gchar *); 
 /***************************************************************/
 
 
@@ -105,7 +106,7 @@ struct _SupportedValues
     Resolution *res;
 };
 
-struct _CurrentValues
+struct _Settings
 {
     char *media;
     char *color;
@@ -139,7 +140,8 @@ struct _PrinterObj
     gboolean is_accepting_jobs;
     PrinterCapabilities capabilities;
     SupportedValues supported;
-    CurrentValues current;
+    Settings defaults;
+    Settings current;
     //add options here
 };
 #endif

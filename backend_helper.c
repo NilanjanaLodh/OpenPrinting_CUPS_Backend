@@ -352,17 +352,41 @@ const char *get_media_default(PrinterCUPS *p)
 {
     cups_size_t size;
     ensure_printer_connection(p);
-    int x = cupsGetDestMediaDefault(CUPS_HTTP_DEFAULT, p->dest, p->dinfo, 0, &size);
+    int x = cupsGetDestMediaDefault(p->http, p->dest, p->dinfo, 0, &size);
     if (!x)
     {
         printf("failure getting media\n");
         return "NA";
     }
-
+    printf("media %s\n", size.media);
     const char *media = cupsLocalizeDestMedia(p->http, p->dest,
                                               p->dinfo, 0,
                                               &size);
+    //Later : consult media mappings and return the equivalent media , other wise retun the localized version
     return media;
+}
+int get_media_supported(PrinterCUPS *p, char ***supported_values)
+{
+    char **values;
+    ensure_printer_connection(p);
+    ipp_attribute_t *attrs =
+        cupsFindDestSupported(p->http, p->dest, p->dinfo, CUPS_MEDIA);
+    int i, count = ippGetCount(attrs);
+    if (!count)
+    {
+        *supported_values = NULL;
+        return 0;
+    }
+
+    values = malloc(sizeof(char *) * count);
+
+    char *str;
+    for (i = 0; i < count; i++)
+    {
+        values[i] = get_string_copy(ippGetString(attrs, i, NULL));
+    }
+    *supported_values = values;
+    return count;
 }
 /*********Mappings********/
 Mappings *get_new_Mappings()
