@@ -98,7 +98,8 @@ int get_media_supported(PrinterCUPS *p, char ***supported_values);
 const char *get_orientation_default(PrinterCUPS *p);
 int get_orientation_supported(PrinterCUPS *p, char ***supported_values);
 
-Res* get_resolution_default(PrinterCUPS *p);
+char* get_resolution_default(PrinterCUPS *p);
+int get_resolution_supported(PrinterCUPS *p, char ***supported_values);
 
 /**********Mapping related functions*****************/
 Mappings *get_new_Mappings();
@@ -106,7 +107,7 @@ Mappings *get_new_Mappings();
 /*********Resolution related functions*****************/
 
 
-/*************CUPS RELATED FUNCTIONS******************/
+/*************CUPS/IPP RELATED FUNCTIONS******************/
 const char *cups_printer_state(cups_dest_t *dest);
 gboolean cups_is_accepting_jobs(cups_dest_t *dest);
 void cups_get_Resolution(cups_dest_t *dest, int *xres, int *yres);
@@ -115,5 +116,6 @@ GHashTable *cups_get_local_printers();
 char *cups_retrieve_string(cups_dest_t *dest, const char *option_name);
 gboolean cups_is_temporary(cups_dest_t *dest);
 GHashTable *cups_get_printers(gboolean notemp, gboolean noremote);
+char* extract_res_from_ipp(ipp_attribute_t *, int index);
 
 #endif

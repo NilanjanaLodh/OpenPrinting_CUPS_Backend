@@ -255,6 +255,12 @@ void print_backend_complete_get_default_resolution (
     GDBusMethodInvocation *invocation,
     const gchar *resolution);
 
+void print_backend_complete_get_supported_resolution (
+    PrintBackend *object,
+    GDBusMethodInvocation *invocation,
+    gint num_values,
+    GVariant *values);
+
 void print_backend_complete_ping (
     PrintBackend *object,
     GDBusMethodInvocation *invocation);
@@ -277,12 +283,6 @@ void print_backend_complete_get_supported_color (
     GVariant *values);
 
 void print_backend_complete_get_supported_quality (
-    PrintBackend *object,
-    GDBusMethodInvocation *invocation,
-    gint num_values,
-    GVariant *values);
-
-void print_backend_complete_get_supported_resolution (
     PrintBackend *object,
     GDBusMethodInvocation *invocation,
     gint num_values,
@@ -592,6 +592,28 @@ gboolean print_backend_call_get_default_resolution_sync (
     GCancellable *cancellable,
     GError **error);
 
+void print_backend_call_get_supported_resolution (
+    PrintBackend *proxy,
+    const gchar *arg_printer_name,
+    GCancellable *cancellable,
+    GAsyncReadyCallback callback,
+    gpointer user_data);
+
+gboolean print_backend_call_get_supported_resolution_finish (
+    PrintBackend *proxy,
+    gint *out_num_values,
+    GVariant **out_values,
+    GAsyncResult *res,
+    GError **error);
+
+gboolean print_backend_call_get_supported_resolution_sync (
+    PrintBackend *proxy,
+    const gchar *arg_printer_name,
+    gint *out_num_values,
+    GVariant **out_values,
+    GCancellable *cancellable,
+    GError **error);
+
 void print_backend_call_ping (
     PrintBackend *proxy,
     const gchar *arg_printer_name,
@@ -693,28 +715,6 @@ gboolean print_backend_call_get_supported_quality_finish (
     GError **error);
 
 gboolean print_backend_call_get_supported_quality_sync (
-    PrintBackend *proxy,
-    const gchar *arg_printer_name,
-    gint *out_num_values,
-    GVariant **out_values,
-    GCancellable *cancellable,
-    GError **error);
-
-void print_backend_call_get_supported_resolution (
-    PrintBackend *proxy,
-    const gchar *arg_printer_name,
-    GCancellable *cancellable,
-    GAsyncReadyCallback callback,
-    gpointer user_data);
-
-gboolean print_backend_call_get_supported_resolution_finish (
-    PrintBackend *proxy,
-    gint *out_num_values,
-    GVariant **out_values,
-    GAsyncResult *res,
-    GError **error);
-
-gboolean print_backend_call_get_supported_resolution_sync (
     PrintBackend *proxy,
     const gchar *arg_printer_name,
     gint *out_num_values,

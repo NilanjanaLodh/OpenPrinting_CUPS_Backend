@@ -460,34 +460,41 @@ int get_orientation_supported(PrinterCUPS *p, char ***supported_values)
     *supported_values = values;
     return count;
 }
-Res *get_resolution_default(PrinterCUPS *p)
+char *get_resolution_default(PrinterCUPS *p)
 {
-    Res *res = (Res *)(malloc(sizeof(Res)));
     ensure_printer_connection(p);
     ipp_attribute_t *attr = NULL;
 
     attr = cupsFindDestDefault(p->http, p->dest, p->dinfo, "printer-resolution");
     if (!attr)
     {
-        res->string = "NA";
-        return res;
+        return "NA";
     }
 
-    int xres, yres;
-    ipp_res_t units;
-    xres = ippGetResolution(attr, 0, &yres, &units);
-    res->x = xres;
-    res->y = yres;
+    return extract_res_from_ipp(attr,0); 
+}
+int get_resolution_supported(PrinterCUPS *p, char ***supported_values)
+{
+    char **values;
+    ensure_printer_connection(p);
+    ipp_attribute_t *attrs =
+        cupsFindDestSupported(p->http, p->dest, p->dinfo, "printer-resolution");
+    int i, count = ippGetCount(attrs);
+    if (!count)
+    {
+        *supported_values = NULL;
+        return 0;
+    }
 
-    res->unit = units == IPP_RES_PER_INCH ? "dpi" : "dpcm";
-    char buf[50];
-    if (xres == yres)
-        sprintf(buf, "%d %s", xres, res->unit);
-    else
-        sprintf(buf, "%dx%d %s", xres, yres, res->unit);
-    res->string = get_string_copy(buf);
+    values = malloc(sizeof(char *) * count);
 
-    return res;
+    char *str;
+    for (i = 0; i < count; i++)
+    {
+        values[i] = extract_res_from_ipp(attrs, i);   
+    }
+    *supported_values = values;
+    return count;
 }
 const char *get_printer_state(PrinterCUPS *p)
 {
@@ -665,4 +672,19 @@ gboolean cups_is_temporary(cups_dest_t *dest)
     if (cupsGetOption("printer-uri-supported", dest->num_options, dest->options))
         return FALSE;
     return TRUE;
+}
+char *extract_res_from_ipp(ipp_attribute_t *attr, int index)
+{
+    int xres, yres;
+    ipp_res_t units;
+    xres = ippGetResolution(attr, index, &yres, &units);
+
+    char *unit = units == IPP_RES_PER_INCH ? "dpi" : "dpcm";
+    char buf[50];
+    if (xres == yres)
+        sprintf(buf, "%d %s", xres, unit);
+    else
+        sprintf(buf, "%dx%d %s", xres, yres, unit);
+
+    return get_string_copy(buf);
 }

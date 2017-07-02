@@ -143,6 +143,16 @@ void get_supported_orientation(PrinterObj *p)
                                                       &p->supported.num_orientation, &values, NULL, &error);
     unpack_string_array(values, p->supported.num_orientation, &p->supported.orientation);
 }
+void get_supported_resolution(PrinterObj *p)
+{
+    GError *error = NULL;
+    GVariant *values;
+    gchar *str;
+    GVariantIter *iter;
+    print_backend_call_get_supported_resolution_sync(p->backend_proxy, p->name,
+                                                     &p->supported.num_res, &values, NULL, &error);
+    unpack_string_array(values, p->supported.num_res, &p->supported.res);
+}
 void get_state(PrinterObj *p)
 {
     GError *error = NULL;
@@ -338,6 +348,13 @@ void get_printer_supported_orientation(FrontendObj *f, gchar *printer_name)
 
     get_supported_orientation(p);
 }
+void get_printer_supported_resolution(FrontendObj *f, gchar *printer_name)
+{
+    PrinterObj *p = g_hash_table_lookup(f->printer, printer_name);
+    g_assert_nonnull(p);
+
+    get_supported_resolution(p);
+}
 char *get_printer_state(FrontendObj *f, gchar *printer_name)
 {
     PrinterObj *p = g_hash_table_lookup(f->printer, printer_name);
@@ -354,7 +371,7 @@ gboolean printer_is_accepting_jobs(FrontendObj *f, gchar *printer_name)
     is_accepting_jobs(p);
     return p->is_accepting_jobs;
 }
-char* get_printer_default_resolution(FrontendObj *f, gchar *printer_name)
+char *get_printer_default_resolution(FrontendObj *f, gchar *printer_name)
 {
     PrinterObj *p = g_hash_table_lookup(f->printer, printer_name);
     g_assert_nonnull(p);

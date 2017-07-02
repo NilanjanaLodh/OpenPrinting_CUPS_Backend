@@ -33,9 +33,10 @@ void get_supported_media(PrinterObj *);
 void get_supported_color(PrinterObj *);
 void get_supported_quality(PrinterObj *);
 void get_supported_orientation(PrinterObj *);
+void get_supported_resolution(PrinterObj *);
 void get_state(PrinterObj *);
 void is_accepting_jobs(PrinterObj *);
-char *get_media(PrinterObj *);         
+char *get_media(PrinterObj *);
 void set_media(PrinterObj *, gchar *); /// research about custom media size // to do
 void get_resolution(PrinterObj *);
 void set_resolution(PrinterObj *, int, int);
@@ -62,16 +63,17 @@ void get_printer_supported_media(FrontendObj *, gchar *);
 void get_printer_supported_color(FrontendObj *, gchar *);
 void get_printer_supported_quality(FrontendObj *, gchar *);
 void get_printer_supported_orientation(FrontendObj *, gchar *);
+void get_printer_supported_resolution(FrontendObj *, gchar *);
 char *get_printer_state(FrontendObj *, gchar *);
 gboolean printer_is_accepting_jobs(FrontendObj *, gchar *);
-char* get_printer_default_resolution(FrontendObj *, gchar *);
+char *get_printer_default_resolution(FrontendObj *, gchar *);
 void set_printer_resolution(FrontendObj *, gchar *, int, int); //to do
-char* get_printer_default_orientation(FrontendObj *, gchar *);
-void set_printer_default_orientation(FrontendObj *, gchar *, gchar *); 
-void get_printer_quality(FrontendObj *, gchar *);              // to to
-void set_printer_quality(FrontendObj *, gchar *, gchar *);     //todo
-void get_printer_color_mode(FrontendObj *, gchar *);           //todo
-void set_printer_color_mode(FrontendObj *, gchar *, gchar *);  //to do
+char *get_printer_default_orientation(FrontendObj *, gchar *);
+void set_printer_default_orientation(FrontendObj *, gchar *, gchar *);
+void get_printer_quality(FrontendObj *, gchar *);             // to to
+void set_printer_quality(FrontendObj *, gchar *, gchar *);    //todo
+void get_printer_color_mode(FrontendObj *, gchar *);          //todo
+void set_printer_color_mode(FrontendObj *, gchar *, gchar *); //to do
 void apply_printer_settings(FrontendObj *, gchar *);
 void print_job(FrontendObj *, gchar *);
 void pingtest(FrontendObj *, gchar *);

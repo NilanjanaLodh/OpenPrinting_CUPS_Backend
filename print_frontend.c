@@ -239,6 +239,12 @@ gpointer parse_commands(gpointer user_data)
             scanf("%s", printer_name);
             get_printer_default_resolution(f, printer_name);
         }
+        else if (strcmp(buf, "get-supported-resolution") == 0)
+        {
+            char printer_name[100];
+            scanf("%s", printer_name);
+            get_printer_supported_resolution(f, printer_name);
+        }
         else if (strcmp(buf, "help") == 0)
         {
             display_help();
@@ -276,6 +282,7 @@ void display_help()
     printf("%s\n", "get-default-media <printer name>");
     printf("%s\n", "get-supported-media <printer name>");
     printf("%s\n", "get-default-resolution <printer name>");
+    printf("%s\n", "get-supported-resolution <printer name>");
 
     printf("%s\n", "get-default-orientation <printer name>");
     // printf("%s\n","get-supported-color <printer name>");
