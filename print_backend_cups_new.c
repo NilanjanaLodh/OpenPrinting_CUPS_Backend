@@ -49,13 +49,10 @@ static gboolean on_handle_list_basic_options(PrintBackend *interface,
 void connect_to_signals();
 
 BackendObj *b;
-Mappings *m;
 
 int main()
 {
     b = get_new_BackendObj();
-    m = get_new_Mappings();
-
     acquire_session_bus_name(BUS_NAME);
     GMainLoop *loop = g_main_loop_new(NULL, FALSE);
     g_main_loop_run(loop);
@@ -236,14 +233,15 @@ gboolean on_handle_list_basic_options(PrintBackend *interface,
 {
     g_message("Listing basic options for %s", printer_name);
     const char *dialog_name = g_dbus_method_invocation_get_sender(invocation); /// potential risk
-    cups_dest_t *dest = get_dest_by_name(b, dialog_name, printer_name);
+    PrinterCUPS *p = get_printer_by_name(b, dialog_name, printer_name);
+    cups_dest_t *dest = p->dest;
     g_assert_nonnull(dest);
     print_backend_complete_list_basic_options(interface, invocation,
                                               cups_retrieve_string(dest, "printer-info"),
                                               cups_retrieve_string(dest, "printer-location"),
                                               cups_retrieve_string(dest, "printer-make-and-model"),
                                               cups_is_accepting_jobs(dest),
-                                              cups_printer_state(dest));
+                                              cups_printer_state(dest)); //change
     return TRUE;
 }
 static gboolean on_handle_get_printer_capabilities(PrintBackend *interface,
@@ -284,9 +282,10 @@ static gboolean on_handle_get_printer_state(PrintBackend *interface,
                                             gpointer user_data)
 {
     const char *dialog_name = g_dbus_method_invocation_get_sender(invocation); /// potential risk
-    cups_dest_t *dest = get_dest_by_name(b, dialog_name, printer_name);
-    g_assert_nonnull(dest);
-    print_backend_complete_get_printer_state(interface, invocation, cups_printer_state(dest));
+    PrinterCUPS *p = get_printer_by_name(b, dialog_name, printer_name);
+    const char *state = get_printer_state(p);
+    printf("%s is %s\n", printer_name, state);
+    print_backend_complete_get_printer_state(interface, invocation, state);
     return TRUE;
 }
 
@@ -295,10 +294,15 @@ static gboolean on_handle_ping(PrintBackend *interface,
                                const gchar *printer_name,
                                gpointer user_data)
 {
-    //const char *dialog_name = g_dbus_method_invocation_get_sender(invocation); /// potential risk
-    char *def = get_default_printer(b);
-    printf("%s\n", def);
+    const char *dialog_name = g_dbus_method_invocation_get_sender(invocation); /// potential risk
+    PrinterCUPS *p = get_printer_by_name(b, dialog_name, printer_name);
     print_backend_complete_ping(interface, invocation);
+    while(1)
+    {
+        const char *state = get_printer_state(p);
+        printf("%s is %s\n", printer_name, state);
+    }
+    
     return TRUE;
 }
 static gboolean on_handle_get_default_media(PrintBackend *interface,

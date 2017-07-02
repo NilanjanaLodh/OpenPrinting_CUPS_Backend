@@ -1,7 +1,9 @@
 #include "backend_helper.h"
-
+Mappings *map;
 BackendObj *get_new_BackendObj()
 {
+    map = get_new_Mappings();
+
     BackendObj *b = (BackendObj *)(malloc(sizeof(BackendObj)));
     b->dbus_connection = NULL;
     b->dialog_printers = g_hash_table_new(g_str_hash, g_str_equal);
@@ -139,7 +141,7 @@ gboolean dialog_contains_printer(BackendObj *b, const char *dialog_name, const c
     return FALSE;
 }
 
-void add_printer_to_dialog(BackendObj *b, const char *dialog_name, const cups_dest_t *dest)
+PrinterCUPS *add_printer_to_dialog(BackendObj *b, const char *dialog_name, const cups_dest_t *dest)
 {
     char *printer_name = get_string_copy(dest->name);
     GHashTable *printers = g_hash_table_lookup(b->dialog_printers, dialog_name);
@@ -153,6 +155,7 @@ void add_printer_to_dialog(BackendObj *b, const char *dialog_name, const cups_de
     g_assert_nonnull(dest_copy);
     PrinterCUPS *p = get_new_PrinterCUPS(dest_copy);
     g_hash_table_insert(printers, printer_name, p); ///mem
+    return p;
 }
 void remove_printer_from_dialog(BackendObj *b, const char *dialog_name, const char *printer_name)
 {
@@ -180,7 +183,7 @@ void send_printer_added_signal(BackendObj *b, const char *dialog_name, cups_dest
                                  cups_retrieve_string(dest, "printer-info"),
                                  cups_retrieve_string(dest, "printer-location"),
                                  cups_retrieve_string(dest, "printer-make-and-model"),
-                                 cups_retrieve_string(dest, "printer-uri-supported"),
+                                 cups_retrieve_string(dest, "device-uri"),
                                  cups_is_accepting_jobs(dest),
                                  cups_printer_state(dest));
 
@@ -412,12 +415,49 @@ int get_media_supported(PrinterCUPS *p, char ***supported_values)
     *supported_values = values;
     return count;
 }
+const char *get_printer_state(PrinterCUPS *p)
+{
+    const char *str;
+    ensure_printer_connection(p);
+    ipp_t *request = ippNewRequest(IPP_OP_GET_PRINTER_ATTRIBUTES);
+    const char *uri = cupsGetOption("printer-uri-supported",
+                                    p->dest->num_options,
+                                    p->dest->options);
+    ippAddString(request, IPP_TAG_OPERATION, IPP_TAG_URI,
+                 "printer-uri", NULL, uri);
+    const char *const requested_attributes[] = {"printer-state"};
+    ippAddStrings(request, IPP_TAG_OPERATION, IPP_TAG_KEYWORD,
+                  "requested-attributes", 1, NULL,
+                  requested_attributes);
+
+    ipp_t *response = cupsDoRequest(p->http, request, "/");
+    if (cupsLastError() >= IPP_STATUS_ERROR_BAD_REQUEST)
+    {
+        /* request failed */
+        printf("Request failed: %s\n", cupsLastErrorString());
+        return "NA";
+    }
+
+    ipp_attribute_t *attr;
+    if ((attr = ippFindAttribute(response, "printer-state",
+                                 IPP_TAG_ENUM)) != NULL)
+    {
+
+        printf("printer-state=%d\n", ippGetInteger(attr, 0));
+        str = map->state[ippGetInteger(attr, 0)];
+    }
+    return str;
+}
 /*********Mappings********/
 Mappings *get_new_Mappings()
 {
-    return NULL;
+    Mappings *m = (Mappings *)(malloc(sizeof(Mappings)));
+    m->state[3] = STATE_IDLE;
+    m->state[4] = STATE_PRINTING;
+    m->state[5] = STATE_STOPPED;
+    return m;
 }
-char *cups_printer_state(cups_dest_t *dest)
+const char *cups_printer_state(cups_dest_t *dest)
 {
     //cups_dest_t *dest = cupsGetNamedDest(CUPS_HTTP_DEFAULT, printer_name, NULL);
     g_assert_nonnull(dest);
@@ -425,19 +465,7 @@ char *cups_printer_state(cups_dest_t *dest)
                                       dest->options);
     if (state == NULL)
         return "NA";
-
-    switch (state[0])
-    {
-    case '3':
-        return STATE_IDLE;
-    case '4':
-        return STATE_PRINTING;
-    case '5':
-        return STATE_STOPPED;
-
-    default:
-        return "NA";
-    }
+    return map->state[state[0] - '0'];
 }
 
 gboolean cups_is_accepting_jobs(cups_dest_t *dest)
