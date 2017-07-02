@@ -1,5 +1,12 @@
 #include "frontend_helper.h"
 
+static void unpack()
+{
+    
+}
+/*****************/
+
+
 PrinterObj *get_new_PrinterObj()
 {
     PrinterObj *p = malloc(sizeof(PrinterObj));
@@ -183,20 +190,20 @@ void get_supported_orientation(PrinterObj *p)
     GVariantIter *iter;
     print_backend_call_get_supported_orientation_sync(p->backend_proxy, p->name,
                                                       &p->supported.num_orientation, &values, NULL, &error);
-    p->supported.orientation = (char **)malloc(sizeof(char *) * p->supported.num_orientation);
-
+    if (p->supported.num_orientation)
+        p->supported.orientation = (char **)malloc(sizeof(char *) * p->supported.num_orientation);
+    else
+    {
+        printf("No supported orientation found.\n");
+        p->supported.orientation = NULL;
+    }
     g_variant_get(values, "a(s)", &iter);
     int i = 0;
-    while (g_variant_iter_loop(iter, "(s)", &str))
+    for (i = 0; i < (p->supported.num_orientation); i++)
     {
-        p->supported.orientation[i] = malloc(sizeof(char) * (strlen(str) + 1));
-        strcpy(p->supported.orientation[i], str);
-        i++;
-    }
-
-    for (i = 0; i < p->supported.num_orientation; i++)
-    {
-        g_print(" %s\n", p->supported.orientation[i]);
+        g_variant_iter_loop(iter, "(s)", &str);
+        p->supported.orientation[i] = get_string_copy(str);
+        printf(" %s\n", p->supported.orientation[i]);
     }
 }
 void get_state(PrinterObj *p)
@@ -455,3 +462,5 @@ char *get_default_printer(FrontendObj *f, gchar *backend_name)
     printf("%s\n", def);
     return def;
 }
+
+

@@ -361,6 +361,32 @@ static gboolean on_handle_get_default_orientation(PrintBackend *interface,
     print_backend_complete_get_default_orientation(interface, invocation, orientation);
     return TRUE;
 }
+static gboolean on_handle_get_supported_orientation(PrintBackend *interface,
+                                                    GDBusMethodInvocation *invocation,
+                                                    const gchar *printer_name,
+                                                    gpointer user_data)
+{
+    const char *dialog_name = g_dbus_method_invocation_get_sender(invocation); /// potential risk
+    PrinterCUPS *p = get_printer_by_name(b, dialog_name, printer_name);
+    char **supported_values = NULL;
+    int count = get_orientation_supported(p, &supported_values);
+    GVariantBuilder *builder;
+    GVariant *values;
+    builder = g_variant_builder_new(G_VARIANT_TYPE("a(s)"));
+    for (int i = 0; i < count; i++)
+    {
+        g_message("%s", supported_values[i]);
+        g_variant_builder_add(builder, "(s)", supported_values[i]);
+    }
+
+    if (count == 0)
+        g_variant_builder_add(builder, "(s)", "NA");
+
+    values = g_variant_new("a(s)", builder);
+    print_backend_complete_get_supported_orientation(interface, invocation, count, values);
+
+    return TRUE;
+}
 void connect_to_signals()
 {
     PrintBackend *skeleton = b->skeleton;
@@ -406,6 +432,10 @@ void connect_to_signals()
                      "handle-get-default-orientation",              //signal name
                      G_CALLBACK(on_handle_get_default_orientation), //callback
                      NULL);
+    g_signal_connect(skeleton,                                        //instance
+                     "handle-get-supported-orientation",              //signal name
+                     G_CALLBACK(on_handle_get_supported_orientation), //callback
+                     NULL);
     // g_signal_connect(skeleton,                                  //instance
     //                  "handle-get-supported-color",              //signal name
     //                  G_CALLBACK(on_handle_get_supported_color), //callback
@@ -414,10 +444,7 @@ void connect_to_signals()
     //                  "handle-get-supported-quality",              //signal name
     //                  G_CALLBACK(on_handle_get_supported_quality), //callback
     //                  NULL);
-    // g_signal_connect(skeleton,                                        //instance
-    //                  "handle-get-supported-orientation",              //signal name
-    //                  G_CALLBACK(on_handle_get_supported_orientation), //callback
-    //                  NULL);
+
     g_signal_connect(skeleton,                                //instance
                      "handle-get-printer-state",              //signal name
                      G_CALLBACK(on_handle_get_printer_state), //callback

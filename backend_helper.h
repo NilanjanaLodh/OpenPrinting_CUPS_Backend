@@ -91,6 +91,7 @@ const char *get_media_default(PrinterCUPS *p);
 int get_media_supported(PrinterCUPS *p, char ***supported_values);
 
 const char *get_orientation_default(PrinterCUPS *p);
+int get_orientation_supported(PrinterCUPS *p, char ***supported_values);
 
 /**********Mapping related functions*****************/
 Mappings *get_new_Mappings();

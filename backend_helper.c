@@ -420,15 +420,41 @@ const char *get_orientation_default(PrinterCUPS *p)
     ensure_printer_connection(p);
     ipp_attribute_t *attr = NULL;
 
-    attr =  cupsFindDestDefault(p->http, p->dest, p->dinfo, CUPS_ORIENTATION);
-    if(!attr)
+    attr = cupsFindDestDefault(p->http, p->dest, p->dinfo, CUPS_ORIENTATION);
+    if (!attr)
         return "NA";
-    
+
     const char *str = ippEnumString(CUPS_ORIENTATION, ippGetInteger(attr, 0));
-    printf("orient value=%d  , %s\n",ippGetInteger(attr, 0), str);
-    if(strcmp("0",str)==0)
+    printf("orient value=%d  , %s\n", ippGetInteger(attr, 0), str);
+    if (strcmp("0", str) == 0)
         str = "automatic-rotation";
+    // to do(later) consult the orientation mapping and do the necessary translation
     return str;
+}
+int get_orientation_supported(PrinterCUPS *p, char ***supported_values)
+{
+    char **values;
+    ensure_printer_connection(p);
+    ipp_attribute_t *attrs =
+        cupsFindDestSupported(p->http, p->dest, p->dinfo, CUPS_ORIENTATION);
+    int i, count = ippGetCount(attrs);
+    if (!count)
+    {
+        *supported_values = NULL;
+        return 0;
+    }
+
+    values = malloc(sizeof(char *) * count);
+
+    char *str;
+    for (i = 0; i < count; i++)
+    {
+        values[i] = (char *)ippEnumString(CUPS_ORIENTATION, ippGetInteger(attrs, i));
+        if (strcmp("0", values[i]) == 0)
+            values[i] = "automatic-rotation";
+    }
+    *supported_values = values;
+    return count;
 }
 const char *get_printer_state(PrinterCUPS *p)
 {
@@ -471,8 +497,8 @@ Mappings *get_new_Mappings()
     m->state[4] = STATE_PRINTING;
     m->state[5] = STATE_STOPPED;
 
-    m->orientation[atoi(CUPS_ORIENTATION_LANDSCAPE)]= ORIENTATION_LANDSCAPE;
-    m->orientation[atoi(CUPS_ORIENTATION_PORTRAIT)]= ORIENTATION_PORTRAIT;
+    m->orientation[atoi(CUPS_ORIENTATION_LANDSCAPE)] = ORIENTATION_LANDSCAPE;
+    m->orientation[atoi(CUPS_ORIENTATION_PORTRAIT)] = ORIENTATION_PORTRAIT;
     return m;
 }
 const char *cups_printer_state(cups_dest_t *dest)

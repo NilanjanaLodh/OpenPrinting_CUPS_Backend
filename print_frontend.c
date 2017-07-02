@@ -253,7 +253,7 @@ gpointer parse_commands(gpointer user_data)
         {
             char backend_name[100];
             scanf("%s", backend_name);
-            get_default_printer(f,backend_name);
+            get_default_printer(f, backend_name);
         }
     }
 }
@@ -270,16 +270,16 @@ void display_help()
     printf("%s\n", "unhide-temporary-cups");
     printf("%s\n", "get-capabilities <printer name>");
     printf("%s\n", "ping <printer name>");
-    printf("%s\n", "get-default-printer <backend name>");    
+    printf("%s\n", "get-default-printer <backend name>");
     // printf("%s\n","get-option-default <printer name> <option name>");
     // printf("%s\n","get-supported-raw <printer name> <option name>");
     printf("%s\n", "get-default-media <printer name>");
     printf("%s\n", "get-supported-media <printer name>");
 
-    printf("%s\n", "get-default-orientation <printer name>");    
+    printf("%s\n", "get-default-orientation <printer name>");
     // printf("%s\n","get-supported-color <printer name>");
     // printf("%s\n","get-supported-quality <printer name>");
-    // printf("%s\n","get-supported-orientation <printer name>");
+    printf("%s\n", "get-supported-orientation <printer name>");
     printf("%s\n", "get-state <printer name>");
     // printf("%s\n","get-resolution <printer name>");
     printf("%s\n", "is-accepting-jobs <printer name>");
