@@ -1,11 +1,5 @@
 #include "frontend_helper.h"
 
-static void unpack()
-{
-    
-}
-/*****************/
-
 
 PrinterObj *get_new_PrinterObj()
 {
@@ -118,21 +112,7 @@ void get_supported_media(PrinterObj *p)
     GVariantIter *iter;
     print_backend_call_get_supported_media_sync(p->backend_proxy, p->name,
                                                 &p->supported.num_media, &values, NULL, &error);
-    if (p->supported.num_media)
-        p->supported.media = (char **)malloc(sizeof(char *) * p->supported.num_media);
-    else
-    {
-        printf("No supported media found.\n");
-        p->supported.media = NULL;
-    }
-    g_variant_get(values, "a(s)", &iter);
-    int i = 0;
-    for (i = 0; i < (p->supported.num_media); i++)
-    {
-        g_variant_iter_loop(iter, "(s)", &str);
-        p->supported.media[i] = get_string_copy(str);
-        printf(" %s\n", p->supported.media[i]);
-    }
+    unpack_string_array(values, p->supported.num_media, &p->supported.media);
 }
 void get_supported_color(PrinterObj *p)
 {
@@ -190,21 +170,7 @@ void get_supported_orientation(PrinterObj *p)
     GVariantIter *iter;
     print_backend_call_get_supported_orientation_sync(p->backend_proxy, p->name,
                                                       &p->supported.num_orientation, &values, NULL, &error);
-    if (p->supported.num_orientation)
-        p->supported.orientation = (char **)malloc(sizeof(char *) * p->supported.num_orientation);
-    else
-    {
-        printf("No supported orientation found.\n");
-        p->supported.orientation = NULL;
-    }
-    g_variant_get(values, "a(s)", &iter);
-    int i = 0;
-    for (i = 0; i < (p->supported.num_orientation); i++)
-    {
-        g_variant_iter_loop(iter, "(s)", &str);
-        p->supported.orientation[i] = get_string_copy(str);
-        printf(" %s\n", p->supported.orientation[i]);
-    }
+    unpack_string_array(values, p->supported.num_orientation, &p->supported.orientation);
 }
 void get_state(PrinterObj *p)
 {
@@ -462,5 +428,3 @@ char *get_default_printer(FrontendObj *f, gchar *backend_name)
     printf("%s\n", def);
     return def;
 }
-
-

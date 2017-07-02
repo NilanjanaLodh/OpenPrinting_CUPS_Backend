@@ -50,4 +50,5 @@
 #define UNHIDE_TEMP_CUPS_SIGNAL "UnhideTemporaryPrintersCUPS"
 gboolean get_boolean(const char *);
 char *get_string_copy(const char *);
+void unpack_string_array(GVariant *variant, int num_val, char ***val);
 #endif
