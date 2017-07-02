@@ -233,11 +233,11 @@ gpointer parse_commands(gpointer user_data)
             scanf("%s", printer_name);
             printer_is_accepting_jobs(f, printer_name);
         }
-        else if (strcmp(buf, "get-resolution") == 0)
+        else if (strcmp(buf, "get-default-resolution") == 0)
         {
             char printer_name[100];
             scanf("%s", printer_name);
-            get_printer_resolution(f, printer_name);
+            get_printer_default_resolution(f, printer_name);
         }
         else if (strcmp(buf, "help") == 0)
         {
@@ -275,12 +275,12 @@ void display_help()
     // printf("%s\n","get-supported-raw <printer name> <option name>");
     printf("%s\n", "get-default-media <printer name>");
     printf("%s\n", "get-supported-media <printer name>");
+    printf("%s\n", "get-default-resolution <printer name>");
 
     printf("%s\n", "get-default-orientation <printer name>");
     // printf("%s\n","get-supported-color <printer name>");
     // printf("%s\n","get-supported-quality <printer name>");
     printf("%s\n", "get-supported-orientation <printer name>");
     printf("%s\n", "get-state <printer name>");
-    // printf("%s\n","get-resolution <printer name>");
     printf("%s\n", "is-accepting-jobs <printer name>");
 }

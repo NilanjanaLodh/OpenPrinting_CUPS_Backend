@@ -35,7 +35,7 @@ void get_supported_quality(PrinterObj *);
 void get_supported_orientation(PrinterObj *);
 void get_state(PrinterObj *);
 void is_accepting_jobs(PrinterObj *);
-char *get_media(PrinterObj *);         //to do
+char *get_media(PrinterObj *);         
 void set_media(PrinterObj *, gchar *); /// research about custom media size // to do
 void get_resolution(PrinterObj *);
 void set_resolution(PrinterObj *, int, int);
@@ -64,10 +64,10 @@ void get_printer_supported_quality(FrontendObj *, gchar *);
 void get_printer_supported_orientation(FrontendObj *, gchar *);
 char *get_printer_state(FrontendObj *, gchar *);
 gboolean printer_is_accepting_jobs(FrontendObj *, gchar *);
-void get_printer_resolution(FrontendObj *, gchar *);
+char* get_printer_default_resolution(FrontendObj *, gchar *);
 void set_printer_resolution(FrontendObj *, gchar *, int, int); //to do
-void get_printer_default_orientation(FrontendObj *, gchar *);
-void set_printer_default_orientation(FrontendObj *, gchar *, gchar *); //to do
+char* get_printer_default_orientation(FrontendObj *, gchar *);
+void set_printer_default_orientation(FrontendObj *, gchar *, gchar *); 
 void get_printer_quality(FrontendObj *, gchar *);              // to to
 void set_printer_quality(FrontendObj *, gchar *, gchar *);     //todo
 void get_printer_color_mode(FrontendObj *, gchar *);           //todo
@@ -102,7 +102,7 @@ struct _SupportedValues
     char **orientation;
 
     int num_res;
-    Resolution *res;
+    char **res;
 };
 
 struct _Settings
@@ -111,7 +111,7 @@ struct _Settings
     char *color;
     char *quaity;
     char *orientation;
-    Resolution res;
+    char *res;
 };
 
 struct _PrinterCapabilities

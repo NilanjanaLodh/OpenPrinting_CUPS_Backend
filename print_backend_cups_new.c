@@ -296,8 +296,8 @@ static gboolean on_handle_ping(PrintBackend *interface,
 {
     const char *dialog_name = g_dbus_method_invocation_get_sender(invocation); /// potential risk
     PrinterCUPS *p = get_printer_by_name(b, dialog_name, printer_name);
-    const char *orientation = get_orientation_default(p);
-    printf("The default orientation is %s\n", orientation);
+    Res *res = get_resolution_default(p);
+    printf("Default resolution is %s\n", res->string);
     print_backend_complete_ping(interface, invocation);
     return TRUE;
 }
@@ -387,6 +387,18 @@ static gboolean on_handle_get_supported_orientation(PrintBackend *interface,
 
     return TRUE;
 }
+static gboolean on_handle_get_default_resolution(PrintBackend *interface,
+                                                 GDBusMethodInvocation *invocation,
+                                                 const gchar *printer_name,
+                                                 gpointer user_data)
+{
+    const char *dialog_name = g_dbus_method_invocation_get_sender(invocation); /// potential risk
+    PrinterCUPS *p = get_printer_by_name(b, dialog_name, printer_name);
+    Res *res = get_resolution_default(p);
+    printf("The default resolution is %s\n", res->string);
+    print_backend_complete_get_default_resolution(interface, invocation, res->string);
+    return TRUE;
+}
 void connect_to_signals()
 {
     PrintBackend *skeleton = b->skeleton;
@@ -435,6 +447,10 @@ void connect_to_signals()
     g_signal_connect(skeleton,                                        //instance
                      "handle-get-supported-orientation",              //signal name
                      G_CALLBACK(on_handle_get_supported_orientation), //callback
+                     NULL);
+    g_signal_connect(skeleton,                                     //instance
+                     "handle-get-default-resolution",             //signal name
+                     G_CALLBACK(on_handle_get_default_resolution), //callback
                      NULL);
     // g_signal_connect(skeleton,                                  //instance
     //                  "handle-get-supported-color",              //signal name

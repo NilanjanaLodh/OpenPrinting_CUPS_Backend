@@ -30,14 +30,13 @@ typedef struct _PrinterCUPS
     // and later use these to send print jobs
 } PrinterCUPS;
 
-
 typedef struct _Mappings
 {
     GHashTable *media;
     GHashTable *color;
     GHashTable *print_quality;
-    const char* orientation[10];
-    const char* state[6];
+    const char *orientation[10];
+    const char *state[6];
 } Mappings;
 
 typedef struct _BackendObj
@@ -53,6 +52,12 @@ typedef struct _BackendObj
     char *default_printer;
 } BackendObj;
 
+typedef struct _Res
+{
+    int x, y;
+    const char *unit;
+    char *string;
+} Res;
 /********Backend related functions*******************/
 BackendObj *get_new_BackendObj();
 char *get_default_printer(BackendObj *b);
@@ -70,7 +75,7 @@ gboolean get_hide_temp(BackendObj *b, char *dialog_name);
 void set_hide_temp_printers(BackendObj *, const char *dialog_name);
 void unset_hide_temp_printers(BackendObj *, const char *dialog_name);
 gboolean dialog_contains_printer(BackendObj *, const char *dialog_name, const char *printer_name);
-PrinterCUPS* add_printer_to_dialog(BackendObj *, const char *dialog_name, const cups_dest_t *dest);
+PrinterCUPS *add_printer_to_dialog(BackendObj *, const char *dialog_name, const cups_dest_t *dest);
 void remove_printer_from_dialog(BackendObj *, const char *dialog_name, const char *printer_name);
 void send_printer_added_signal(BackendObj *b, const char *dialog_name, cups_dest_t *dest);
 void send_printer_removed_signal(BackendObj *b, const char *dialog_name, const char *printer_name);
@@ -83,7 +88,7 @@ cups_dest_t *get_dest_by_name(BackendObj *b, const char *dialog_name, const char
 PrinterCUPS *get_printer_by_name(BackendObj *b, const char *dialog_name, const char *printer_name);
 /*********Printer related functions******************/
 PrinterCUPS *get_new_PrinterCUPS(cups_dest_t *dest);
-void ensure_printer_connection(PrinterCUPS *p);
+gboolean ensure_printer_connection(PrinterCUPS *p);
 int get_printer_capabilities(PrinterCUPS *);
 const char *get_printer_state(PrinterCUPS *p);
 
@@ -93,8 +98,14 @@ int get_media_supported(PrinterCUPS *p, char ***supported_values);
 const char *get_orientation_default(PrinterCUPS *p);
 int get_orientation_supported(PrinterCUPS *p, char ***supported_values);
 
+Res* get_resolution_default(PrinterCUPS *p);
+
 /**********Mapping related functions*****************/
 Mappings *get_new_Mappings();
+
+/*********Resolution related functions*****************/
+
+
 /*************CUPS RELATED FUNCTIONS******************/
 const char *cups_printer_state(cups_dest_t *dest);
 gboolean cups_is_accepting_jobs(cups_dest_t *dest);

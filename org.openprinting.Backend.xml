@@ -62,6 +62,10 @@
             <arg name="num_values" direction="out" type="i"/>
             <arg name="values" direction="out" type="a(s)" />
         </method>
+        <method name="getDefaultResolution">
+            <arg name="printer_name" direction="in" type="s" />
+            <arg name="resolution" direction="out" type="s"/>
+        </method>
 
         <method name="ping">
             <arg name="printer_name" direction="in" type="s" />
@@ -103,11 +107,6 @@
             <arg name="printer_name" direction="in" type="s" />
             <arg name="num_values" direction="out" type="i"/>
             <arg name="values" direction="out" type="a(ii)" />
-        </method>
-        <method name="getResolution">
-            <arg name="printer_name" direction="in" type="s" />
-            <arg name="x_res" direction="out" type="i"/>
-            <arg name="y_res" direction="out" type="i"/>
         </method>
         <method name="checkResolution">
             <arg name="printer_name" direction="in" type="s" />

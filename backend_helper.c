@@ -320,14 +320,18 @@ PrinterCUPS *get_new_PrinterCUPS(cups_dest_t *dest)
 
     return p;
 }
-void ensure_printer_connection(PrinterCUPS *p)
+gboolean ensure_printer_connection(PrinterCUPS *p)
 {
     if (p->http)
-        return;
+        return TRUE;
     p->http = cupsConnectDest(p->dest, CUPS_DEST_FLAGS_NONE, 300, NULL, NULL, 0, NULL, NULL);
-    g_assert_nonnull(p->http);
+    if (p->http == NULL)
+        return FALSE;
     p->dinfo = cupsCopyDestInfo(p->http, p->dest);
-    g_assert_nonnull(p->dinfo);
+    if (p->dinfo == NULL)
+        return FALSE;
+
+    return TRUE;
 }
 int get_printer_capabilities(PrinterCUPS *p)
 {
@@ -455,6 +459,35 @@ int get_orientation_supported(PrinterCUPS *p, char ***supported_values)
     }
     *supported_values = values;
     return count;
+}
+Res *get_resolution_default(PrinterCUPS *p)
+{
+    Res *res = (Res *)(malloc(sizeof(Res)));
+    ensure_printer_connection(p);
+    ipp_attribute_t *attr = NULL;
+
+    attr = cupsFindDestDefault(p->http, p->dest, p->dinfo, "printer-resolution");
+    if (!attr)
+    {
+        res->string = "NA";
+        return res;
+    }
+
+    int xres, yres;
+    ipp_res_t units;
+    xres = ippGetResolution(attr, 0, &yres, &units);
+    res->x = xres;
+    res->y = yres;
+
+    res->unit = units == IPP_RES_PER_INCH ? "dpi" : "dpcm";
+    char buf[50];
+    if (xres == yres)
+        sprintf(buf, "%d %s", xres, res->unit);
+    else
+        sprintf(buf, "%dx%d %s", xres, yres, res->unit);
+    res->string = get_string_copy(buf);
+
+    return res;
 }
 const char *get_printer_state(PrinterCUPS *p)
 {

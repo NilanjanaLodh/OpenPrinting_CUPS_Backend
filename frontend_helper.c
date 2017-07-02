@@ -1,6 +1,5 @@
 #include "frontend_helper.h"
 
-
 PrinterObj *get_new_PrinterObj()
 {
     PrinterObj *p = malloc(sizeof(PrinterObj));
@@ -122,21 +121,7 @@ void get_supported_color(PrinterObj *p)
     GVariantIter *iter;
     print_backend_call_get_supported_color_sync(p->backend_proxy, p->name,
                                                 &p->supported.num_color, &values, NULL, &error);
-    p->supported.color = (char **)malloc(sizeof(char *) * p->supported.num_color);
-
-    g_variant_get(values, "a(s)", &iter);
-    int i = 0;
-    while (g_variant_iter_loop(iter, "(s)", &str))
-    {
-        p->supported.color[i] = malloc(sizeof(char) * (strlen(str) + 1));
-        strcpy(p->supported.color[i], str);
-        i++;
-    }
-
-    for (i = 0; i < p->supported.num_color; i++)
-    {
-        g_print(" %s\n", p->supported.color[i]);
-    }
+    unpack_string_array(values, p->supported.num_color, &p->supported.color);
 }
 void get_supported_quality(PrinterObj *p)
 {
@@ -146,21 +131,7 @@ void get_supported_quality(PrinterObj *p)
     GVariantIter *iter;
     print_backend_call_get_supported_quality_sync(p->backend_proxy, p->name,
                                                   &p->supported.num_quality, &values, NULL, &error);
-    p->supported.quality = (char **)malloc(sizeof(char *) * p->supported.num_quality);
-
-    g_variant_get(values, "a(s)", &iter);
-    int i = 0;
-    while (g_variant_iter_loop(iter, "(s)", &str))
-    {
-        p->supported.quality[i] = malloc(sizeof(char) * (strlen(str) + 1));
-        strcpy(p->supported.quality[i], str);
-        i++;
-    }
-
-    for (i = 0; i < p->supported.num_quality; i++)
-    {
-        g_print(" %s\n", p->supported.quality[i]);
-    }
+    unpack_string_array(values, p->supported.num_quality, &p->supported.quality);
 }
 void get_supported_orientation(PrinterObj *p)
 {
@@ -184,13 +155,12 @@ void get_state(PrinterObj *p)
 void get_resolution(PrinterObj *p)
 {
     GError *error = NULL;
-    print_backend_call_get_resolution_sync(p->backend_proxy, p->name,
-                                           &p->defaults.res.xres, &p->defaults.res.yres,
-                                           NULL, &error);
+    print_backend_call_get_default_resolution_sync(p->backend_proxy, p->name,
+                                                   &p->defaults.res,
+                                                   NULL, &error);
     g_assert_no_error(error);
 
-    /// To do : set the other boolean flags too
-    g_message("%d x %d", p->defaults.res.xres, p->defaults.res.yres);
+    g_message("%s", p->defaults.res);
 }
 char *get_media(PrinterObj *p)
 {
@@ -212,15 +182,15 @@ void is_accepting_jobs(PrinterObj *p)
 }
 void set_resolution(PrinterObj *p, int xres, int yres)
 {
-    gboolean possible;
-    print_backend_call_check_resolution_sync(p->backend_proxy, p->name,
-                                             xres, yres, &possible,
-                                             NULL, NULL);
-    if (possible)
-    {
-        p->defaults.res.xres = xres;
-        p->defaults.res.yres = yres;
-    }
+    // gboolean possible;
+    // print_backend_call_check_resolution_sync(p->backend_proxy, p->name,
+    //                                          xres, yres, &possible,
+    //                                          NULL, NULL);
+    // if (possible)
+    // {
+    //     p->defaults.res.xres = xres;
+    //     p->defaults.res.yres = yres;
+    // }
 }
 void get_orientation(PrinterObj *p)
 {
@@ -384,12 +354,13 @@ gboolean printer_is_accepting_jobs(FrontendObj *f, gchar *printer_name)
     is_accepting_jobs(p);
     return p->is_accepting_jobs;
 }
-void get_printer_resolution(FrontendObj *f, gchar *printer_name)
+char* get_printer_default_resolution(FrontendObj *f, gchar *printer_name)
 {
     PrinterObj *p = g_hash_table_lookup(f->printer, printer_name);
     g_assert_nonnull(p);
 
     get_resolution(p);
+    return p->defaults.res;
 }
 void set_printer_resolution(FrontendObj *f, gchar *printer_name, int xres, int yres)
 {
@@ -398,12 +369,13 @@ void set_printer_resolution(FrontendObj *f, gchar *printer_name, int xres, int y
 
     set_resolution(p, xres, yres);
 }
-void get_printer_default_orientation(FrontendObj *f, gchar *printer_name)
+char *get_printer_default_orientation(FrontendObj *f, gchar *printer_name)
 {
     PrinterObj *p = g_hash_table_lookup(f->printer, printer_name);
     g_assert_nonnull(p);
 
     get_orientation(p);
+    p->defaults.orientation;
 }
 void get_printer_default_media(FrontendObj *f, gchar *printer_name)
 {
