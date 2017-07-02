@@ -197,6 +197,12 @@ gpointer parse_commands(gpointer user_data)
             scanf("%s", printer_name);
             get_printer_default_media(f, printer_name);
         }
+        else if (strcmp(buf, "get-default-orientation") == 0)
+        {
+            char printer_name[100];
+            scanf("%s", printer_name);
+            get_printer_default_orientation(f, printer_name);
+        }
         else if (strcmp(buf, "get-supported-color") == 0)
         {
             char printer_name[100];
@@ -269,6 +275,8 @@ void display_help()
     // printf("%s\n","get-supported-raw <printer name> <option name>");
     printf("%s\n", "get-default-media <printer name>");
     printf("%s\n", "get-supported-media <printer name>");
+
+    printf("%s\n", "get-default-orientation <printer name>");    
     // printf("%s\n","get-supported-color <printer name>");
     // printf("%s\n","get-supported-quality <printer name>");
     // printf("%s\n","get-supported-orientation <printer name>");

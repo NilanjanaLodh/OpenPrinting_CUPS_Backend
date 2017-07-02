@@ -79,6 +79,11 @@ struct _PrintBackendIface
     GDBusMethodInvocation *invocation,
     const gchar *arg_printer_name);
 
+  gboolean (*handle_get_default_orientation) (
+    PrintBackend *object,
+    GDBusMethodInvocation *invocation,
+    const gchar *arg_printer_name);
+
   gboolean (*handle_get_default_printer) (
     PrintBackend *object,
     GDBusMethodInvocation *invocation);
@@ -88,11 +93,6 @@ struct _PrintBackendIface
     GDBusMethodInvocation *invocation,
     const gchar *arg_printer_name,
     const gchar *arg_option_name);
-
-  gboolean (*handle_get_orientation) (
-    PrintBackend *object,
-    GDBusMethodInvocation *invocation,
-    const gchar *arg_printer_name);
 
   gboolean (*handle_get_page_range) (
     PrintBackend *object,
@@ -239,6 +239,11 @@ void print_backend_complete_get_supported_media (
     gint num_values,
     GVariant *values);
 
+void print_backend_complete_get_default_orientation (
+    PrintBackend *object,
+    GDBusMethodInvocation *invocation,
+    const gchar *orientation);
+
 void print_backend_complete_ping (
     PrintBackend *object,
     GDBusMethodInvocation *invocation);
@@ -293,11 +298,6 @@ void print_backend_complete_check_media (
     PrintBackend *object,
     GDBusMethodInvocation *invocation,
     gboolean possible);
-
-void print_backend_complete_get_orientation (
-    PrintBackend *object,
-    GDBusMethodInvocation *invocation,
-    const gchar *orientation);
 
 void print_backend_complete_check_orientation (
     PrintBackend *object,
@@ -531,6 +531,26 @@ gboolean print_backend_call_get_supported_media_sync (
     GCancellable *cancellable,
     GError **error);
 
+void print_backend_call_get_default_orientation (
+    PrintBackend *proxy,
+    const gchar *arg_printer_name,
+    GCancellable *cancellable,
+    GAsyncReadyCallback callback,
+    gpointer user_data);
+
+gboolean print_backend_call_get_default_orientation_finish (
+    PrintBackend *proxy,
+    gchar **out_orientation,
+    GAsyncResult *res,
+    GError **error);
+
+gboolean print_backend_call_get_default_orientation_sync (
+    PrintBackend *proxy,
+    const gchar *arg_printer_name,
+    gchar **out_orientation,
+    GCancellable *cancellable,
+    GError **error);
+
 void print_backend_call_ping (
     PrintBackend *proxy,
     const gchar *arg_printer_name,
@@ -748,26 +768,6 @@ gboolean print_backend_call_check_media_sync (
     const gchar *arg_printer_name,
     const gchar *arg_media_name,
     gboolean *out_possible,
-    GCancellable *cancellable,
-    GError **error);
-
-void print_backend_call_get_orientation (
-    PrintBackend *proxy,
-    const gchar *arg_printer_name,
-    GCancellable *cancellable,
-    GAsyncReadyCallback callback,
-    gpointer user_data);
-
-gboolean print_backend_call_get_orientation_finish (
-    PrintBackend *proxy,
-    gchar **out_orientation,
-    GAsyncResult *res,
-    GError **error);
-
-gboolean print_backend_call_get_orientation_sync (
-    PrintBackend *proxy,
-    const gchar *arg_printer_name,
-    gchar **out_orientation,
     GCancellable *cancellable,
     GError **error);
 

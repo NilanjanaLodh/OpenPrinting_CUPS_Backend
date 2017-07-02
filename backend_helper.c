@@ -415,6 +415,21 @@ int get_media_supported(PrinterCUPS *p, char ***supported_values)
     *supported_values = values;
     return count;
 }
+const char *get_orientation_default(PrinterCUPS *p)
+{
+    ensure_printer_connection(p);
+    ipp_attribute_t *attr = NULL;
+
+    attr =  cupsFindDestDefault(p->http, p->dest, p->dinfo, CUPS_ORIENTATION);
+    if(!attr)
+        return "NA";
+    
+    const char *str = ippEnumString(CUPS_ORIENTATION, ippGetInteger(attr, 0));
+    printf("orient value=%d  , %s\n",ippGetInteger(attr, 0), str);
+    if(strcmp("0",str)==0)
+        str = "automatic-rotation";
+    return str;
+}
 const char *get_printer_state(PrinterCUPS *p)
 {
     const char *str;
@@ -455,6 +470,9 @@ Mappings *get_new_Mappings()
     m->state[3] = STATE_IDLE;
     m->state[4] = STATE_PRINTING;
     m->state[5] = STATE_STOPPED;
+
+    m->orientation[atoi(CUPS_ORIENTATION_LANDSCAPE)]= ORIENTATION_LANDSCAPE;
+    m->orientation[atoi(CUPS_ORIENTATION_PORTRAIT)]= ORIENTATION_PORTRAIT;
     return m;
 }
 const char *cups_printer_state(cups_dest_t *dest)

@@ -36,7 +36,7 @@ typedef struct _Mappings
     GHashTable *media;
     GHashTable *color;
     GHashTable *print_quality;
-    GHashTable *orientation;
+    const char* orientation[10];
     const char* state[6];
 } Mappings;
 
@@ -85,9 +85,12 @@ PrinterCUPS *get_printer_by_name(BackendObj *b, const char *dialog_name, const c
 PrinterCUPS *get_new_PrinterCUPS(cups_dest_t *dest);
 void ensure_printer_connection(PrinterCUPS *p);
 int get_printer_capabilities(PrinterCUPS *);
+const char *get_printer_state(PrinterCUPS *p);
+
 const char *get_media_default(PrinterCUPS *p);
 int get_media_supported(PrinterCUPS *p, char ***supported_values);
-const char *get_printer_state(PrinterCUPS *p);
+
+const char *get_orientation_default(PrinterCUPS *p);
 
 /**********Mapping related functions*****************/
 Mappings *get_new_Mappings();

@@ -66,8 +66,8 @@ char *get_printer_state(FrontendObj *, gchar *);
 gboolean printer_is_accepting_jobs(FrontendObj *, gchar *);
 void get_printer_resolution(FrontendObj *, gchar *);
 void set_printer_resolution(FrontendObj *, gchar *, int, int); //to do
-void get_printer_orientation(FrontendObj *, gchar *);
-void set_printer_orientation(FrontendObj *, gchar *, gchar *); //to do
+void get_printer_default_orientation(FrontendObj *, gchar *);
+void set_printer_default_orientation(FrontendObj *, gchar *, gchar *); //to do
 void get_printer_quality(FrontendObj *, gchar *);              // to to
 void set_printer_quality(FrontendObj *, gchar *, gchar *);     //todo
 void get_printer_color_mode(FrontendObj *, gchar *);           //todo

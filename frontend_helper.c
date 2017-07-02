@@ -252,12 +252,12 @@ void set_resolution(PrinterObj *p, int xres, int yres)
 void get_orientation(PrinterObj *p)
 {
     GError *error = NULL;
-    print_backend_call_get_orientation_sync(p->backend_proxy, p->name,
-                                            &p->defaults.orientation,
-                                            NULL, &error);
+    print_backend_call_get_default_orientation_sync(p->backend_proxy, p->name,
+                                                    &p->defaults.orientation,
+                                                    NULL, &error);
     g_assert_no_error(error);
 
-    g_message("defaults orientation: %s", p->defaults.orientation);
+    g_message("default orientation: %s", p->defaults.orientation);
 }
 /************************************************* FrontendObj********************************************/
 
@@ -425,7 +425,7 @@ void set_printer_resolution(FrontendObj *f, gchar *printer_name, int xres, int y
 
     set_resolution(p, xres, yres);
 }
-void get_printer_orientation(FrontendObj *f, gchar *printer_name)
+void get_printer_default_orientation(FrontendObj *f, gchar *printer_name)
 {
     PrinterObj *p = g_hash_table_lookup(f->printer, printer_name);
     g_assert_nonnull(p);
@@ -451,7 +451,7 @@ char *get_default_printer(FrontendObj *f, gchar *backend_name)
     PrintBackend *proxy = g_hash_table_lookup(f->backend, backend_name);
     g_assert_nonnull(proxy);
     char *def;
-    print_backend_call_get_default_printer_sync(proxy,&def,NULL, NULL);
+    print_backend_call_get_default_printer_sync(proxy, &def, NULL, NULL);
     printf("%s\n", def);
     return def;
 }

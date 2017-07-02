@@ -296,13 +296,9 @@ static gboolean on_handle_ping(PrintBackend *interface,
 {
     const char *dialog_name = g_dbus_method_invocation_get_sender(invocation); /// potential risk
     PrinterCUPS *p = get_printer_by_name(b, dialog_name, printer_name);
+    const char *orientation = get_orientation_default(p);
+    printf("The default orientation is %s\n", orientation);
     print_backend_complete_ping(interface, invocation);
-    while(1)
-    {
-        const char *state = get_printer_state(p);
-        printf("%s is %s\n", printer_name, state);
-    }
-    
     return TRUE;
 }
 static gboolean on_handle_get_default_media(PrintBackend *interface,
@@ -353,6 +349,18 @@ static gboolean on_handle_get_default_printer(PrintBackend *interface,
     print_backend_complete_get_default_printer(interface, invocation, def);
     return TRUE;
 }
+static gboolean on_handle_get_default_orientation(PrintBackend *interface,
+                                                  GDBusMethodInvocation *invocation,
+                                                  const gchar *printer_name,
+                                                  gpointer user_data)
+{
+    const char *dialog_name = g_dbus_method_invocation_get_sender(invocation); /// potential risk
+    PrinterCUPS *p = get_printer_by_name(b, dialog_name, printer_name);
+    const char *orientation = get_orientation_default(p);
+    printf("The default orientation is %s\n", orientation);
+    print_backend_complete_get_default_orientation(interface, invocation, orientation);
+    return TRUE;
+}
 void connect_to_signals()
 {
     PrintBackend *skeleton = b->skeleton;
@@ -393,6 +401,10 @@ void connect_to_signals()
     g_signal_connect(skeleton,                                  //instance
                      "handle-get-supported-media",              //signal name
                      G_CALLBACK(on_handle_get_supported_media), //callback
+                     NULL);
+    g_signal_connect(skeleton,                                      //instance
+                     "handle-get-default-orientation",              //signal name
+                     G_CALLBACK(on_handle_get_default_orientation), //callback
                      NULL);
     // g_signal_connect(skeleton,                                  //instance
     //                  "handle-get-supported-color",              //signal name
