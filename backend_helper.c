@@ -20,7 +20,20 @@ char *get_default_printer(BackendObj *b)
     {
         return b->default_printer;
     }
+    int num_dests;
+    cups_dest_t *dests;
+    num_dests = cupsGetDests2(CUPS_HTTP_DEFAULT, &dests);
+    cups_dest_t *dest = cupsGetDest(NULL, NULL, num_dests, dests);
+    if (dest)
+    {
+        /**first query the user default printer**/
+        char *def = get_string_copy(dest->name);
+        cupsFreeDests(num_dests, dests);
+        return def;
+    }
+    cupsFreeDests(num_dests, dests);
 
+    /** Then query the system default printer **/
     ipp_t *request = ippNewRequest(IPP_OP_CUPS_GET_DEFAULT);
     ipp_t *response;
     ipp_attribute_t *attr;
@@ -471,7 +484,7 @@ char *get_resolution_default(PrinterCUPS *p)
         return "NA";
     }
 
-    return extract_res_from_ipp(attr,0); 
+    return extract_res_from_ipp(attr, 0);
 }
 int get_resolution_supported(PrinterCUPS *p, char ***supported_values)
 {
@@ -491,7 +504,7 @@ int get_resolution_supported(PrinterCUPS *p, char ***supported_values)
     char *str;
     for (i = 0; i < count; i++)
     {
-        values[i] = extract_res_from_ipp(attrs, i);   
+        values[i] = extract_res_from_ipp(attrs, i);
     }
     *supported_values = values;
     return count;
