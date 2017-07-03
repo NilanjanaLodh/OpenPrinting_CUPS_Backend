@@ -528,6 +528,29 @@ const char *get_color_default(PrinterCUPS *p)
     }
     return "NA";
 }
+int get_color_supported(PrinterCUPS *p, char ***supported_values)
+{
+    char **values;
+    ensure_printer_connection(p);
+    ipp_attribute_t *attrs =
+        cupsFindDestSupported(p->http, p->dest, p->dinfo, CUPS_PRINT_COLOR_MODE);
+    int i, count = ippGetCount(attrs);
+    if (!count)
+    {
+        *supported_values = NULL;
+        return 0;
+    }
+
+    values = malloc(sizeof(char *) * count);
+
+    char *str;
+    for (i = 0; i < count; i++)
+    {
+        values[i] = get_string_copy(ippGetString(attrs, i, NULL));
+    }
+    *supported_values = values;
+    return count;
+}
 const char *get_printer_state(PrinterCUPS *p)
 {
     const char *str;

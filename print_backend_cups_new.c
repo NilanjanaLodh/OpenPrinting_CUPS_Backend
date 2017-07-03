@@ -389,15 +389,29 @@ static gboolean on_handle_get_supported_resolution(PrintBackend *interface,
     return TRUE;
 }
 static gboolean on_handle_get_default_color(PrintBackend *interface,
-                                                 GDBusMethodInvocation *invocation,
-                                                 const gchar *printer_name,
-                                                 gpointer user_data)
+                                            GDBusMethodInvocation *invocation,
+                                            const gchar *printer_name,
+                                            gpointer user_data)
 {
     const char *dialog_name = g_dbus_method_invocation_get_sender(invocation); /// potential risk
     PrinterCUPS *p = get_printer_by_name(b, dialog_name, printer_name);
-    char *col = get_color_default(p);
+    const char *col = get_color_default(p);
     printf("The default color is %s\n", col);
     print_backend_complete_get_default_color(interface, invocation, col);
+    return TRUE;
+}
+static gboolean on_handle_get_supported_color(PrintBackend *interface,
+                                              GDBusMethodInvocation *invocation,
+                                              const gchar *printer_name,
+                                              gpointer user_data)
+{
+    const char *dialog_name = g_dbus_method_invocation_get_sender(invocation); /// potential risk
+    PrinterCUPS *p = get_printer_by_name(b, dialog_name, printer_name);
+    char **supported_values = NULL;
+    int count = get_color_supported(p, &supported_values);
+    GVariant *values = pack_string_array(count, supported_values);
+    print_backend_complete_get_supported_color(interface, invocation, count, values);
+
     return TRUE;
 }
 void connect_to_signals()
@@ -457,14 +471,14 @@ void connect_to_signals()
                      "handle-get-supported-resolution",              //signal name
                      G_CALLBACK(on_handle_get_supported_resolution), //callback
                      NULL);
-    g_signal_connect(skeleton,                                     //instance
+    g_signal_connect(skeleton,                                //instance
                      "handle-get-default-color",              //signal name
                      G_CALLBACK(on_handle_get_default_color), //callback
                      NULL);
-    // g_signal_connect(skeleton,                                  //instance
-    //                  "handle-get-supported-color",              //signal name
-    //                  G_CALLBACK(on_handle_get_supported_color), //callback
-    //                  NULL);
+    g_signal_connect(skeleton,                                  //instance
+                     "handle-get-supported-color",              //signal name
+                     G_CALLBACK(on_handle_get_supported_color), //callback
+                     NULL);
     // g_signal_connect(skeleton,                                    //instance
     //                  "handle-get-supported-quality",              //signal name
     //                  G_CALLBACK(on_handle_get_supported_quality), //callback

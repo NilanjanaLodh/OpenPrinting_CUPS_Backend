@@ -75,7 +75,11 @@
             <arg name="printer_name" direction="in" type="s" />
             <arg name="color_mode" direction="out" type="s"/>
         </method>
-
+        <method name="getSupportedColor">
+            <arg name="printer_name" direction="in" type="s" />
+            <arg name="num_values" direction="out" type="i"/>
+            <arg name="values" direction="out" type="a(s)" />
+        </method>
         <method name="ping">
             <arg name="printer_name" direction="in" type="s" />
         </method>
@@ -101,11 +105,6 @@
             <arg name="option_name" direction="in" type="s"/>
             <arg name="num_values" direction="out" type="i"/>
             <arg name="option_values" direction="out" type="a(s)" />
-        </method>
-        <method name="getSupportedColor">
-            <arg name="printer_name" direction="in" type="s" />
-            <arg name="num_values" direction="out" type="i"/>
-            <arg name="values" direction="out" type="a(s)" />
         </method>
         <method name="getSupportedQuality">
             <arg name="printer_name" direction="in" type="s" />

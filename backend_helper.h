@@ -102,6 +102,7 @@ char* get_resolution_default(PrinterCUPS *p);
 int get_resolution_supported(PrinterCUPS *p, char ***supported_values);
 
 const char* get_color_default(PrinterCUPS *p);
+int get_color_supported(PrinterCUPS *p, char ***supported_values);
 
 /**********Mapping related functions*****************/
 Mappings *get_new_Mappings();

@@ -102,7 +102,6 @@ static void on_printer_added(GDBusConnection *connection,
 
     PrinterObj *p = get_new_PrinterObj();
     fill_basic_options(p, parameters);
-    // g_variant_get(parameters, "(sssss)", &printer_name, &info, &location, &make_and_model, &is_accepting_jobs);
     add_printer(f, p, sender_name, object_path);
     print_basic_options(p);
 }
@@ -290,9 +289,9 @@ void display_help()
     printf("%s\n", "get-default-resolution <printer name>");
     printf("%s\n", "get-supported-resolution <printer name>");
     printf("%s\n", "get-default-color <printer name>");
+    printf("%s\n", "get-supported-color <printer name>");
 
     printf("%s\n", "get-default-orientation <printer name>");
-    // printf("%s\n","get-supported-color <printer name>");
     // printf("%s\n","get-supported-quality <printer name>");
     printf("%s\n", "get-supported-orientation <printer name>");
     printf("%s\n", "get-state <printer name>");

@@ -266,6 +266,12 @@ void print_backend_complete_get_default_color (
     GDBusMethodInvocation *invocation,
     const gchar *color_mode);
 
+void print_backend_complete_get_supported_color (
+    PrintBackend *object,
+    GDBusMethodInvocation *invocation,
+    gint num_values,
+    GVariant *values);
+
 void print_backend_complete_ping (
     PrintBackend *object,
     GDBusMethodInvocation *invocation);
@@ -280,12 +286,6 @@ void print_backend_complete_get_supported_values_raw_string (
     GDBusMethodInvocation *invocation,
     gint num_values,
     GVariant *option_values);
-
-void print_backend_complete_get_supported_color (
-    PrintBackend *object,
-    GDBusMethodInvocation *invocation,
-    gint num_values,
-    GVariant *values);
 
 void print_backend_complete_get_supported_quality (
     PrintBackend *object,
@@ -634,6 +634,28 @@ gboolean print_backend_call_get_default_color_sync (
     GCancellable *cancellable,
     GError **error);
 
+void print_backend_call_get_supported_color (
+    PrintBackend *proxy,
+    const gchar *arg_printer_name,
+    GCancellable *cancellable,
+    GAsyncReadyCallback callback,
+    gpointer user_data);
+
+gboolean print_backend_call_get_supported_color_finish (
+    PrintBackend *proxy,
+    gint *out_num_values,
+    GVariant **out_values,
+    GAsyncResult *res,
+    GError **error);
+
+gboolean print_backend_call_get_supported_color_sync (
+    PrintBackend *proxy,
+    const gchar *arg_printer_name,
+    gint *out_num_values,
+    GVariant **out_values,
+    GCancellable *cancellable,
+    GError **error);
+
 void print_backend_call_ping (
     PrintBackend *proxy,
     const gchar *arg_printer_name,
@@ -695,28 +717,6 @@ gboolean print_backend_call_get_supported_values_raw_string_sync (
     const gchar *arg_option_name,
     gint *out_num_values,
     GVariant **out_option_values,
-    GCancellable *cancellable,
-    GError **error);
-
-void print_backend_call_get_supported_color (
-    PrintBackend *proxy,
-    const gchar *arg_printer_name,
-    GCancellable *cancellable,
-    GAsyncReadyCallback callback,
-    gpointer user_data);
-
-gboolean print_backend_call_get_supported_color_finish (
-    PrintBackend *proxy,
-    gint *out_num_values,
-    GVariant **out_values,
-    GAsyncResult *res,
-    GError **error);
-
-gboolean print_backend_call_get_supported_color_sync (
-    PrintBackend *proxy,
-    const gchar *arg_printer_name,
-    gint *out_num_values,
-    GVariant **out_values,
     GCancellable *cancellable,
     GError **error);
 
