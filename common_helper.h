@@ -5,7 +5,6 @@
 /*********LISTING OF ALL POSSIBLE OPTIONS*****/
 //Rename these to something better if needed
 
-
 #define MEDIA_A4 "A4"
 #define MEDIA_A3 "A3"
 #define MEDIA_A5 "A5"
@@ -51,4 +50,6 @@
 gboolean get_boolean(const char *);
 char *get_string_copy(const char *);
 void unpack_string_array(GVariant *variant, int num_val, char ***val);
+GVariant *pack_string_array(int num_val, char **val);
+
 #endif

@@ -49,3 +49,20 @@ void unpack_string_array(GVariant *variant, int num_val, char ***val)
         printf(" %s\n", str);
     }
 }
+GVariant* pack_string_array(int num_val, char **val)
+{
+    GVariantBuilder *builder;
+    GVariant *values;
+    builder = g_variant_builder_new(G_VARIANT_TYPE("a(s)"));
+    for (int i = 0; i < num_val; i++)
+    {
+        g_message("%s", val[i]);
+        g_variant_builder_add(builder, "(s)", val[i]);
+    }
+
+    if (num_val == 0)
+        g_variant_builder_add(builder, "(s)", "NA");
+
+    values = g_variant_new("a(s)", builder);
+    return values;
+}

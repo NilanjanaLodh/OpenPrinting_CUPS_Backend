@@ -321,19 +321,7 @@ static gboolean on_handle_get_supported_media(PrintBackend *interface,
     PrinterCUPS *p = get_printer_by_name(b, dialog_name, printer_name);
     char **supported_media = NULL;
     int count = get_media_supported(p, &supported_media);
-    GVariantBuilder *builder;
-    GVariant *values;
-    builder = g_variant_builder_new(G_VARIANT_TYPE("a(s)"));
-    for (int i = 0; i < count; i++)
-    {
-        g_message("%s", supported_media[i]);
-        g_variant_builder_add(builder, "(s)", supported_media[i]);
-    }
-
-    if (count == 0)
-        g_variant_builder_add(builder, "(s)", "NA");
-
-    values = g_variant_new("a(s)", builder);
+    GVariant *values = pack_string_array(count,supported_media);
     print_backend_complete_get_supported_media(interface, invocation, count, values);
 
     return TRUE;
@@ -368,19 +356,8 @@ static gboolean on_handle_get_supported_orientation(PrintBackend *interface,
     PrinterCUPS *p = get_printer_by_name(b, dialog_name, printer_name);
     char **supported_values = NULL;
     int count = get_orientation_supported(p, &supported_values);
-    GVariantBuilder *builder;
-    GVariant *values;
-    builder = g_variant_builder_new(G_VARIANT_TYPE("a(s)"));
-    for (int i = 0; i < count; i++)
-    {
-        g_message("%s", supported_values[i]);
-        g_variant_builder_add(builder, "(s)", supported_values[i]);
-    }
-
-    if (count == 0)
-        g_variant_builder_add(builder, "(s)", "NA");
-
-    values = g_variant_new("a(s)", builder);
+    GVariant *values = pack_string_array(count,supported_values);
+    ///try freeing the array, just for fun    
     print_backend_complete_get_supported_orientation(interface, invocation, count, values);
 
     return TRUE;
@@ -406,20 +383,7 @@ static gboolean on_handle_get_supported_resolution(PrintBackend *interface,
     PrinterCUPS *p = get_printer_by_name(b, dialog_name, printer_name);
     char **supported_values = NULL;
     int count = get_resolution_supported(p, &supported_values);
-
-    GVariantBuilder *builder;
-    GVariant *values;
-    builder = g_variant_builder_new(G_VARIANT_TYPE("a(s)"));
-    for (int i = 0; i < count; i++)
-    {
-        g_message("%s", supported_values[i]);
-        g_variant_builder_add(builder, "(s)", supported_values[i]);
-    }
-
-    if (count == 0)
-        g_variant_builder_add(builder, "(s)", "NA");
-
-    values = g_variant_new("a(s)", builder);
+    GVariant *values = pack_string_array(count,supported_values);
     print_backend_complete_get_supported_resolution(interface, invocation, count, values);
 
     return TRUE;
