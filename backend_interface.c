@@ -844,6 +844,53 @@ static const _ExtendedGDBusMethodInfo _print_backend_method_info_get_supported_r
   FALSE
 };
 
+static const _ExtendedGDBusArgInfo _print_backend_method_info_get_default_color_IN_ARG_printer_name =
+{
+  {
+    -1,
+    (gchar *) "printer_name",
+    (gchar *) "s",
+    NULL
+  },
+  FALSE
+};
+
+static const _ExtendedGDBusArgInfo * const _print_backend_method_info_get_default_color_IN_ARG_pointers[] =
+{
+  &_print_backend_method_info_get_default_color_IN_ARG_printer_name,
+  NULL
+};
+
+static const _ExtendedGDBusArgInfo _print_backend_method_info_get_default_color_OUT_ARG_color_mode =
+{
+  {
+    -1,
+    (gchar *) "color_mode",
+    (gchar *) "s",
+    NULL
+  },
+  FALSE
+};
+
+static const _ExtendedGDBusArgInfo * const _print_backend_method_info_get_default_color_OUT_ARG_pointers[] =
+{
+  &_print_backend_method_info_get_default_color_OUT_ARG_color_mode,
+  NULL
+};
+
+static const _ExtendedGDBusMethodInfo _print_backend_method_info_get_default_color =
+{
+  {
+    -1,
+    (gchar *) "getDefaultColor",
+    (GDBusArgInfo **) &_print_backend_method_info_get_default_color_IN_ARG_pointers,
+    (GDBusArgInfo **) &_print_backend_method_info_get_default_color_OUT_ARG_pointers,
+    NULL
+  },
+  "handle-get-default-color",
+  FALSE
+};
+
 static const _ExtendedGDBusArgInfo _print_backend_method_info_ping_IN_ARG_printer_name =
 {
   {
@@ -1464,53 +1511,6 @@ static const _ExtendedGDBusMethodInfo _print_backend_method_info_check_quality =
   FALSE
 };
 
-static const _ExtendedGDBusArgInfo _print_backend_method_info_get_color_IN_ARG_printer_name =
-{
-  {
-    -1,
-    (gchar *) "printer_name",
-    (gchar *) "s",
-    NULL
-  },
-  FALSE
-};
-
-static const _ExtendedGDBusArgInfo * const _print_backend_method_info_get_color_IN_ARG_pointers[] =
-{
-  &_print_backend_method_info_get_color_IN_ARG_printer_name,
-  NULL
-};
-
-static const _ExtendedGDBusArgInfo _print_backend_method_info_get_color_OUT_ARG_color_mode =
-{
-  {
-    -1,
-    (gchar *) "color_mode",
-    (gchar *) "s",
-    NULL
-  },
-  FALSE
-};
-
-static const _ExtendedGDBusArgInfo * const _print_backend_method_info_get_color_OUT_ARG_pointers[] =
-{
-  &_print_backend_method_info_get_color_OUT_ARG_color_mode,
-  NULL
-};
-
-static const _ExtendedGDBusMethodInfo _print_backend_method_info_get_color =
-{
-  {
-    -1,
-    (gchar *) "getColor",
-    (GDBusArgInfo **) &_print_backend_method_info_get_color_IN_ARG_pointers,
-    (GDBusArgInfo **) &_print_backend_method_info_get_color_OUT_ARG_pointers,
-    NULL
-  },
-  "handle-get-color",
-  FALSE
-};
-
 static const _ExtendedGDBusArgInfo _print_backend_method_info_check_color_IN_ARG_printer_name =
 {
   {
@@ -1614,6 +1614,7 @@ static const _ExtendedGDBusMethodInfo * const _print_backend_method_info_pointer
   &_print_backend_method_info_get_supported_orientation,
   &_print_backend_method_info_get_default_resolution,
   &_print_backend_method_info_get_supported_resolution,
+  &_print_backend_method_info_get_default_color,
   &_print_backend_method_info_ping,
   &_print_backend_method_info_get_default_value,
   &_print_backend_method_info_get_supported_values_raw_string,
@@ -1625,7 +1626,6 @@ static const _ExtendedGDBusMethodInfo * const _print_backend_method_info_pointer
   &_print_backend_method_info_get_page_range,
   &_print_backend_method_info_get_quality,
   &_print_backend_method_info_check_quality,
-  &_print_backend_method_info_get_color,
   &_print_backend_method_info_check_color,
   &_print_backend_method_info_apply_settings,
   NULL
@@ -1827,7 +1827,7 @@ print_backend_override_properties (GObjectClass *klass, guint property_id_begin)
  * @handle_check_orientation: Handler for the #PrintBackend::handle-check-orientation signal.
  * @handle_check_quality: Handler for the #PrintBackend::handle-check-quality signal.
  * @handle_check_resolution: Handler for the #PrintBackend::handle-check-resolution signal.
- * @handle_get_color: Handler for the #PrintBackend::handle-get-color signal.
+ * @handle_get_default_color: Handler for the #PrintBackend::handle-get-default-color signal.
  * @handle_get_default_media: Handler for the #PrintBackend::handle-get-default-media signal.
  * @handle_get_default_orientation: Handler for the #PrintBackend::handle-get-default-orientation signal.
  * @handle_get_default_printer: Handler for the #PrintBackend::handle-get-default-printer signal.
@@ -2134,6 +2134,29 @@ print_backend_default_init (PrintBackendIface *iface)
     G_TYPE_DBUS_METHOD_INVOCATION, G_TYPE_STRING);
 
   /**
+   * PrintBackend::handle-get-default-color:
+   * @object: A #PrintBackend.
+   * @invocation: A #GDBusMethodInvocation.
+   * @arg_printer_name: Argument passed by remote caller.
+   *
+   * Signal emitted when a remote caller is invoking the <link linkend="gdbus-method-org-openprinting-PrintBackend.getDefaultColor">getDefaultColor()</link> D-Bus method.
+   *
+   * If a signal handler returns %TRUE, it means the signal handler will handle the invocation (e.g. take a reference to @invocation and eventually call print_backend_complete_get_default_color() or e.g. g_dbus_method_invocation_return_error() on it) and no order signal handlers will run. If no signal handler handles the invocation, the %G_DBUS_ERROR_UNKNOWN_METHOD error is returned.
+   *
+   * Returns: %TRUE if the invocation was handled, %FALSE to let other signal handlers run.
+   */
+  g_signal_new ("handle-get-default-color",
+    G_TYPE_FROM_INTERFACE (iface),
+    G_SIGNAL_RUN_LAST,
+    G_STRUCT_OFFSET (PrintBackendIface, handle_get_default_color),
+    g_signal_accumulator_true_handled,
+    NULL,
+    g_cclosure_marshal_generic,
+    G_TYPE_BOOLEAN,
+    2,
+    G_TYPE_DBUS_METHOD_INVOCATION, G_TYPE_STRING);
+
+  /**
    * PrintBackend::handle-ping:
    * @object: A #PrintBackend.
    * @invocation: A #GDBusMethodInvocation.
@@ -2392,29 +2415,6 @@ print_backend_default_init (PrintBackendIface *iface)
     G_TYPE_BOOLEAN,
     3,
     G_TYPE_DBUS_METHOD_INVOCATION, G_TYPE_STRING, G_TYPE_STRING);
-
-  /**
-   * PrintBackend::handle-get-color:
-   * @object: A #PrintBackend.
-   * @invocation: A #GDBusMethodInvocation.
-   * @arg_printer_name: Argument passed by remote caller.
-   *
-   * Signal emitted when a remote caller is invoking the <link linkend="gdbus-method-org-openprinting-PrintBackend.getColor">getColor()</link> D-Bus method.
-   *
-   * If a signal handler returns %TRUE, it means the signal handler will handle the invocation (e.g. take a reference to @invocation and eventually call print_backend_complete_get_color() or e.g. g_dbus_method_invocation_return_error() on it) and no order signal handlers will run. If no signal handler handles the invocation, the %G_DBUS_ERROR_UNKNOWN_METHOD error is returned.
-   *
-   * Returns: %TRUE if the invocation was handled, %FALSE to let other signal handlers run.
-   */
-  g_signal_new ("handle-get-color",
-    G_TYPE_FROM_INTERFACE (iface),
-    G_SIGNAL_RUN_LAST,
-    G_STRUCT_OFFSET (PrintBackendIface, handle_get_color),
-    g_signal_accumulator_true_handled,
-    NULL,
-    g_cclosure_marshal_generic,
-    G_TYPE_BOOLEAN,
-    2,
-    G_TYPE_DBUS_METHOD_INVOCATION, G_TYPE_STRING);
 
   /**
    * PrintBackend::handle-check-color:
@@ -3867,6 +3867,110 @@ _out:
 }
 
 /**
+ * print_backend_call_get_default_color:
+ * @proxy: A #PrintBackendProxy.
+ * @arg_printer_name: Argument to pass with the method invocation.
+ * @cancellable: (allow-none): A #GCancellable or %NULL.
+ * @callback: A #GAsyncReadyCallback to call when the request is satisfied or %NULL.
+ * @user_data: User data to pass to @callback.
+ *
+ * Asynchronously invokes the <link linkend="gdbus-method-org-openprinting-PrintBackend.getDefaultColor">getDefaultColor()</link> D-Bus method on @proxy.
+ * When the operation is finished, @callback will be invoked in the <link linkend="g-main-context-push-thread-default">thread-default main loop</link> of the thread you are calling this method from.
+ * You can then call print_backend_call_get_default_color_finish() to get the result of the operation.
+ *
+ * See print_backend_call_get_default_color_sync() for the synchronous, blocking version of this method.
+ */
+void
+print_backend_call_get_default_color (
+    PrintBackend *proxy,
+    const gchar *arg_printer_name,
+    GCancellable *cancellable,
+    GAsyncReadyCallback callback,
+    gpointer user_data)
+{
+  g_dbus_proxy_call (G_DBUS_PROXY (proxy),
+    "getDefaultColor",
+    g_variant_new ("(s)",
+                   arg_printer_name),
+    G_DBUS_CALL_FLAGS_NONE,
+    -1,
+    cancellable,
+    callback,
+    user_data);
+}
+
+/**
+ * print_backend_call_get_default_color_finish:
+ * @proxy: A #PrintBackendProxy.
+ * @out_color_mode: (out): Return location for return parameter or %NULL to ignore.
+ * @res: The #GAsyncResult obtained from the #GAsyncReadyCallback passed to print_backend_call_get_default_color().
+ * @error: Return location for error or %NULL.
+ *
+ * Finishes an operation started with print_backend_call_get_default_color().
+ *
+ * Returns: (skip): %TRUE if the call succeded, %FALSE if @error is set.
+ */
+gboolean
+print_backend_call_get_default_color_finish (
+    PrintBackend *proxy,
+    gchar **out_color_mode,
+    GAsyncResult *res,
+    GError **error)
+{
+  GVariant *_ret;
+  _ret = g_dbus_proxy_call_finish (G_DBUS_PROXY (proxy), res, error);
+  if (_ret == NULL)
+    goto _out;
+  g_variant_get (_ret,
+                 "(s)",
+                 out_color_mode);
+  g_variant_unref (_ret);
+_out:
+  return _ret != NULL;
+}
+
+/**
+ * print_backend_call_get_default_color_sync:
+ * @proxy: A #PrintBackendProxy.
+ * @arg_printer_name: Argument to pass with the method invocation.
+ * @out_color_mode: (out): Return location for return parameter or %NULL to ignore.
+ * @cancellable: (allow-none): A #GCancellable or %NULL.
+ * @error: Return location for error or %NULL.
+ *
+ * Synchronously invokes the <link linkend="gdbus-method-org-openprinting-PrintBackend.getDefaultColor">getDefaultColor()</link> D-Bus method on @proxy. The calling thread is blocked until a reply is received.
+ *
+ * See print_backend_call_get_default_color() for the asynchronous version of this method.
+ *
+ * Returns: (skip): %TRUE if the call succeded, %FALSE if @error is set.
+ */
+gboolean
+print_backend_call_get_default_color_sync (
+    PrintBackend *proxy,
+    const gchar *arg_printer_name,
+    gchar **out_color_mode,
+    GCancellable *cancellable,
+    GError **error)
+{
+  GVariant *_ret;
+  _ret = g_dbus_proxy_call_sync (G_DBUS_PROXY (proxy),
+    "getDefaultColor",
+    g_variant_new ("(s)",
+                   arg_printer_name),
+    G_DBUS_CALL_FLAGS_NONE,
+    -1,
+    cancellable,
+    error);
+  if (_ret == NULL)
+    goto _out;
+  g_variant_get (_ret,
+                 "(s)",
+                 out_color_mode);
+  g_variant_unref (_ret);
+_out:
+  return _ret != NULL;
+}
+
+/**
  * print_backend_call_ping:
  * @proxy: A #PrintBackendProxy.
  * @arg_printer_name: Argument to pass with the method invocation.
@@ -5065,110 +5169,6 @@ _out:
 }
 
 /**
- * print_backend_call_get_color:
- * @proxy: A #PrintBackendProxy.
- * @arg_printer_name: Argument to pass with the method invocation.
- * @cancellable: (allow-none): A #GCancellable or %NULL.
- * @callback: A #GAsyncReadyCallback to call when the request is satisfied or %NULL.
- * @user_data: User data to pass to @callback.
- *
- * Asynchronously invokes the <link linkend="gdbus-method-org-openprinting-PrintBackend.getColor">getColor()</link> D-Bus method on @proxy.
- * When the operation is finished, @callback will be invoked in the <link linkend="g-main-context-push-thread-default">thread-default main loop</link> of the thread you are calling this method from.
- * You can then call print_backend_call_get_color_finish() to get the result of the operation.
- *
- * See print_backend_call_get_color_sync() for the synchronous, blocking version of this method.
- */
-void
-print_backend_call_get_color (
-    PrintBackend *proxy,
-    const gchar *arg_printer_name,
-    GCancellable *cancellable,
-    GAsyncReadyCallback callback,
-    gpointer user_data)
-{
-  g_dbus_proxy_call (G_DBUS_PROXY (proxy),
-    "getColor",
-    g_variant_new ("(s)",
-                   arg_printer_name),
-    G_DBUS_CALL_FLAGS_NONE,
-    -1,
-    cancellable,
-    callback,
-    user_data);
-}
-
-/**
- * print_backend_call_get_color_finish:
- * @proxy: A #PrintBackendProxy.
- * @out_color_mode: (out): Return location for return parameter or %NULL to ignore.
- * @res: The #GAsyncResult obtained from the #GAsyncReadyCallback passed to print_backend_call_get_color().
- * @error: Return location for error or %NULL.
- *
- * Finishes an operation started with print_backend_call_get_color().
- *
- * Returns: (skip): %TRUE if the call succeded, %FALSE if @error is set.
- */
-gboolean
-print_backend_call_get_color_finish (
-    PrintBackend *proxy,
-    gchar **out_color_mode,
-    GAsyncResult *res,
-    GError **error)
-{
-  GVariant *_ret;
-  _ret = g_dbus_proxy_call_finish (G_DBUS_PROXY (proxy), res, error);
-  if (_ret == NULL)
-    goto _out;
-  g_variant_get (_ret,
-                 "(s)",
-                 out_color_mode);
-  g_variant_unref (_ret);
-_out:
-  return _ret != NULL;
-}
-
-/**
- * print_backend_call_get_color_sync:
- * @proxy: A #PrintBackendProxy.
- * @arg_printer_name: Argument to pass with the method invocation.
- * @out_color_mode: (out): Return location for return parameter or %NULL to ignore.
- * @cancellable: (allow-none): A #GCancellable or %NULL.
- * @error: Return location for error or %NULL.
- *
- * Synchronously invokes the <link linkend="gdbus-method-org-openprinting-PrintBackend.getColor">getColor()</link> D-Bus method on @proxy. The calling thread is blocked until a reply is received.
- *
- * See print_backend_call_get_color() for the asynchronous version of this method.
- *
- * Returns: (skip): %TRUE if the call succeded, %FALSE if @error is set.
- */
-gboolean
-print_backend_call_get_color_sync (
-    PrintBackend *proxy,
-    const gchar *arg_printer_name,
-    gchar **out_color_mode,
-    GCancellable *cancellable,
-    GError **error)
-{
-  GVariant *_ret;
-  _ret = g_dbus_proxy_call_sync (G_DBUS_PROXY (proxy),
-    "getColor",
-    g_variant_new ("(s)",
-                   arg_printer_name),
-    G_DBUS_CALL_FLAGS_NONE,
-    -1,
-    cancellable,
-    error);
-  if (_ret == NULL)
-    goto _out;
-  g_variant_get (_ret,
-                 "(s)",
-                 out_color_mode);
-  g_variant_unref (_ret);
-_out:
-  return _ret != NULL;
-}
-
-/**
  * print_backend_call_check_color:
  * @proxy: A #PrintBackendProxy.
  * @arg_printer_name: Argument to pass with the method invocation.
@@ -5668,6 +5668,27 @@ print_backend_complete_get_supported_resolution (
 }
 
 /**
+ * print_backend_complete_get_default_color:
+ * @object: A #PrintBackend.
+ * @invocation: (transfer full): A #GDBusMethodInvocation.
+ * @color_mode: Parameter to return.
+ *
+ * Helper function used in service implementations to finish handling invocations of the <link linkend="gdbus-method-org-openprinting-PrintBackend.getDefaultColor">getDefaultColor()</link> D-Bus method. If you instead want to finish handling an invocation by returning an error, use g_dbus_method_invocation_return_error() or similar.
+ *
+ * This method will free @invocation, you cannot use it afterwards.
+ */
+void
+print_backend_complete_get_default_color (
+    PrintBackend *object,
+    GDBusMethodInvocation *invocation,
+    const gchar *color_mode)
+{
+  g_dbus_method_invocation_return_value (invocation,
+    g_variant_new ("(s)",
+                   color_mode));
+}
+
+/**
  * print_backend_complete_ping:
  * @object: A #PrintBackend.
  * @invocation: (transfer full): A #GDBusMethodInvocation.
@@ -5902,27 +5923,6 @@ print_backend_complete_check_quality (
   g_dbus_method_invocation_return_value (invocation,
     g_variant_new ("(b)",
                    possible));
-}
-
-/**
- * print_backend_complete_get_color:
- * @object: A #PrintBackend.
- * @invocation: (transfer full): A #GDBusMethodInvocation.
- * @color_mode: Parameter to return.
- *
- * Helper function used in service implementations to finish handling invocations of the <link linkend="gdbus-method-org-openprinting-PrintBackend.getColor">getColor()</link> D-Bus method. If you instead want to finish handling an invocation by returning an error, use g_dbus_method_invocation_return_error() or similar.
- *
- * This method will free @invocation, you cannot use it afterwards.
- */
-void
-print_backend_complete_get_color (
-    PrintBackend *object,
-    GDBusMethodInvocation *invocation,
-    const gchar *color_mode)
-{
-  g_dbus_method_invocation_return_value (invocation,
-    g_variant_new ("(s)",
-                   color_mode));
 }
 
 /**

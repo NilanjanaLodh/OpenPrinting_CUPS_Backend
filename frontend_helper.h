@@ -44,7 +44,7 @@ void get_orientation(PrinterObj *);
 void set_orientation(PrinterObj *, gchar *); //to do
 void get_quality(PrinterObj *);              // to to
 void set_quality(PrinterObj *, gchar *);     //todo
-void get_color_mode(PrinterObj *);           //todo
+char *get_default_color(PrinterObj *);
 void set_color_mode(PrinterObj *, gchar *);
 void apply_settings(PrinterObj *);
 
@@ -70,9 +70,9 @@ char *get_printer_default_resolution(FrontendObj *, gchar *);
 void set_printer_resolution(FrontendObj *, gchar *, int, int); //to do
 char *get_printer_default_orientation(FrontendObj *, gchar *);
 void set_printer_default_orientation(FrontendObj *, gchar *, gchar *);
-void get_printer_quality(FrontendObj *, gchar *);             // to to
-void set_printer_quality(FrontendObj *, gchar *, gchar *);    //todo
-void get_printer_color_mode(FrontendObj *, gchar *);          //todo
+void get_printer_quality(FrontendObj *, gchar *);          // to to
+void set_printer_quality(FrontendObj *, gchar *, gchar *); //todo
+char *get_printer_color_mode(FrontendObj *, gchar *);
 void set_printer_color_mode(FrontendObj *, gchar *, gchar *); //to do
 void apply_printer_settings(FrontendObj *, gchar *);
 void print_job(FrontendObj *, gchar *);

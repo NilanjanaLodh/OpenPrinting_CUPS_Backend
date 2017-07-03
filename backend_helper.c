@@ -509,6 +509,25 @@ int get_resolution_supported(PrinterCUPS *p, char ***supported_values)
     *supported_values = values;
     return count;
 }
+const char *get_color_default(PrinterCUPS *p)
+{
+    /**first query user defaults**/
+    const char *def_value = cupsGetOption(CUPS_PRINT_COLOR_MODE, p->dest->num_options, p->dest->options);
+    if (def_value)
+    {
+        return def_value;
+    }
+    ensure_printer_connection(p);
+    ipp_attribute_t *def_attr = cupsFindDestDefault(p->http, p->dest, p->dinfo,
+                                                    CUPS_PRINT_COLOR_MODE);
+    if (def_attr)
+    {
+        def_value = ippGetString(def_attr,0, NULL);
+        printf("%s\n",def_value);
+        return def_value;
+    }
+    return "NA";
+}
 const char *get_printer_state(PrinterCUPS *p)
 {
     const char *str;

@@ -71,6 +71,10 @@
             <arg name="num_values" direction="out" type="i"/>
             <arg name="values" direction="out" type="a(s)" />
         </method>
+        <method name="getDefaultColor">
+            <arg name="printer_name" direction="in" type="s" />
+            <arg name="color_mode" direction="out" type="s"/>
+        </method>
 
         <method name="ping">
             <arg name="printer_name" direction="in" type="s" />
@@ -136,10 +140,6 @@
             <arg name="printer_name" direction="in" type="s" />
             <arg name="quality" direction="in" type="s"/>
             <arg name="possible" direction="out" type="b"/>
-        </method>
-        <method name="getColor">
-            <arg name="printer_name" direction="in" type="s" />
-            <arg name="color_mode" direction="out" type="s"/>
         </method>
         <method name="checkColor">
             <arg name="printer_name" direction="in" type="s" />

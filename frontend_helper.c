@@ -212,6 +212,16 @@ void get_orientation(PrinterObj *p)
 
     g_message("default orientation: %s", p->defaults.orientation);
 }
+char *get_default_color(PrinterObj *p)
+{
+    GError *error = NULL;
+    print_backend_call_get_default_color_sync(p->backend_proxy, p->name,
+                                              &p->defaults.color,
+                                              NULL, &error);
+    g_assert_no_error(error);
+
+    g_message("default color: %s", p->defaults.color);
+}
 /************************************************* FrontendObj********************************************/
 
 FrontendObj *get_new_FrontendObj()
@@ -400,6 +410,14 @@ void get_printer_default_media(FrontendObj *f, gchar *printer_name)
     g_assert_nonnull(p);
 
     get_media(p);
+}
+char *get_printer_color_mode(FrontendObj *f, gchar *printer_name)
+{
+    PrinterObj *p = g_hash_table_lookup(f->printer, printer_name);
+    g_assert_nonnull(p);
+
+    get_default_color(p);
+    return p->defaults.color;
 }
 void pingtest(FrontendObj *f, gchar *printer_name)
 {
