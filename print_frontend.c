@@ -115,6 +115,7 @@ static void on_printer_removed(GDBusConnection *connection,
 {
     char *printer_name;
     g_variant_get(parameters, "(s)", &printer_name);
+    remove_printer(f,printer_name);
     g_message("Removed Printer %s!\n", printer_name);
 }
 

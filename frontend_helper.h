@@ -53,8 +53,8 @@ typedef struct _FrontendObj FrontendObj;
 
 FrontendObj *get_new_FrontendObj();
 void activate_backends(FrontendObj *);
-PrintBackend *add_backend(FrontendObj *, const char *);
-gboolean add_printer(FrontendObj *, PrinterObj *, gchar *, gchar *); ///think about this definition a little more
+gboolean add_printer(FrontendObj *, PrinterObj *, gchar *, gchar *); 
+gboolean remove_printer(FrontendObj *, char *);
 PrinterObj *update_basic_printer_options(FrontendObj *, gchar *);
 void get_printer_capabilities(FrontendObj *, gchar *);
 void get_printer_option_default(FrontendObj *, gchar *, gchar *);
@@ -81,7 +81,7 @@ void get_printer_default_media(FrontendObj *, gchar *);
 char *get_default_printer(FrontendObj *, gchar *);
 
 /***************************************************************/
-
+PrintBackend *create_backend_from_file( const char *);
 /************Struvture definitions********************************/
 typedef struct _Resolution
 {

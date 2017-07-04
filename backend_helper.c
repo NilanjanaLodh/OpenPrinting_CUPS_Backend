@@ -1,5 +1,6 @@
 #include "backend_helper.h"
 Mappings *map;
+/*****************BackendObj********************************/
 BackendObj *get_new_BackendObj()
 {
     map = get_new_Mappings();
@@ -392,10 +393,45 @@ int get_printer_capabilities(PrinterCUPS *p)
     }
     return capabilities;
 }
+const char *get_default_generic(PrinterCUPS *p, const char *option_name, extract_func extract)
+{
+    ensure_printer_connection(p);
+    ipp_attribute_t *attr = NULL;
+
+    attr = cupsFindDestDefault(p->http, p->dest, p->dinfo, option_name);
+    if (!attr)
+        return "NA";
+
+    const char *str = extract(attr, 0);
+    return str;
+}
+int get_supported_generic(PrinterCUPS *p, char ***supported_values, const char *option_name, extract_func extract)
+{
+    char **values;
+    ensure_printer_connection(p);
+    ipp_attribute_t *attrs =
+        cupsFindDestSupported(p->http, p->dest, p->dinfo, option_name);
+    int i, count = ippGetCount(attrs);
+    if (!count)
+    {
+        *supported_values = NULL;
+        return 0;
+    }
+
+    values = malloc(sizeof(char *) * count);
+
+    char *str;
+    for (i = 0; i < count; i++)
+    {
+        values[i] = extract(attrs, i);
+    }
+    *supported_values = values;
+    return count;
+}
 const char *get_media_default(PrinterCUPS *p)
 {
-    cups_size_t size;
     ensure_printer_connection(p);
+    cups_size_t size;
     int x = cupsGetDestMediaDefault(p->http, p->dest, p->dinfo, 0, &size);
     if (!x)
     {
@@ -411,29 +447,16 @@ const char *get_media_default(PrinterCUPS *p)
 }
 int get_media_supported(PrinterCUPS *p, char ***supported_values)
 {
-    char **values;
-    ensure_printer_connection(p);
-    ipp_attribute_t *attrs =
-        cupsFindDestSupported(p->http, p->dest, p->dinfo, CUPS_MEDIA);
-    int i, count = ippGetCount(attrs);
-    if (!count)
-    {
-        *supported_values = NULL;
-        return 0;
-    }
-
-    values = malloc(sizeof(char *) * count);
-
-    char *str;
-    for (i = 0; i < count; i++)
-    {
-        values[i] = get_string_copy(ippGetString(attrs, i, NULL));
-    }
-    *supported_values = values;
-    return count;
+    return get_supported_generic(p, supported_values, CUPS_MEDIA, extract_string_from_ipp);
 }
 const char *get_orientation_default(PrinterCUPS *p)
 {
+    const char *def_value = cupsGetOption(CUPS_ORIENTATION, p->dest->num_options, p->dest->options);
+    if (def_value)
+    {
+        printf("user defaults\n");
+        return def_value;
+    }
     ensure_printer_connection(p);
     ipp_attribute_t *attr = NULL;
 
@@ -450,31 +473,15 @@ const char *get_orientation_default(PrinterCUPS *p)
 }
 int get_orientation_supported(PrinterCUPS *p, char ***supported_values)
 {
-    char **values;
-    ensure_printer_connection(p);
-    ipp_attribute_t *attrs =
-        cupsFindDestSupported(p->http, p->dest, p->dinfo, CUPS_ORIENTATION);
-    int i, count = ippGetCount(attrs);
-    if (!count)
-    {
-        *supported_values = NULL;
-        return 0;
-    }
-
-    values = malloc(sizeof(char *) * count);
-
-    char *str;
-    for (i = 0; i < count; i++)
-    {
-        values[i] = (char *)ippEnumString(CUPS_ORIENTATION, ippGetInteger(attrs, i));
-        if (strcmp("0", values[i]) == 0)
-            values[i] = "automatic-rotation";
-    }
-    *supported_values = values;
-    return count;
+    return get_supported_generic(p, supported_values, CUPS_ORIENTATION, extract_orientation_from_ipp);
 }
 char *get_resolution_default(PrinterCUPS *p)
 {
+    const char *def_value = cupsGetOption("printer-resolution", p->dest->num_options, p->dest->options);
+    if (def_value)
+    {
+        return def_value;
+    }
     ensure_printer_connection(p);
     ipp_attribute_t *attr = NULL;
 
@@ -488,26 +495,7 @@ char *get_resolution_default(PrinterCUPS *p)
 }
 int get_resolution_supported(PrinterCUPS *p, char ***supported_values)
 {
-    char **values;
-    ensure_printer_connection(p);
-    ipp_attribute_t *attrs =
-        cupsFindDestSupported(p->http, p->dest, p->dinfo, "printer-resolution");
-    int i, count = ippGetCount(attrs);
-    if (!count)
-    {
-        *supported_values = NULL;
-        return 0;
-    }
-
-    values = malloc(sizeof(char *) * count);
-
-    char *str;
-    for (i = 0; i < count; i++)
-    {
-        values[i] = extract_res_from_ipp(attrs, i);
-    }
-    *supported_values = values;
-    return count;
+    return get_supported_generic(p, supported_values, "printer-resolution", extract_res_from_ipp);
 }
 const char *get_color_default(PrinterCUPS *p)
 {
@@ -522,34 +510,15 @@ const char *get_color_default(PrinterCUPS *p)
                                                     CUPS_PRINT_COLOR_MODE);
     if (def_attr)
     {
-        def_value = ippGetString(def_attr,0, NULL);
-        printf("%s\n",def_value);
+        def_value = ippGetString(def_attr, 0, NULL);
+        printf("%s\n", def_value);
         return def_value;
     }
     return "NA";
 }
 int get_color_supported(PrinterCUPS *p, char ***supported_values)
 {
-    char **values;
-    ensure_printer_connection(p);
-    ipp_attribute_t *attrs =
-        cupsFindDestSupported(p->http, p->dest, p->dinfo, CUPS_PRINT_COLOR_MODE);
-    int i, count = ippGetCount(attrs);
-    if (!count)
-    {
-        *supported_values = NULL;
-        return 0;
-    }
-
-    values = malloc(sizeof(char *) * count);
-
-    char *str;
-    for (i = 0; i < count; i++)
-    {
-        values[i] = get_string_copy(ippGetString(attrs, i, NULL));
-    }
-    *supported_values = values;
-    return count;
+    return get_supported_generic(p, supported_values, CUPS_PRINT_COLOR_MODE, extract_string_from_ipp);
 }
 const char *get_printer_state(PrinterCUPS *p)
 {
@@ -728,6 +697,7 @@ gboolean cups_is_temporary(cups_dest_t *dest)
         return FALSE;
     return TRUE;
 }
+
 char *extract_res_from_ipp(ipp_attribute_t *attr, int index)
 {
     int xres, yres;
@@ -737,9 +707,22 @@ char *extract_res_from_ipp(ipp_attribute_t *attr, int index)
     char *unit = units == IPP_RES_PER_INCH ? "dpi" : "dpcm";
     char buf[50];
     if (xres == yres)
-        sprintf(buf, "%d %s", xres, unit);
+        sprintf(buf, "%d%s", xres, unit);
     else
-        sprintf(buf, "%dx%d %s", xres, yres, unit);
+        sprintf(buf, "%dx%d%s", xres, yres, unit);
 
     return get_string_copy(buf);
+}
+
+char *extract_string_from_ipp(ipp_attribute_t *attr, int index)
+{
+    return get_string_copy(ippGetString(attr, index, NULL));
+}
+
+char *extract_orientation_from_ipp(ipp_attribute_t *attr, int index)
+{
+    char *str = (char *)ippEnumString(CUPS_ORIENTATION, ippGetInteger(attr, index));
+    if (strcmp("0", str) == 0)
+        str = "automatic-rotation";
+    return str;
 }

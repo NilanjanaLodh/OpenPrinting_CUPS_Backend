@@ -247,8 +247,9 @@ void activate_backends(FrontendObj *f)
             if (strncmp(BACKEND_PREFIX, dir->d_name, len) == 0)
             {
                 printf("Found backend %s\n", dir->d_name);
-                proxy = add_backend(f, dir->d_name);
+                proxy = create_backend_from_file(dir->d_name);
                 print_backend_call_activate_backend(proxy, NULL, NULL, NULL);
+                f->num_backends++;
             }
         }
 
@@ -256,12 +257,9 @@ void activate_backends(FrontendObj *f)
     }
 }
 
-PrintBackend *add_backend(FrontendObj *f, const char *backend_file_name)
+PrintBackend *create_backend_from_file(const char *backend_file_name)
 {
     PrintBackend *proxy;
-    if (g_hash_table_contains(f->backend, backend_file_name))
-        return proxy;
-
     char *backend_name = get_string_copy(backend_file_name);
     ///what about this arbitrary limit?
     char path[1000];
@@ -269,12 +267,11 @@ PrintBackend *add_backend(FrontendObj *f, const char *backend_file_name)
     FILE *file = fopen(path, "r");
     char obj_path[200]; // arbit :/
     fscanf(file, "%s", obj_path);
-
+    fclose(file);
     GError *error = NULL;
     proxy = print_backend_proxy_new_for_bus_sync(G_BUS_TYPE_SESSION, 0,
                                                  backend_name, obj_path, NULL, &error);
     g_assert_no_error(error);
-    g_hash_table_insert(f->backend, backend_name, proxy);
     return proxy;
 }
 
@@ -284,11 +281,12 @@ gboolean add_printer(FrontendObj *f, PrinterObj *p, gchar *backend_name, gchar *
     PrintBackend *proxy;
     if (g_hash_table_contains(f->backend, backend_name))
     {
-        // g_message("Backend already exists");
+        //g_message("Backend already exists");
         proxy = g_hash_table_lookup(f->backend, backend_name);
     }
     else
     {
+        //g_message("New backend %s\n",backend_name);
         proxy = print_backend_proxy_new_for_bus_sync(G_BUS_TYPE_SESSION, 0,
                                                      backend_name, obj_path, NULL, NULL);
         char *t = malloc(strlen(backend_name) + 1); //fix memory leak
@@ -297,6 +295,15 @@ gboolean add_printer(FrontendObj *f, PrinterObj *p, gchar *backend_name, gchar *
     }
     p->backend_proxy = proxy;
     g_hash_table_insert(f->printer, p->name, p);
+}
+gboolean remove_printer(FrontendObj *f, char *printer_name)
+{
+    if (g_hash_table_contains(f->printer, printer_name))
+    {
+        g_hash_table_remove(f->printer, printer_name);
+        return TRUE;
+    }
+    return FALSE;
 }
 PrinterObj *update_basic_printer_options(FrontendObj *f, gchar *printer_name)
 {
@@ -429,6 +436,10 @@ void pingtest(FrontendObj *f, gchar *printer_name)
 char *get_default_printer(FrontendObj *f, gchar *backend_name)
 {
     PrintBackend *proxy = g_hash_table_lookup(f->backend, backend_name);
+    if (!proxy)
+    {
+        proxy = create_backend_from_file(backend_name);
+    }
     g_assert_nonnull(proxy);
     char *def;
     print_backend_call_get_default_printer_sync(proxy, &def, NULL, NULL);

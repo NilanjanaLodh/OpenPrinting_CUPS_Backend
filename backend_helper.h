@@ -58,6 +58,8 @@ typedef struct _Res
     const char *unit;
     char *string;
 } Res;
+
+typedef char *(*extract_func)(ipp_attribute_t *, int index);
 /********Backend related functions*******************/
 BackendObj *get_new_BackendObj();
 char *get_default_printer(BackendObj *b);
@@ -86,6 +88,7 @@ void refresh_printer_list(BackendObj *b, char *dialog_name);
 GHashTable *get_dialog_printers(BackendObj *b, const char *dialog_name);
 cups_dest_t *get_dest_by_name(BackendObj *b, const char *dialog_name, const char *printer_name);
 PrinterCUPS *get_printer_by_name(BackendObj *b, const char *dialog_name, const char *printer_name);
+
 /*********Printer related functions******************/
 PrinterCUPS *get_new_PrinterCUPS(cups_dest_t *dest);
 gboolean ensure_printer_connection(PrinterCUPS *p);
@@ -120,5 +123,7 @@ char *cups_retrieve_string(cups_dest_t *dest, const char *option_name);
 gboolean cups_is_temporary(cups_dest_t *dest);
 GHashTable *cups_get_printers(gboolean notemp, gboolean noremote);
 char* extract_res_from_ipp(ipp_attribute_t *, int index);
+char *extract_string_from_ipp(ipp_attribute_t *attr, int index);
+char *extract_orientation_from_ipp(ipp_attribute_t *attr, int index);
 
 #endif
