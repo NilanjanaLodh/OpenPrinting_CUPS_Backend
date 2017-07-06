@@ -173,6 +173,13 @@ gpointer parse_commands(gpointer user_data)
             g_message("Getting basic capabilities ..\n");
             get_printer_capabilities(f, printer_name);
         }
+        else if (strcmp(buf, "get-all-options"))
+        {
+            char printer_name[100];
+            scanf("%s", printer_name);
+            g_message("Getting all attributes ..\n");
+            //get_all_printer_attributes(f, printer_name);
+        }
         else if (strcmp(buf, "get-option-default") == 0)
         {
             char printer_name[100], option_name[100];

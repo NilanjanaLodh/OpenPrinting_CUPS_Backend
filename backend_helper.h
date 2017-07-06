@@ -59,6 +59,14 @@ typedef struct _Res
     char *string;
 } Res;
 
+typedef struct _Option
+{
+    const char * option_name;
+    int num_supported;
+    char **supported_values;
+    char *default_value;
+}Option;
+
 typedef char *(*extract_func)(ipp_attribute_t *, int index);
 /********Backend related functions*******************/
 BackendObj *get_new_BackendObj();
@@ -107,11 +115,17 @@ int get_resolution_supported(PrinterCUPS *p, char ***supported_values);
 const char* get_color_default(PrinterCUPS *p);
 int get_color_supported(PrinterCUPS *p, char ***supported_values);
 
+int get_print_quality_supported(PrinterCUPS *p, char ***supported_values);
+
+
+const char *get_default(PrinterCUPS *p, char *option_name);
+int get_supported(PrinterCUPS *p, char ***supported_values, const char *option_name);
+
 /**********Mapping related functions*****************/
 Mappings *get_new_Mappings();
 
-/*********Resolution related functions*****************/
-
+/*********Option related functions*****************/
+void print_option(const Option* opt);
 
 /*************CUPS/IPP RELATED FUNCTIONS******************/
 const char *cups_printer_state(cups_dest_t *dest);
@@ -122,8 +136,11 @@ GHashTable *cups_get_local_printers();
 char *cups_retrieve_string(cups_dest_t *dest, const char *option_name);
 gboolean cups_is_temporary(cups_dest_t *dest);
 GHashTable *cups_get_printers(gboolean notemp, gboolean noremote);
+char* extract_ipp_attribute(ipp_attribute_t *, int index , const char * option_name , PrinterCUPS *p);
 char* extract_res_from_ipp(ipp_attribute_t *, int index);
 char *extract_string_from_ipp(ipp_attribute_t *attr, int index);
 char *extract_orientation_from_ipp(ipp_attribute_t *attr, int index);
+char *extract_quality_from_ipp(ipp_attribute_t *attr, int index);
+char *extract_media_from_ipp(ipp_attribute_t *attr, int index , PrinterCUPS *p);
 
 #endif

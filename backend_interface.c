@@ -526,6 +526,53 @@ static const _ExtendedGDBusMethodInfo _print_backend_method_info_get_printer_cap
   FALSE
 };
 
+static const _ExtendedGDBusArgInfo _print_backend_method_info_get_all_attributes_IN_ARG_printer_name =
+{
+  {
+    -1,
+    (gchar *) "printer_name",
+    (gchar *) "s",
+    NULL
+  },
+  FALSE
+};
+
+static const _ExtendedGDBusArgInfo * const _print_backend_method_info_get_all_attributes_IN_ARG_pointers[] =
+{
+  &_print_backend_method_info_get_all_attributes_IN_ARG_printer_name,
+  NULL
+};
+
+static const _ExtendedGDBusArgInfo _print_backend_method_info_get_all_attributes_OUT_ARG_num_attributes =
+{
+  {
+    -1,
+    (gchar *) "num_attributes",
+    (gchar *) "i",
+    NULL
+  },
+  FALSE
+};
+
+static const _ExtendedGDBusArgInfo * const _print_backend_method_info_get_all_attributes_OUT_ARG_pointers[] =
+{
+  &_print_backend_method_info_get_all_attributes_OUT_ARG_num_attributes,
+  NULL
+};
+
+static const _ExtendedGDBusMethodInfo _print_backend_method_info_get_all_attributes =
+{
+  {
+    -1,
+    (gchar *) "GetAllAttributes",
+    (GDBusArgInfo **) &_print_backend_method_info_get_all_attributes_IN_ARG_pointers,
+    (GDBusArgInfo **) &_print_backend_method_info_get_all_attributes_OUT_ARG_pointers,
+    NULL
+  },
+  "handle-get-all-attributes",
+  FALSE
+};
+
 static const _ExtendedGDBusArgInfo _print_backend_method_info_get_default_media_IN_ARG_printer_name =
 {
   {
@@ -1608,6 +1655,7 @@ static const _ExtendedGDBusMethodInfo * const _print_backend_method_info_pointer
   &_print_backend_method_info_get_printer_state,
   &_print_backend_method_info_is_accepting_jobs,
   &_print_backend_method_info_get_printer_capabilities,
+  &_print_backend_method_info_get_all_attributes,
   &_print_backend_method_info_get_default_media,
   &_print_backend_method_info_get_supported_media,
   &_print_backend_method_info_get_default_orientation,
@@ -1827,6 +1875,7 @@ print_backend_override_properties (GObjectClass *klass, guint property_id_begin)
  * @handle_check_orientation: Handler for the #PrintBackend::handle-check-orientation signal.
  * @handle_check_quality: Handler for the #PrintBackend::handle-check-quality signal.
  * @handle_check_resolution: Handler for the #PrintBackend::handle-check-resolution signal.
+ * @handle_get_all_attributes: Handler for the #PrintBackend::handle-get-all-attributes signal.
  * @handle_get_default_color: Handler for the #PrintBackend::handle-get-default-color signal.
  * @handle_get_default_media: Handler for the #PrintBackend::handle-get-default-media signal.
  * @handle_get_default_orientation: Handler for the #PrintBackend::handle-get-default-orientation signal.
@@ -1988,6 +2037,29 @@ print_backend_default_init (PrintBackendIface *iface)
     G_TYPE_FROM_INTERFACE (iface),
     G_SIGNAL_RUN_LAST,
     G_STRUCT_OFFSET (PrintBackendIface, handle_get_printer_capabilities),
+    g_signal_accumulator_true_handled,
+    NULL,
+    g_cclosure_marshal_generic,
+    G_TYPE_BOOLEAN,
+    2,
+    G_TYPE_DBUS_METHOD_INVOCATION, G_TYPE_STRING);
+
+  /**
+   * PrintBackend::handle-get-all-attributes:
+   * @object: A #PrintBackend.
+   * @invocation: A #GDBusMethodInvocation.
+   * @arg_printer_name: Argument passed by remote caller.
+   *
+   * Signal emitted when a remote caller is invoking the <link linkend="gdbus-method-org-openprinting-PrintBackend.GetAllAttributes">GetAllAttributes()</link> D-Bus method.
+   *
+   * If a signal handler returns %TRUE, it means the signal handler will handle the invocation (e.g. take a reference to @invocation and eventually call print_backend_complete_get_all_attributes() or e.g. g_dbus_method_invocation_return_error() on it) and no order signal handlers will run. If no signal handler handles the invocation, the %G_DBUS_ERROR_UNKNOWN_METHOD error is returned.
+   *
+   * Returns: %TRUE if the invocation was handled, %FALSE to let other signal handlers run.
+   */
+  g_signal_new ("handle-get-all-attributes",
+    G_TYPE_FROM_INTERFACE (iface),
+    G_SIGNAL_RUN_LAST,
+    G_STRUCT_OFFSET (PrintBackendIface, handle_get_all_attributes),
     g_signal_accumulator_true_handled,
     NULL,
     g_cclosure_marshal_generic,
@@ -3219,6 +3291,110 @@ print_backend_call_get_printer_capabilities_sync (
                  out_print_quality,
                  out_sides,
                  out_resolution);
+  g_variant_unref (_ret);
+_out:
+  return _ret != NULL;
+}
+
+/**
+ * print_backend_call_get_all_attributes:
+ * @proxy: A #PrintBackendProxy.
+ * @arg_printer_name: Argument to pass with the method invocation.
+ * @cancellable: (allow-none): A #GCancellable or %NULL.
+ * @callback: A #GAsyncReadyCallback to call when the request is satisfied or %NULL.
+ * @user_data: User data to pass to @callback.
+ *
+ * Asynchronously invokes the <link linkend="gdbus-method-org-openprinting-PrintBackend.GetAllAttributes">GetAllAttributes()</link> D-Bus method on @proxy.
+ * When the operation is finished, @callback will be invoked in the <link linkend="g-main-context-push-thread-default">thread-default main loop</link> of the thread you are calling this method from.
+ * You can then call print_backend_call_get_all_attributes_finish() to get the result of the operation.
+ *
+ * See print_backend_call_get_all_attributes_sync() for the synchronous, blocking version of this method.
+ */
+void
+print_backend_call_get_all_attributes (
+    PrintBackend *proxy,
+    const gchar *arg_printer_name,
+    GCancellable *cancellable,
+    GAsyncReadyCallback callback,
+    gpointer user_data)
+{
+  g_dbus_proxy_call (G_DBUS_PROXY (proxy),
+    "GetAllAttributes",
+    g_variant_new ("(s)",
+                   arg_printer_name),
+    G_DBUS_CALL_FLAGS_NONE,
+    -1,
+    cancellable,
+    callback,
+    user_data);
+}
+
+/**
+ * print_backend_call_get_all_attributes_finish:
+ * @proxy: A #PrintBackendProxy.
+ * @out_num_attributes: (out): Return location for return parameter or %NULL to ignore.
+ * @res: The #GAsyncResult obtained from the #GAsyncReadyCallback passed to print_backend_call_get_all_attributes().
+ * @error: Return location for error or %NULL.
+ *
+ * Finishes an operation started with print_backend_call_get_all_attributes().
+ *
+ * Returns: (skip): %TRUE if the call succeded, %FALSE if @error is set.
+ */
+gboolean
+print_backend_call_get_all_attributes_finish (
+    PrintBackend *proxy,
+    gint *out_num_attributes,
+    GAsyncResult *res,
+    GError **error)
+{
+  GVariant *_ret;
+  _ret = g_dbus_proxy_call_finish (G_DBUS_PROXY (proxy), res, error);
+  if (_ret == NULL)
+    goto _out;
+  g_variant_get (_ret,
+                 "(i)",
+                 out_num_attributes);
+  g_variant_unref (_ret);
+_out:
+  return _ret != NULL;
+}
+
+/**
+ * print_backend_call_get_all_attributes_sync:
+ * @proxy: A #PrintBackendProxy.
+ * @arg_printer_name: Argument to pass with the method invocation.
+ * @out_num_attributes: (out): Return location for return parameter or %NULL to ignore.
+ * @cancellable: (allow-none): A #GCancellable or %NULL.
+ * @error: Return location for error or %NULL.
+ *
+ * Synchronously invokes the <link linkend="gdbus-method-org-openprinting-PrintBackend.GetAllAttributes">GetAllAttributes()</link> D-Bus method on @proxy. The calling thread is blocked until a reply is received.
+ *
+ * See print_backend_call_get_all_attributes() for the asynchronous version of this method.
+ *
+ * Returns: (skip): %TRUE if the call succeded, %FALSE if @error is set.
+ */
+gboolean
+print_backend_call_get_all_attributes_sync (
+    PrintBackend *proxy,
+    const gchar *arg_printer_name,
+    gint *out_num_attributes,
+    GCancellable *cancellable,
+    GError **error)
+{
+  GVariant *_ret;
+  _ret = g_dbus_proxy_call_sync (G_DBUS_PROXY (proxy),
+    "GetAllAttributes",
+    g_variant_new ("(s)",
+                   arg_printer_name),
+    G_DBUS_CALL_FLAGS_NONE,
+    -1,
+    cancellable,
+    error);
+  if (_ret == NULL)
+    goto _out;
+  g_variant_get (_ret,
+                 "(i)",
+                 out_num_attributes);
   g_variant_unref (_ret);
 _out:
   return _ret != NULL;
@@ -5530,6 +5706,27 @@ print_backend_complete_get_printer_capabilities (
                    print_quality,
                    sides,
                    resolution));
+}
+
+/**
+ * print_backend_complete_get_all_attributes:
+ * @object: A #PrintBackend.
+ * @invocation: (transfer full): A #GDBusMethodInvocation.
+ * @num_attributes: Parameter to return.
+ *
+ * Helper function used in service implementations to finish handling invocations of the <link linkend="gdbus-method-org-openprinting-PrintBackend.GetAllAttributes">GetAllAttributes()</link> D-Bus method. If you instead want to finish handling an invocation by returning an error, use g_dbus_method_invocation_return_error() or similar.
+ *
+ * This method will free @invocation, you cannot use it afterwards.
+ */
+void
+print_backend_complete_get_all_attributes (
+    PrintBackend *object,
+    GDBusMethodInvocation *invocation,
+    gint num_attributes)
+{
+  g_dbus_method_invocation_return_value (invocation,
+    g_variant_new ("(i)",
+                   num_attributes));
 }
 
 /**

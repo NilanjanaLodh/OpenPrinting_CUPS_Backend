@@ -69,6 +69,11 @@ struct _PrintBackendIface
     gint arg_x_res,
     gint arg_y_res);
 
+  gboolean (*handle_get_all_attributes) (
+    PrintBackend *object,
+    GDBusMethodInvocation *invocation,
+    const gchar *arg_printer_name);
+
   gboolean (*handle_get_default_color) (
     PrintBackend *object,
     GDBusMethodInvocation *invocation,
@@ -227,6 +232,11 @@ void print_backend_complete_get_printer_capabilities (
     gboolean print_quality,
     gboolean sides,
     gboolean resolution);
+
+void print_backend_complete_get_all_attributes (
+    PrintBackend *object,
+    GDBusMethodInvocation *invocation,
+    gint num_attributes);
 
 void print_backend_complete_get_default_media (
     PrintBackend *object,
@@ -485,6 +495,26 @@ gboolean print_backend_call_get_printer_capabilities_sync (
     gboolean *out_print_quality,
     gboolean *out_sides,
     gboolean *out_resolution,
+    GCancellable *cancellable,
+    GError **error);
+
+void print_backend_call_get_all_attributes (
+    PrintBackend *proxy,
+    const gchar *arg_printer_name,
+    GCancellable *cancellable,
+    GAsyncReadyCallback callback,
+    gpointer user_data);
+
+gboolean print_backend_call_get_all_attributes_finish (
+    PrintBackend *proxy,
+    gint *out_num_attributes,
+    GAsyncResult *res,
+    GError **error);
+
+gboolean print_backend_call_get_all_attributes_sync (
+    PrintBackend *proxy,
+    const gchar *arg_printer_name,
+    gint *out_num_attributes,
     GCancellable *cancellable,
     GError **error);
 

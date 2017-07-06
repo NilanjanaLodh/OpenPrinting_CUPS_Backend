@@ -153,4 +153,11 @@ struct _FrontendObj
     GHashTable *printer;
 };
 
+struct _GenericOption
+{
+    char *option_name;
+    int num_supported;
+    char** supported_values;
+    char *value;
+};
 #endif

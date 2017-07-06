@@ -5,6 +5,7 @@
 /*********LISTING OF ALL POSSIBLE OPTIONS*****/
 //Rename these to something better if needed
 
+#define new_cstring_array(x) ((char**)(malloc(sizeof(char*) * x))) 
 #define MEDIA_A4 "A4"
 #define MEDIA_A3 "A3"
 #define MEDIA_A5 "A5"

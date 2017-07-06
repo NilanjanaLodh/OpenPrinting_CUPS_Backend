@@ -393,19 +393,8 @@ int get_printer_capabilities(PrinterCUPS *p)
     }
     return capabilities;
 }
-const char *get_default_generic(PrinterCUPS *p, const char *option_name, extract_func extract)
-{
-    ensure_printer_connection(p);
-    ipp_attribute_t *attr = NULL;
 
-    attr = cupsFindDestDefault(p->http, p->dest, p->dinfo, option_name);
-    if (!attr)
-        return "NA";
-
-    const char *str = extract(attr, 0);
-    return str;
-}
-int get_supported_generic(PrinterCUPS *p, char ***supported_values, const char *option_name, extract_func extract)
+int get_supported(PrinterCUPS *p, char ***supported_values, const char *option_name)
 {
     char **values;
     ensure_printer_connection(p);
@@ -420,10 +409,9 @@ int get_supported_generic(PrinterCUPS *p, char ***supported_values, const char *
 
     values = malloc(sizeof(char *) * count);
 
-    char *str;
     for (i = 0; i < count; i++)
     {
-        values[i] = extract(attrs, i);
+        values[i] = extract_ipp_attribute(attrs, i, option_name, p);
     }
     *supported_values = values;
     return count;
@@ -447,15 +435,20 @@ const char *get_media_default(PrinterCUPS *p)
 }
 int get_media_supported(PrinterCUPS *p, char ***supported_values)
 {
-    return get_supported_generic(p, supported_values, CUPS_MEDIA, extract_string_from_ipp);
+    return get_supported(p, supported_values, CUPS_MEDIA);
 }
 const char *get_orientation_default(PrinterCUPS *p)
 {
     const char *def_value = cupsGetOption(CUPS_ORIENTATION, p->dest->num_options, p->dest->options);
     if (def_value)
     {
-        printf("user defaults\n");
-        return def_value;
+        switch (def_value[0])
+        {
+        case '0':
+            return "automatic-rotation";
+        default:
+            return ippEnumString(CUPS_ORIENTATION, atoi(def_value));
+        }
     }
     ensure_printer_connection(p);
     ipp_attribute_t *attr = NULL;
@@ -473,7 +466,7 @@ const char *get_orientation_default(PrinterCUPS *p)
 }
 int get_orientation_supported(PrinterCUPS *p, char ***supported_values)
 {
-    return get_supported_generic(p, supported_values, CUPS_ORIENTATION, extract_orientation_from_ipp);
+    return get_supported(p, supported_values, CUPS_ORIENTATION);
 }
 char *get_resolution_default(PrinterCUPS *p)
 {
@@ -495,7 +488,7 @@ char *get_resolution_default(PrinterCUPS *p)
 }
 int get_resolution_supported(PrinterCUPS *p, char ***supported_values)
 {
-    return get_supported_generic(p, supported_values, "printer-resolution", extract_res_from_ipp);
+    return get_supported(p, supported_values, "printer-resolution");
 }
 const char *get_color_default(PrinterCUPS *p)
 {
@@ -518,8 +511,77 @@ const char *get_color_default(PrinterCUPS *p)
 }
 int get_color_supported(PrinterCUPS *p, char ***supported_values)
 {
-    return get_supported_generic(p, supported_values, CUPS_PRINT_COLOR_MODE, extract_string_from_ipp);
+    return get_supported(p, supported_values, CUPS_PRINT_COLOR_MODE);
 }
+
+int get_job_hold_until_supported(PrinterCUPS *p, char ***supported_values)
+{
+    return get_supported(p, supported_values, "job-hold-until");
+}
+
+int get_print_quality_supported(PrinterCUPS *p, char ***supported_values)
+{
+    return get_supported(p, supported_values, CUPS_PRINT_QUALITY);
+}
+
+int get_job_creation_attributes(PrinterCUPS *p, char ***values)
+{
+    int count = get_supported(p, values, "job-creation-attributes");
+}
+
+const char *get_default(PrinterCUPS *p, char *option_name)
+{
+    /** first take care of special cases**/
+    if (strcmp(option_name, CUPS_ORIENTATION) == 0)
+        return get_orientation_default(p);
+    if (strcmp(option_name, CUPS_MEDIA) == 0)
+        return get_media_default(p);
+    
+    ensure_printer_connection(p);
+    ipp_attribute_t *def_attr = cupsFindDestDefault(p->http, p->dest, p->dinfo, option_name);
+    const char *def_value = cupsGetOption(option_name, p->dest->num_options, p->dest->options);
+    if (def_value)
+    {
+        if (!def_attr)
+            return def_value;
+        if(ippGetValueTag(def_attr)==IPP_TAG_ENUM)
+            return ippEnumString(option_name, atoi(def_value));
+    }
+    if (def_attr)
+    {
+        return extract_ipp_attribute(def_attr, 0, option_name, p);
+    }
+    return "NA";
+}
+int get_all_attributes(PrinterCUPS *p, Option **options)
+{
+    ensure_printer_connection(p);
+    char **attribute_names;
+    int num_attributes = get_job_creation_attributes(p, &attribute_names);
+    int i, j;
+    Option *opts = (Option *)(malloc(sizeof(Option) * num_attributes));
+    ipp_attribute_t *vals;
+    int num_values;
+    for (i = 0; i < num_attributes; i++)
+    {
+        opts[i].option_name = attribute_names[i];
+        vals = cupsFindDestSupported(p->http, p->dest, p->dinfo, attribute_names[i]);
+        if (vals)
+            opts[i].num_supported = ippGetCount(vals);
+        else
+            opts[i].num_supported = 0;
+
+        opts[i].supported_values = new_cstring_array(opts[i].num_supported);
+        for (j = 0; j < opts[i].num_supported; j++)
+        {
+            opts[i].supported_values[j] = extract_ipp_attribute(vals, j, attribute_names[i], p);
+        }
+        opts[i].default_value = get_default(p, attribute_names[i]);
+    }
+    *options = opts;
+    return num_attributes;
+}
+
 const char *get_printer_state(PrinterCUPS *p)
 {
     const char *str;
@@ -565,6 +627,18 @@ Mappings *get_new_Mappings()
     m->orientation[atoi(CUPS_ORIENTATION_PORTRAIT)] = ORIENTATION_PORTRAIT;
     return m;
 }
+/**************Option************************************/
+void print_option(const Option *opt)
+{
+    g_message("%s", opt->option_name);
+    int i;
+    for (i = 0; i < opt->num_supported; i++)
+    {
+        printf(" %s\n", opt->supported_values[i]);
+    }
+    printf("****DEFAULT: %s\n", opt->default_value);
+}
+/*****************CUPS and IPP helpers*********************/
 const char *cups_printer_state(cups_dest_t *dest)
 {
     //cups_dest_t *dest = cupsGetNamedDest(CUPS_HTTP_DEFAULT, printer_name, NULL);
@@ -698,6 +772,44 @@ gboolean cups_is_temporary(cups_dest_t *dest)
     return TRUE;
 }
 
+char *extract_ipp_attribute(ipp_attribute_t *attr, int index, const char *option_name, PrinterCUPS *p)
+{
+    printf("%s   ", option_name);
+    //first deal with the totally unique cases
+    if (strcmp(option_name, CUPS_ORIENTATION) == 0)
+        return extract_orientation_from_ipp(attr, index);
+
+    if (strcmp(option_name, CUPS_MEDIA) == 0)
+        return extract_media_from_ipp(attr, index, p);
+
+    char *str;
+    switch (ippGetValueTag(attr))
+    {
+    case IPP_TAG_INTEGER:
+        str = (char *)(malloc(sizeof(char) * 50));
+        sprintf(str, "%d", ippGetInteger(attr, index));
+        break;
+
+    case IPP_TAG_ENUM:
+        str = (char *)(malloc(sizeof(char) * 50));
+        sprintf(str, "%s", ippEnumString(option_name, ippGetInteger(attr, index)));
+        break;
+
+    case IPP_TAG_RANGE:
+        str = (char *)(malloc(sizeof(char) * 50));
+        int upper, lower = ippGetRange(attr, index, &upper);
+        sprintf(str, "%d-%d", lower, upper);
+        break;
+
+    case IPP_TAG_RESOLUTION:
+        return extract_res_from_ipp(attr, index);
+    default:
+        return extract_string_from_ipp(attr, index);
+    }
+    char *ans = get_string_copy(str);
+    free(str);
+    return ans;
+}
 char *extract_res_from_ipp(ipp_attribute_t *attr, int index)
 {
     int xres, yres;
@@ -724,5 +836,23 @@ char *extract_orientation_from_ipp(ipp_attribute_t *attr, int index)
     char *str = (char *)ippEnumString(CUPS_ORIENTATION, ippGetInteger(attr, index));
     if (strcmp("0", str) == 0)
         str = "automatic-rotation";
+    return str;
+}
+
+char *extract_quality_from_ipp(ipp_attribute_t *attr, int index)
+{
+    return (char *)ippEnumString(CUPS_PRINT_QUALITY, ippGetInteger(attr, index));
+}
+
+char *extract_media_from_ipp(ipp_attribute_t *attr, int index, PrinterCUPS *p)
+{
+    char *media_name = extract_string_from_ipp(attr, index);
+    cups_size_t size;
+    int x = cupsGetDestMediaByName(p->http, p->dest, p->dinfo, media_name, 0, &size);
+    if (x == 0)
+        return media_name;
+    char *str = cupsLocalizeDestMedia(p->http, p->dest,
+                                      p->dinfo, 0,
+                                      &size);
     return str;
 }

@@ -44,6 +44,10 @@
             <arg name="sides" direction="out" type="b"/>
             <arg name="resolution" direction="out" type="b"/>
         </method>
+        <method name="GetAllAttributes">
+            <arg name="printer_name" direction="in" type="s" />
+            <arg name="num_attributes" direction="out" type="i" />
+        </method>
         <method name="getDefaultMedia">
             <arg name="printer_name" direction="in" type="s" />
             <arg name="media_name" direction="out" type="s"/>

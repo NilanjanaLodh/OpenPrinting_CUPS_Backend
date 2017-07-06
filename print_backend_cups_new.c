@@ -297,6 +297,30 @@ static gboolean on_handle_ping(PrintBackend *interface,
     const char *dialog_name = g_dbus_method_invocation_get_sender(invocation); /// potential risk
     PrinterCUPS *p = get_printer_by_name(b, dialog_name, printer_name);
     print_backend_complete_ping(interface, invocation);
+    Option *options;
+    int count = get_all_attributes(p, &options);
+    int i;
+    for (i = 0; i < count; i++)
+    {
+        print_option(&options[i]);
+    }
+    return TRUE;
+}
+static gboolean on_handle_get_all_attributes(PrintBackend *interface,
+                                            GDBusMethodInvocation *invocation,
+                                            const gchar *printer_name,
+                                            gpointer user_data)
+{
+    const char *dialog_name = g_dbus_method_invocation_get_sender(invocation); /// potential risk
+    PrinterCUPS *p = get_printer_by_name(b, dialog_name, printer_name);
+    Option *options;
+    int count = get_all_attributes(p, &options);
+    int i;
+    for (i = 0; i < count; i++)
+    {
+        print_option(&options[i]);
+    }
+    print_backend_complete_get_all_attributes(interface, invocation, count);    
     return TRUE;
 }
 static gboolean on_handle_get_default_media(PrintBackend *interface,
@@ -426,7 +450,10 @@ void connect_to_signals()
                      "handle-list-basic-options",              //signal name
                      G_CALLBACK(on_handle_list_basic_options), //callback
                      NULL);                                    //user_data
-
+    g_signal_connect(skeleton,                                 //instance
+                     "handle-get-all-attributes",              //signal name
+                     G_CALLBACK(on_handle_get_all_attributes), //callback
+                     NULL);
     g_signal_connect(skeleton,                                       //instance
                      "handle-get-printer-capabilities",              //signal name
                      G_CALLBACK(on_handle_get_printer_capabilities), //callback
