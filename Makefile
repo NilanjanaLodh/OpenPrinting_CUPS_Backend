@@ -1,27 +1,32 @@
 FLAGS=$(shell pkg-config --libs --cflags gio-2.0 gio-unix-2.0 glib-2.0)
-.PHONY:all gen lib
+.PHONY:all gen
 
-all: print_frontend print_backend_cups_new
+all: print_frontend print_backend_cups
 
 gen:genback genfront
 
 genfront:
-	gdbus-codegen --generate-c-code frontend_interface  --interface-prefix org.openprinting org.openprinting.Frontend.xml
+	gdbus-codegen --generate-c-code frontend_interface  --interface-prefix org.openprinting interface/org.openprinting.Frontend.xml 
+	mv frontend_interface.* src/
 
 genback:
-	gdbus-codegen --generate-c-code backend_interface  --interface-prefix org.openprinting org.openprinting.Backend.xml
+	gdbus-codegen --generate-c-code backend_interface  --interface-prefix org.openprinting interface/org.openprinting.Backend.xml 
+	mv backend_interface.* src/
 
-%.o: %.c
+build/%.o: src/%.c
 	gcc -o $@ $^ -c $(FLAGS)
 
-print_backend_cups_new: print_backend_cups_new.o backend_interface.o common_helper.o backend_helper.o
+print_backend_cups: build/print_backend_cups.o build/backend_interface.o build/common_helper.o build/backend_helper.o
 	gcc -o $@ $^ $(FLAGS) -lcups
 
-print_frontend: print_frontend.o backend_interface.o frontend_interface.o common_helper.o frontend_helper.o
+print_frontend: build/print_frontend.o build/backend_interface.o build/frontend_interface.o build/common_helper.o build/frontend_helper.o
 	gcc -o $@ $^ $(FLAGS)
 
 clean_gen:
-	rm -f backend_interface.* frontend_interface.*
+	rm -f src/backend_interface.* src/frontend_interface.*
 
 clean:
-	rm -f *.o print_backend_cups_new print_frontend
+	rm -f print_backend_cups print_frontend build/*
+
+install:
+	./install.sh
