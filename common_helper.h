@@ -1,6 +1,19 @@
 #ifndef _COMMON_HELPER_H_
 #define _COMMON_HELPER_H_
 
+#define PRINTER_ADDED_ARGS "(sssssbs)"
+#define new_cstring_array(x) ((char **)(malloc(sizeof(char *) * x)))
+
+typedef struct _Option
+{
+    const char *option_name;
+    int num_supported;
+    char **supported_values;
+    char *default_value;
+} Option;
+/*********Option related functions*****************/
+void print_option(const Option *opt);
+
 /*********LISTING OF ALL POSSIBLE OPTIONS*****/
 //Rename these to something better if needed
 
@@ -17,7 +30,6 @@
 #define COLOR_MODE_COLOR "color"
 #define COLOR_MODE_BW "monochrome"
 #define COLOR_MODE_AUTO "auto"
-
 
 #define QUALITY_DRAFT "draft"
 #define QUALITY_NORMAL "normal"
@@ -40,11 +52,18 @@
 #define STATE_STOPPED "stopped"
 
 #define STOP_BACKEND_SIGNAL "StopListing"
-#define ACTIVATE_BACKEND_SIGNAL "GetBackend"
 #define REFRESH_BACKEND_SIGNAL "RefreshBackend"
 #define PRINTER_ADDED_SIGNAL "PrinterAdded"
 #define PRINTER_REMOVED_SIGNAL "PrinterRemoved"
-
-gboolean get_boolean(gchar *);
+#define HIDE_REMOTE_CUPS_SIGNAL "HideRemotePrintersCUPS"
+#define UNHIDE_REMOTE_CUPS_SIGNAL "UnhideRemotePrintersCUPS"
+#define HIDE_TEMP_CUPS_SIGNAL "HideTemporaryPrintersCUPS"
+#define UNHIDE_TEMP_CUPS_SIGNAL "UnhideTemporaryPrintersCUPS"
+gboolean get_boolean(const char *);
+char *get_string_copy(const char *);
+void unpack_string_array(GVariant *variant, int num_val, char ***val);
+void unpack_option_array(GVariant *var, int num_options, Option **options);
+GVariant *pack_string_array(int num_val, char **val);
+GVariant *pack_option(const Option *opt);
 
 #endif

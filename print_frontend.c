@@ -7,7 +7,7 @@
 #include "frontend_helper.h"
 #include "common_helper.h"
 
-#define DIALOG_BUS_NAME "org.openprinting.PrintFrontend1"
+#define DIALOG_BUS_NAME "org.openprinting.PrintFrontend"
 #define DIALOG_OBJ_PATH "/"
 static void on_name_acquired(GDBusConnection *connection, const gchar *name, gpointer user_data);
 static void on_printer_added(GDBusConnection *connection,
@@ -27,14 +27,18 @@ static void on_printer_removed(GDBusConnection *connection,
 void display_help();
 gpointer parse_commands(gpointer user_data);
 FrontendObj *f;
-int main()
+int main(int argc, char **argv)
 {
     // printers = g_hash_table_new(g_str_hash, g_str_equal);
     //backends = g_hash_table_new(g_str_hash, g_str_equal);
-
+    char *dialog_bus_name = malloc(300);
+    if (argc > 1) //this is for creating multiple instances of a dialog simultaneously
+        sprintf(dialog_bus_name, "%s%s", DIALOG_BUS_NAME, argv[1]);
+    else
+        sprintf(dialog_bus_name, "%s", DIALOG_BUS_NAME);
     f = get_new_FrontendObj();
     g_bus_own_name(G_BUS_TYPE_SESSION,
-                   DIALOG_BUS_NAME,
+                   dialog_bus_name,
                    0,                //flags
                    NULL,             //bus_acquired_handler
                    on_name_acquired, //name acquired handler
@@ -79,8 +83,8 @@ on_name_acquired(GDBusConnection *connection,
     g_dbus_interface_skeleton_export(G_DBUS_INTERFACE_SKELETON(skeleton), connection, DIALOG_OBJ_PATH, &error);
     g_assert_no_error(error);
 
-    print_frontend_emit_get_backend(skeleton);
-
+    //print_frontend_emit_get_backend(skeleton);
+    activate_backends(f);
     /**
     I have created the following thread just for testing purpose.
     In reality you don't need a separate thread to parse commands because you already have a GUI. 
@@ -98,7 +102,6 @@ static void on_printer_added(GDBusConnection *connection,
 
     PrinterObj *p = get_new_PrinterObj();
     fill_basic_options(p, parameters);
-    // g_variant_get(parameters, "(sssss)", &printer_name, &info, &location, &make_and_model, &is_accepting_jobs);
     add_printer(f, p, sender_name, object_path);
     print_basic_options(p);
 }
@@ -112,6 +115,7 @@ static void on_printer_removed(GDBusConnection *connection,
 {
     char *printer_name;
     g_variant_get(parameters, "(s)", &printer_name);
+    remove_printer(f,printer_name);
     g_message("Removed Printer %s!\n", printer_name);
 }
 
@@ -135,6 +139,26 @@ gpointer parse_commands(gpointer user_data)
             print_frontend_emit_refresh_backend(skeleton);
             g_message("Getting changes in printer list..\n");
         }
+        else if (strcmp(buf, "hide-remote-cups") == 0)
+        {
+            print_frontend_emit_hide_remote_printers_cups(skeleton);
+            g_message("Hiding remote printers discovered by the cups backend..\n");
+        }
+        else if (strcmp(buf, "unhide-remote-cups") == 0)
+        {
+            print_frontend_emit_unhide_remote_printers_cups(skeleton);
+            g_message("Unhiding remote printers discovered by the cups backend..\n");
+        }
+        else if (strcmp(buf, "hide-temporary-cups") == 0)
+        {
+            print_frontend_emit_hide_temporary_printers_cups(skeleton);
+            g_message("Hiding remote printers discovered by the cups backend..\n");
+        }
+        else if (strcmp(buf, "unhide-temporary-cups") == 0)
+        {
+            print_frontend_emit_unhide_temporary_printers_cups(skeleton);
+            g_message("Unhiding remote printers discovered by the cups backend..\n");
+        }
         else if (strcmp(buf, "update-basic") == 0)
         {
             char printer_name[100];
@@ -148,6 +172,13 @@ gpointer parse_commands(gpointer user_data)
             scanf("%s", printer_name);
             g_message("Getting basic capabilities ..\n");
             get_printer_capabilities(f, printer_name);
+        }
+        else if (strcmp(buf, "get-all-options")==0)
+        {
+            char printer_name[100];
+            scanf("%s", printer_name);
+            g_message("Getting all attributes ..\n");
+            get_all_printer_options(f, printer_name);
         }
         else if (strcmp(buf, "get-option-default") == 0)
         {
@@ -166,6 +197,18 @@ gpointer parse_commands(gpointer user_data)
             char printer_name[100];
             scanf("%s", printer_name);
             get_printer_supported_media(f, printer_name);
+        }
+        else if (strcmp(buf, "get-default-media") == 0)
+        {
+            char printer_name[100];
+            scanf("%s", printer_name);
+            get_printer_default_media(f, printer_name);
+        }
+        else if (strcmp(buf, "get-default-orientation") == 0)
+        {
+            char printer_name[100];
+            scanf("%s", printer_name);
+            get_printer_default_orientation(f, printer_name);
         }
         else if (strcmp(buf, "get-supported-color") == 0)
         {
@@ -197,34 +240,68 @@ gpointer parse_commands(gpointer user_data)
             scanf("%s", printer_name);
             printer_is_accepting_jobs(f, printer_name);
         }
-        else if (strcmp(buf, "get-resolution") == 0)
+        else if (strcmp(buf, "get-default-resolution") == 0)
         {
             char printer_name[100];
             scanf("%s", printer_name);
-            get_printer_resolution(f, printer_name);
+            get_printer_default_resolution(f, printer_name);
         }
-        else if (strcmp(buf, "help")==0)
+        else if (strcmp(buf, "get-supported-resolution") == 0)
+        {
+            char printer_name[100];
+            scanf("%s", printer_name);
+            get_printer_supported_resolution(f, printer_name);
+        }
+        else if (strcmp(buf, "get-default-color") == 0)
+        {
+            char printer_name[100];
+            scanf("%s", printer_name);
+            get_printer_color_mode(f, printer_name);
+        }
+        else if (strcmp(buf, "help") == 0)
         {
             display_help();
         }
+        else if (strcmp(buf, "ping") == 0)
+        {
+            char printer_name[100];
+            scanf("%s", printer_name);
+            pingtest(f, printer_name);
+        }
+        else if (strcmp(buf, "get-default-printer") == 0)
+        {
+            char backend_name[100];
+            scanf("%s", backend_name);
+            get_default_printer(f, backend_name);
+        }
     }
 }
+
 void display_help()
 {
     g_message("Available commands .. ");
-    printf("%s\n","stop");
-    printf("%s\n","refresh");
-    printf("%s\n","update-basic <printer name>");
-    printf("%s\n","get-capabilities <printer name>");
-    printf("%s\n","get-option-default <printer name> <option name>");
-    printf("%s\n","get-supported-raw <printer name> <option name>");
-    printf("%s\n","get-supported-media <printer name>");
-    printf("%s\n","get-supported-color <printer name>");
-    printf("%s\n","get-supported-quality <printer name>");
-    printf("%s\n","get-supported-orientation <printer name>");
-    printf("%s\n","get-state <printer name>");
-    printf("%s\n","get-resolution <printer name>");    
-    printf("%s\n","is-accepting-jobs <printer name>");
- 
-    
+    printf("%s\n", "stop");
+    printf("%s\n", "refresh");
+    printf("%s\n", "hide-remote-cups");
+    printf("%s\n", "unhide-remote-cups");
+    printf("%s\n", "update-basic <printer name>");
+    printf("%s\n", "hide-temporary-cups");
+    printf("%s\n", "unhide-temporary-cups");
+    printf("%s\n", "get-capabilities <printer name>");
+    printf("%s\n", "ping <printer name>");
+    printf("%s\n", "get-default-printer <backend name>");
+    // printf("%s\n","get-option-default <printer name> <option name>");
+    // printf("%s\n","get-supported-raw <printer name> <option name>");
+    printf("%s\n", "get-default-media <printer name>");
+    printf("%s\n", "get-supported-media <printer name>");
+    printf("%s\n", "get-default-resolution <printer name>");
+    printf("%s\n", "get-supported-resolution <printer name>");
+    printf("%s\n", "get-default-color <printer name>");
+    printf("%s\n", "get-supported-color <printer name>");
+
+    printf("%s\n", "get-default-orientation <printer name>");
+    // printf("%s\n","get-supported-quality <printer name>");
+    printf("%s\n", "get-supported-orientation <printer name>");
+    printf("%s\n", "get-state <printer name>");
+    printf("%s\n", "is-accepting-jobs <printer name>");
 }

@@ -163,17 +163,6 @@ _g_value_equal (const GValue *a, const GValue *b)
 
 /* ---- Introspection data for org.openprinting.PrintFrontend ---- */
 
-static const _ExtendedGDBusSignalInfo _print_frontend_signal_info_get_backend =
-{
-  {
-    -1,
-    (gchar *) "GetBackend",
-    NULL,
-    NULL
-  },
-  "get-backend"
-};
-
 static const _ExtendedGDBusSignalInfo _print_frontend_signal_info_refresh_backend =
 {
   {
@@ -196,11 +185,58 @@ static const _ExtendedGDBusSignalInfo _print_frontend_signal_info_stop_listing =
   "stop-listing"
 };
 
+static const _ExtendedGDBusSignalInfo _print_frontend_signal_info_hide_remote_printers_cups =
+{
+  {
+    -1,
+    (gchar *) "HideRemotePrintersCUPS",
+    NULL,
+    NULL
+  },
+  "hide-remote-printers-cups"
+};
+
+static const _ExtendedGDBusSignalInfo _print_frontend_signal_info_unhide_remote_printers_cups =
+{
+  {
+    -1,
+    (gchar *) "UnhideRemotePrintersCUPS",
+    NULL,
+    NULL
+  },
+  "unhide-remote-printers-cups"
+};
+
+static const _ExtendedGDBusSignalInfo _print_frontend_signal_info_hide_temporary_printers_cups =
+{
+  {
+    -1,
+    (gchar *) "HideTemporaryPrintersCUPS",
+    NULL,
+    NULL
+  },
+  "hide-temporary-printers-cups"
+};
+
+static const _ExtendedGDBusSignalInfo _print_frontend_signal_info_unhide_temporary_printers_cups =
+{
+  {
+    -1,
+    (gchar *) "UnhideTemporaryPrintersCUPS",
+    NULL,
+    NULL
+  },
+  "unhide-temporary-printers-cups"
+};
+
 static const _ExtendedGDBusSignalInfo * const _print_frontend_signal_info_pointers[] =
 {
-  &_print_frontend_signal_info_get_backend,
   &_print_frontend_signal_info_refresh_backend,
   &_print_frontend_signal_info_stop_listing,
+  &_print_frontend_signal_info_hide_remote_printers_cups,
+  &_print_frontend_signal_info_unhide_remote_printers_cups,
+  &_print_frontend_signal_info_hide_temporary_printers_cups,
+  &_print_frontend_signal_info_unhide_temporary_printers_cups,
   NULL
 };
 
@@ -258,9 +294,12 @@ print_frontend_override_properties (GObjectClass *klass, guint property_id_begin
 /**
  * PrintFrontendIface:
  * @parent_iface: The parent interface.
- * @get_backend: Handler for the #PrintFrontend::get-backend signal.
+ * @hide_remote_printers_cups: Handler for the #PrintFrontend::hide-remote-printers-cups signal.
+ * @hide_temporary_printers_cups: Handler for the #PrintFrontend::hide-temporary-printers-cups signal.
  * @refresh_backend: Handler for the #PrintFrontend::refresh-backend signal.
  * @stop_listing: Handler for the #PrintFrontend::stop-listing signal.
+ * @unhide_remote_printers_cups: Handler for the #PrintFrontend::unhide-remote-printers-cups signal.
+ * @unhide_temporary_printers_cups: Handler for the #PrintFrontend::unhide-temporary-printers-cups signal.
  *
  * Virtual table for the D-Bus interface <link linkend="gdbus-interface-org-openprinting-PrintFrontend.top_of_page">org.openprinting.PrintFrontend</link>.
  */
@@ -272,24 +311,6 @@ static void
 print_frontend_default_init (PrintFrontendIface *iface)
 {
   /* GObject signals for received D-Bus signals: */
-  /**
-   * PrintFrontend::get-backend:
-   * @object: A #PrintFrontend.
-   *
-   * On the client-side, this signal is emitted whenever the D-Bus signal <link linkend="gdbus-signal-org-openprinting-PrintFrontend.GetBackend">"GetBackend"</link> is received.
-   *
-   * On the service-side, this signal can be used with e.g. g_signal_emit_by_name() to make the object emit the D-Bus signal.
-   */
-  g_signal_new ("get-backend",
-    G_TYPE_FROM_INTERFACE (iface),
-    G_SIGNAL_RUN_LAST,
-    G_STRUCT_OFFSET (PrintFrontendIface, get_backend),
-    NULL,
-    NULL,
-    g_cclosure_marshal_generic,
-    G_TYPE_NONE,
-    0);
-
   /**
    * PrintFrontend::refresh-backend:
    * @object: A #PrintFrontend.
@@ -326,19 +347,78 @@ print_frontend_default_init (PrintFrontendIface *iface)
     G_TYPE_NONE,
     0);
 
-}
+  /**
+   * PrintFrontend::hide-remote-printers-cups:
+   * @object: A #PrintFrontend.
+   *
+   * On the client-side, this signal is emitted whenever the D-Bus signal <link linkend="gdbus-signal-org-openprinting-PrintFrontend.HideRemotePrintersCUPS">"HideRemotePrintersCUPS"</link> is received.
+   *
+   * On the service-side, this signal can be used with e.g. g_signal_emit_by_name() to make the object emit the D-Bus signal.
+   */
+  g_signal_new ("hide-remote-printers-cups",
+    G_TYPE_FROM_INTERFACE (iface),
+    G_SIGNAL_RUN_LAST,
+    G_STRUCT_OFFSET (PrintFrontendIface, hide_remote_printers_cups),
+    NULL,
+    NULL,
+    g_cclosure_marshal_generic,
+    G_TYPE_NONE,
+    0);
 
-/**
- * print_frontend_emit_get_backend:
- * @object: A #PrintFrontend.
- *
- * Emits the <link linkend="gdbus-signal-org-openprinting-PrintFrontend.GetBackend">"GetBackend"</link> D-Bus signal.
- */
-void
-print_frontend_emit_get_backend (
-    PrintFrontend *object)
-{
-  g_signal_emit_by_name (object, "get-backend");
+  /**
+   * PrintFrontend::unhide-remote-printers-cups:
+   * @object: A #PrintFrontend.
+   *
+   * On the client-side, this signal is emitted whenever the D-Bus signal <link linkend="gdbus-signal-org-openprinting-PrintFrontend.UnhideRemotePrintersCUPS">"UnhideRemotePrintersCUPS"</link> is received.
+   *
+   * On the service-side, this signal can be used with e.g. g_signal_emit_by_name() to make the object emit the D-Bus signal.
+   */
+  g_signal_new ("unhide-remote-printers-cups",
+    G_TYPE_FROM_INTERFACE (iface),
+    G_SIGNAL_RUN_LAST,
+    G_STRUCT_OFFSET (PrintFrontendIface, unhide_remote_printers_cups),
+    NULL,
+    NULL,
+    g_cclosure_marshal_generic,
+    G_TYPE_NONE,
+    0);
+
+  /**
+   * PrintFrontend::hide-temporary-printers-cups:
+   * @object: A #PrintFrontend.
+   *
+   * On the client-side, this signal is emitted whenever the D-Bus signal <link linkend="gdbus-signal-org-openprinting-PrintFrontend.HideTemporaryPrintersCUPS">"HideTemporaryPrintersCUPS"</link> is received.
+   *
+   * On the service-side, this signal can be used with e.g. g_signal_emit_by_name() to make the object emit the D-Bus signal.
+   */
+  g_signal_new ("hide-temporary-printers-cups",
+    G_TYPE_FROM_INTERFACE (iface),
+    G_SIGNAL_RUN_LAST,
+    G_STRUCT_OFFSET (PrintFrontendIface, hide_temporary_printers_cups),
+    NULL,
+    NULL,
+    g_cclosure_marshal_generic,
+    G_TYPE_NONE,
+    0);
+
+  /**
+   * PrintFrontend::unhide-temporary-printers-cups:
+   * @object: A #PrintFrontend.
+   *
+   * On the client-side, this signal is emitted whenever the D-Bus signal <link linkend="gdbus-signal-org-openprinting-PrintFrontend.UnhideTemporaryPrintersCUPS">"UnhideTemporaryPrintersCUPS"</link> is received.
+   *
+   * On the service-side, this signal can be used with e.g. g_signal_emit_by_name() to make the object emit the D-Bus signal.
+   */
+  g_signal_new ("unhide-temporary-printers-cups",
+    G_TYPE_FROM_INTERFACE (iface),
+    G_SIGNAL_RUN_LAST,
+    G_STRUCT_OFFSET (PrintFrontendIface, unhide_temporary_printers_cups),
+    NULL,
+    NULL,
+    g_cclosure_marshal_generic,
+    G_TYPE_NONE,
+    0);
+
 }
 
 /**
@@ -365,6 +445,58 @@ print_frontend_emit_stop_listing (
     PrintFrontend *object)
 {
   g_signal_emit_by_name (object, "stop-listing");
+}
+
+/**
+ * print_frontend_emit_hide_remote_printers_cups:
+ * @object: A #PrintFrontend.
+ *
+ * Emits the <link linkend="gdbus-signal-org-openprinting-PrintFrontend.HideRemotePrintersCUPS">"HideRemotePrintersCUPS"</link> D-Bus signal.
+ */
+void
+print_frontend_emit_hide_remote_printers_cups (
+    PrintFrontend *object)
+{
+  g_signal_emit_by_name (object, "hide-remote-printers-cups");
+}
+
+/**
+ * print_frontend_emit_unhide_remote_printers_cups:
+ * @object: A #PrintFrontend.
+ *
+ * Emits the <link linkend="gdbus-signal-org-openprinting-PrintFrontend.UnhideRemotePrintersCUPS">"UnhideRemotePrintersCUPS"</link> D-Bus signal.
+ */
+void
+print_frontend_emit_unhide_remote_printers_cups (
+    PrintFrontend *object)
+{
+  g_signal_emit_by_name (object, "unhide-remote-printers-cups");
+}
+
+/**
+ * print_frontend_emit_hide_temporary_printers_cups:
+ * @object: A #PrintFrontend.
+ *
+ * Emits the <link linkend="gdbus-signal-org-openprinting-PrintFrontend.HideTemporaryPrintersCUPS">"HideTemporaryPrintersCUPS"</link> D-Bus signal.
+ */
+void
+print_frontend_emit_hide_temporary_printers_cups (
+    PrintFrontend *object)
+{
+  g_signal_emit_by_name (object, "hide-temporary-printers-cups");
+}
+
+/**
+ * print_frontend_emit_unhide_temporary_printers_cups:
+ * @object: A #PrintFrontend.
+ *
+ * Emits the <link linkend="gdbus-signal-org-openprinting-PrintFrontend.UnhideTemporaryPrintersCUPS">"UnhideTemporaryPrintersCUPS"</link> D-Bus signal.
+ */
+void
+print_frontend_emit_unhide_temporary_printers_cups (
+    PrintFrontend *object)
+{
+  g_signal_emit_by_name (object, "unhide-temporary-printers-cups");
 }
 
 /* ------------------------------------------------------------------------ */
@@ -923,28 +1055,6 @@ print_frontend_skeleton_dbus_interface_flush (GDBusInterfaceSkeleton *_skeleton)
 }
 
 static void
-_print_frontend_on_signal_get_backend (
-    PrintFrontend *object)
-{
-  PrintFrontendSkeleton *skeleton = PRINT_FRONTEND_SKELETON (object);
-
-  GList      *connections, *l;
-  GVariant   *signal_variant;
-  connections = g_dbus_interface_skeleton_get_connections (G_DBUS_INTERFACE_SKELETON (skeleton));
-
-  signal_variant = g_variant_ref_sink (g_variant_new ("()"));
-  for (l = connections; l != NULL; l = l->next)
-    {
-      GDBusConnection *connection = l->data;
-      g_dbus_connection_emit_signal (connection,
-        NULL, g_dbus_interface_skeleton_get_object_path (G_DBUS_INTERFACE_SKELETON (skeleton)), "org.openprinting.PrintFrontend", "GetBackend",
-        signal_variant, NULL);
-    }
-  g_variant_unref (signal_variant);
-  g_list_free_full (connections, g_object_unref);
-}
-
-static void
 _print_frontend_on_signal_refresh_backend (
     PrintFrontend *object)
 {
@@ -982,6 +1092,94 @@ _print_frontend_on_signal_stop_listing (
       GDBusConnection *connection = l->data;
       g_dbus_connection_emit_signal (connection,
         NULL, g_dbus_interface_skeleton_get_object_path (G_DBUS_INTERFACE_SKELETON (skeleton)), "org.openprinting.PrintFrontend", "StopListing",
+        signal_variant, NULL);
+    }
+  g_variant_unref (signal_variant);
+  g_list_free_full (connections, g_object_unref);
+}
+
+static void
+_print_frontend_on_signal_hide_remote_printers_cups (
+    PrintFrontend *object)
+{
+  PrintFrontendSkeleton *skeleton = PRINT_FRONTEND_SKELETON (object);
+
+  GList      *connections, *l;
+  GVariant   *signal_variant;
+  connections = g_dbus_interface_skeleton_get_connections (G_DBUS_INTERFACE_SKELETON (skeleton));
+
+  signal_variant = g_variant_ref_sink (g_variant_new ("()"));
+  for (l = connections; l != NULL; l = l->next)
+    {
+      GDBusConnection *connection = l->data;
+      g_dbus_connection_emit_signal (connection,
+        NULL, g_dbus_interface_skeleton_get_object_path (G_DBUS_INTERFACE_SKELETON (skeleton)), "org.openprinting.PrintFrontend", "HideRemotePrintersCUPS",
+        signal_variant, NULL);
+    }
+  g_variant_unref (signal_variant);
+  g_list_free_full (connections, g_object_unref);
+}
+
+static void
+_print_frontend_on_signal_unhide_remote_printers_cups (
+    PrintFrontend *object)
+{
+  PrintFrontendSkeleton *skeleton = PRINT_FRONTEND_SKELETON (object);
+
+  GList      *connections, *l;
+  GVariant   *signal_variant;
+  connections = g_dbus_interface_skeleton_get_connections (G_DBUS_INTERFACE_SKELETON (skeleton));
+
+  signal_variant = g_variant_ref_sink (g_variant_new ("()"));
+  for (l = connections; l != NULL; l = l->next)
+    {
+      GDBusConnection *connection = l->data;
+      g_dbus_connection_emit_signal (connection,
+        NULL, g_dbus_interface_skeleton_get_object_path (G_DBUS_INTERFACE_SKELETON (skeleton)), "org.openprinting.PrintFrontend", "UnhideRemotePrintersCUPS",
+        signal_variant, NULL);
+    }
+  g_variant_unref (signal_variant);
+  g_list_free_full (connections, g_object_unref);
+}
+
+static void
+_print_frontend_on_signal_hide_temporary_printers_cups (
+    PrintFrontend *object)
+{
+  PrintFrontendSkeleton *skeleton = PRINT_FRONTEND_SKELETON (object);
+
+  GList      *connections, *l;
+  GVariant   *signal_variant;
+  connections = g_dbus_interface_skeleton_get_connections (G_DBUS_INTERFACE_SKELETON (skeleton));
+
+  signal_variant = g_variant_ref_sink (g_variant_new ("()"));
+  for (l = connections; l != NULL; l = l->next)
+    {
+      GDBusConnection *connection = l->data;
+      g_dbus_connection_emit_signal (connection,
+        NULL, g_dbus_interface_skeleton_get_object_path (G_DBUS_INTERFACE_SKELETON (skeleton)), "org.openprinting.PrintFrontend", "HideTemporaryPrintersCUPS",
+        signal_variant, NULL);
+    }
+  g_variant_unref (signal_variant);
+  g_list_free_full (connections, g_object_unref);
+}
+
+static void
+_print_frontend_on_signal_unhide_temporary_printers_cups (
+    PrintFrontend *object)
+{
+  PrintFrontendSkeleton *skeleton = PRINT_FRONTEND_SKELETON (object);
+
+  GList      *connections, *l;
+  GVariant   *signal_variant;
+  connections = g_dbus_interface_skeleton_get_connections (G_DBUS_INTERFACE_SKELETON (skeleton));
+
+  signal_variant = g_variant_ref_sink (g_variant_new ("()"));
+  for (l = connections; l != NULL; l = l->next)
+    {
+      GDBusConnection *connection = l->data;
+      g_dbus_connection_emit_signal (connection,
+        NULL, g_dbus_interface_skeleton_get_object_path (G_DBUS_INTERFACE_SKELETON (skeleton)), "org.openprinting.PrintFrontend", "UnhideTemporaryPrintersCUPS",
         signal_variant, NULL);
     }
   g_variant_unref (signal_variant);
@@ -1047,9 +1245,12 @@ print_frontend_skeleton_class_init (PrintFrontendSkeletonClass *klass)
 static void
 print_frontend_skeleton_iface_init (PrintFrontendIface *iface)
 {
-  iface->get_backend = _print_frontend_on_signal_get_backend;
   iface->refresh_backend = _print_frontend_on_signal_refresh_backend;
   iface->stop_listing = _print_frontend_on_signal_stop_listing;
+  iface->hide_remote_printers_cups = _print_frontend_on_signal_hide_remote_printers_cups;
+  iface->unhide_remote_printers_cups = _print_frontend_on_signal_unhide_remote_printers_cups;
+  iface->hide_temporary_printers_cups = _print_frontend_on_signal_hide_temporary_printers_cups;
+  iface->unhide_temporary_printers_cups = _print_frontend_on_signal_unhide_temporary_printers_cups;
 }
 
 /**

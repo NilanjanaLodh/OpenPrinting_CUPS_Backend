@@ -28,13 +28,22 @@ struct _PrintFrontendIface
 {
   GTypeInterface parent_iface;
 
-  void (*get_backend) (
+  void (*hide_remote_printers_cups) (
+    PrintFrontend *object);
+
+  void (*hide_temporary_printers_cups) (
     PrintFrontend *object);
 
   void (*refresh_backend) (
     PrintFrontend *object);
 
   void (*stop_listing) (
+    PrintFrontend *object);
+
+  void (*unhide_remote_printers_cups) (
+    PrintFrontend *object);
+
+  void (*unhide_temporary_printers_cups) (
     PrintFrontend *object);
 
 };
@@ -46,13 +55,22 @@ guint print_frontend_override_properties (GObjectClass *klass, guint property_id
 
 
 /* D-Bus signal emissions functions: */
-void print_frontend_emit_get_backend (
-    PrintFrontend *object);
-
 void print_frontend_emit_refresh_backend (
     PrintFrontend *object);
 
 void print_frontend_emit_stop_listing (
+    PrintFrontend *object);
+
+void print_frontend_emit_hide_remote_printers_cups (
+    PrintFrontend *object);
+
+void print_frontend_emit_unhide_remote_printers_cups (
+    PrintFrontend *object);
+
+void print_frontend_emit_hide_temporary_printers_cups (
+    PrintFrontend *object);
+
+void print_frontend_emit_unhide_temporary_printers_cups (
     PrintFrontend *object);
 
 
