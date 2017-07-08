@@ -554,9 +554,21 @@ static const _ExtendedGDBusArgInfo _print_backend_method_info_get_all_attributes
   FALSE
 };
 
+static const _ExtendedGDBusArgInfo _print_backend_method_info_get_all_attributes_OUT_ARG_attributes =
+{
+  {
+    -1,
+    (gchar *) "attributes",
+    (gchar *) "a(ssia(s))",
+    NULL
+  },
+  FALSE
+};
+
 static const _ExtendedGDBusArgInfo * const _print_backend_method_info_get_all_attributes_OUT_ARG_pointers[] =
 {
   &_print_backend_method_info_get_all_attributes_OUT_ARG_num_attributes,
+  &_print_backend_method_info_get_all_attributes_OUT_ARG_attributes,
   NULL
 };
 
@@ -3333,6 +3345,7 @@ print_backend_call_get_all_attributes (
  * print_backend_call_get_all_attributes_finish:
  * @proxy: A #PrintBackendProxy.
  * @out_num_attributes: (out): Return location for return parameter or %NULL to ignore.
+ * @out_attributes: (out): Return location for return parameter or %NULL to ignore.
  * @res: The #GAsyncResult obtained from the #GAsyncReadyCallback passed to print_backend_call_get_all_attributes().
  * @error: Return location for error or %NULL.
  *
@@ -3344,6 +3357,7 @@ gboolean
 print_backend_call_get_all_attributes_finish (
     PrintBackend *proxy,
     gint *out_num_attributes,
+    GVariant **out_attributes,
     GAsyncResult *res,
     GError **error)
 {
@@ -3352,8 +3366,9 @@ print_backend_call_get_all_attributes_finish (
   if (_ret == NULL)
     goto _out;
   g_variant_get (_ret,
-                 "(i)",
-                 out_num_attributes);
+                 "(i@a(ssia(s)))",
+                 out_num_attributes,
+                 out_attributes);
   g_variant_unref (_ret);
 _out:
   return _ret != NULL;
@@ -3364,6 +3379,7 @@ _out:
  * @proxy: A #PrintBackendProxy.
  * @arg_printer_name: Argument to pass with the method invocation.
  * @out_num_attributes: (out): Return location for return parameter or %NULL to ignore.
+ * @out_attributes: (out): Return location for return parameter or %NULL to ignore.
  * @cancellable: (allow-none): A #GCancellable or %NULL.
  * @error: Return location for error or %NULL.
  *
@@ -3378,6 +3394,7 @@ print_backend_call_get_all_attributes_sync (
     PrintBackend *proxy,
     const gchar *arg_printer_name,
     gint *out_num_attributes,
+    GVariant **out_attributes,
     GCancellable *cancellable,
     GError **error)
 {
@@ -3393,8 +3410,9 @@ print_backend_call_get_all_attributes_sync (
   if (_ret == NULL)
     goto _out;
   g_variant_get (_ret,
-                 "(i)",
-                 out_num_attributes);
+                 "(i@a(ssia(s)))",
+                 out_num_attributes,
+                 out_attributes);
   g_variant_unref (_ret);
 _out:
   return _ret != NULL;
@@ -5713,6 +5731,7 @@ print_backend_complete_get_printer_capabilities (
  * @object: A #PrintBackend.
  * @invocation: (transfer full): A #GDBusMethodInvocation.
  * @num_attributes: Parameter to return.
+ * @attributes: Parameter to return.
  *
  * Helper function used in service implementations to finish handling invocations of the <link linkend="gdbus-method-org-openprinting-PrintBackend.GetAllAttributes">GetAllAttributes()</link> D-Bus method. If you instead want to finish handling an invocation by returning an error, use g_dbus_method_invocation_return_error() or similar.
  *
@@ -5722,11 +5741,13 @@ void
 print_backend_complete_get_all_attributes (
     PrintBackend *object,
     GDBusMethodInvocation *invocation,
-    gint num_attributes)
+    gint num_attributes,
+    GVariant *attributes)
 {
   g_dbus_method_invocation_return_value (invocation,
-    g_variant_new ("(i)",
-                   num_attributes));
+    g_variant_new ("(i@a(ssia(s)))",
+                   num_attributes,
+                   attributes));
 }
 
 /**

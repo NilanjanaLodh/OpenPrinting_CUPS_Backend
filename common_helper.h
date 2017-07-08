@@ -2,10 +2,21 @@
 #define _COMMON_HELPER_H_
 
 #define PRINTER_ADDED_ARGS "(sssssbs)"
+#define new_cstring_array(x) ((char **)(malloc(sizeof(char *) * x)))
+
+typedef struct _Option
+{
+    const char *option_name;
+    int num_supported;
+    char **supported_values;
+    char *default_value;
+} Option;
+/*********Option related functions*****************/
+void print_option(const Option *opt);
+
 /*********LISTING OF ALL POSSIBLE OPTIONS*****/
 //Rename these to something better if needed
 
-#define new_cstring_array(x) ((char**)(malloc(sizeof(char*) * x))) 
 #define MEDIA_A4 "A4"
 #define MEDIA_A3 "A3"
 #define MEDIA_A5 "A5"
@@ -51,6 +62,8 @@
 gboolean get_boolean(const char *);
 char *get_string_copy(const char *);
 void unpack_string_array(GVariant *variant, int num_val, char ***val);
+void unpack_option_array(GVariant *var, int num_options, Option **options);
 GVariant *pack_string_array(int num_val, char **val);
+GVariant *pack_option(const Option *opt);
 
 #endif

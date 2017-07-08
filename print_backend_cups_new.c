@@ -300,6 +300,7 @@ static gboolean on_handle_ping(PrintBackend *interface,
     Option *options;
     int count = get_all_attributes(p, &options);
     int i;
+    printf("PING***********************\n");
     for (i = 0; i < count; i++)
     {
         print_option(&options[i]);
@@ -307,22 +308,39 @@ static gboolean on_handle_ping(PrintBackend *interface,
     return TRUE;
 }
 static gboolean on_handle_get_all_attributes(PrintBackend *interface,
-                                            GDBusMethodInvocation *invocation,
-                                            const gchar *printer_name,
-                                            gpointer user_data)
+                                             GDBusMethodInvocation *invocation,
+                                             const gchar *printer_name,
+                                             gpointer user_data)
 {
     const char *dialog_name = g_dbus_method_invocation_get_sender(invocation); /// potential risk
     PrinterCUPS *p = get_printer_by_name(b, dialog_name, printer_name);
     Option *options;
     int count = get_all_attributes(p, &options);
     int i;
+
     for (i = 0; i < count; i++)
     {
         print_option(&options[i]);
     }
-    print_backend_complete_get_all_attributes(interface, invocation, count);    
+
+    GVariantBuilder *builder;
+    GVariant *variant;
+    builder = g_variant_builder_new(G_VARIANT_TYPE("a(ssia(s))"));
+
+    int c=0;
+    for (int i = 0; i < count; i++)
+    {        
+        c++;
+        GVariant *tuple = pack_option(&options[0]);
+        g_variant_builder_add_value(builder, tuple);
+    }
+
+    variant = g_variant_new("a(ssia(s))", builder);
+
+    print_backend_complete_get_all_attributes(interface, invocation, c, variant);
     return TRUE;
 }
+
 static gboolean on_handle_get_default_media(PrintBackend *interface,
                                             GDBusMethodInvocation *invocation,
                                             const gchar *printer_name,

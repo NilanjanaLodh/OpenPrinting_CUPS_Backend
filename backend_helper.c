@@ -50,7 +50,7 @@ char *get_default_printer(BackendObj *b)
         }
     }
     ippDelete(response);
-    return "NA";
+    return get_string_copy("NA");
 }
 void connect_to_dbus(BackendObj *b, char *obj_path)
 {
@@ -424,7 +424,7 @@ const char *get_media_default(PrinterCUPS *p)
     if (!x)
     {
         printf("failure getting media\n");
-        return "NA";
+        return get_string_copy("NA");
     }
     printf("media %s\n", size.media);
     const char *media = cupsLocalizeDestMedia(p->http, p->dest,
@@ -455,7 +455,7 @@ const char *get_orientation_default(PrinterCUPS *p)
 
     attr = cupsFindDestDefault(p->http, p->dest, p->dinfo, CUPS_ORIENTATION);
     if (!attr)
-        return "NA";
+        return get_string_copy("NA");
 
     const char *str = ippEnumString(CUPS_ORIENTATION, ippGetInteger(attr, 0));
     printf("orient value=%d  , %s\n", ippGetInteger(attr, 0), str);
@@ -536,7 +536,7 @@ const char *get_default(PrinterCUPS *p, char *option_name)
         return get_orientation_default(p);
     if (strcmp(option_name, CUPS_MEDIA) == 0)
         return get_media_default(p);
-    
+
     ensure_printer_connection(p);
     ipp_attribute_t *def_attr = cupsFindDestDefault(p->http, p->dest, p->dinfo, option_name);
     const char *def_value = cupsGetOption(option_name, p->dest->num_options, p->dest->options);
@@ -544,15 +544,27 @@ const char *get_default(PrinterCUPS *p, char *option_name)
     {
         if (!def_attr)
             return def_value;
-        if(ippGetValueTag(def_attr)==IPP_TAG_ENUM)
+        if (ippGetValueTag(def_attr) == IPP_TAG_ENUM)
             return ippEnumString(option_name, atoi(def_value));
     }
     if (def_attr)
     {
         return extract_ipp_attribute(def_attr, 0, option_name, p);
     }
-    return "NA";
+    return get_string_copy("NA");
 }
+Option *get_NA_option()
+{
+    Option *o = (Option *)malloc(sizeof(Option));
+    o->option_name = "NA";
+    o->default_value = "NA";
+    o->num_supported = 0;
+    o->supported_values = new_cstring_array(1);
+    o->supported_values[0]="bub";
+
+    return o;
+}
+
 int get_all_attributes(PrinterCUPS *p, Option **options)
 {
     ensure_printer_connection(p);
@@ -575,8 +587,16 @@ int get_all_attributes(PrinterCUPS *p, Option **options)
         for (j = 0; j < opts[i].num_supported; j++)
         {
             opts[i].supported_values[j] = extract_ipp_attribute(vals, j, attribute_names[i], p);
+            if (!opts[i].supported_values[j])
+            {
+                opts[i].supported_values[j] = get_string_copy("NA");
+            }
         }
         opts[i].default_value = get_default(p, attribute_names[i]);
+        if (!opts[i].default_value)
+        {
+            opts[i].default_value = get_string_copy("NA");
+        }
     }
     *options = opts;
     return num_attributes;
@@ -602,7 +622,7 @@ const char *get_printer_state(PrinterCUPS *p)
     {
         /* request failed */
         printf("Request failed: %s\n", cupsLastErrorString());
-        return "NA";
+        return get_string_copy("NA");
     }
 
     ipp_attribute_t *attr;
@@ -627,17 +647,7 @@ Mappings *get_new_Mappings()
     m->orientation[atoi(CUPS_ORIENTATION_PORTRAIT)] = ORIENTATION_PORTRAIT;
     return m;
 }
-/**************Option************************************/
-void print_option(const Option *opt)
-{
-    g_message("%s", opt->option_name);
-    int i;
-    for (i = 0; i < opt->num_supported; i++)
-    {
-        printf(" %s\n", opt->supported_values[i]);
-    }
-    printf("****DEFAULT: %s\n", opt->default_value);
-}
+
 /*****************CUPS and IPP helpers*********************/
 const char *cups_printer_state(cups_dest_t *dest)
 {
@@ -646,7 +656,7 @@ const char *cups_printer_state(cups_dest_t *dest)
     const char *state = cupsGetOption("printer-state", dest->num_options,
                                       dest->options);
     if (state == NULL)
-        return "NA";
+        return get_string_copy("NA");
     return map->state[state[0] - '0'];
 }
 
@@ -761,7 +771,7 @@ char *cups_retrieve_string(cups_dest_t *dest, const char *option_name)
     if (ans)
         return ans;
 
-    return "NA";
+    return get_string_copy("NA");
 }
 
 gboolean cups_is_temporary(cups_dest_t *dest)
@@ -774,7 +784,7 @@ gboolean cups_is_temporary(cups_dest_t *dest)
 
 char *extract_ipp_attribute(ipp_attribute_t *attr, int index, const char *option_name, PrinterCUPS *p)
 {
-    printf("%s   ", option_name);
+    //printf("%s   ", option_name);
     //first deal with the totally unique cases
     if (strcmp(option_name, CUPS_ORIENTATION) == 0)
         return extract_orientation_from_ipp(attr, index);

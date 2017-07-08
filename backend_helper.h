@@ -59,13 +59,6 @@ typedef struct _Res
     char *string;
 } Res;
 
-typedef struct _Option
-{
-    const char * option_name;
-    int num_supported;
-    char **supported_values;
-    char *default_value;
-}Option;
 
 typedef char *(*extract_func)(ipp_attribute_t *, int index);
 /********Backend related functions*******************/
@@ -121,11 +114,11 @@ int get_print_quality_supported(PrinterCUPS *p, char ***supported_values);
 const char *get_default(PrinterCUPS *p, char *option_name);
 int get_supported(PrinterCUPS *p, char ***supported_values, const char *option_name);
 
+int get_all_attributes(PrinterCUPS *p, Option **options);
 /**********Mapping related functions*****************/
 Mappings *get_new_Mappings();
 
-/*********Option related functions*****************/
-void print_option(const Option* opt);
+
 
 /*************CUPS/IPP RELATED FUNCTIONS******************/
 const char *cups_printer_state(cups_dest_t *dest);

@@ -103,6 +103,30 @@ void get_supported_values_raw(PrinterObj *p, gchar *option_name)
 
     // this only prints the value to screen.. edit it so that it sets the actual value
 }
+
+int get_all_options(PrinterObj *p, Option **options)
+{
+    GError *error = NULL;
+    int num_options;
+    GVariant *var;
+    print_backend_call_get_all_attributes_sync(p->backend_proxy, p->name,
+                                               &num_options, &var, NULL, &error);
+    printf("Num_options is %d\n", num_options);
+    unpack_option_array(var,num_options, options);
+    // Option *opt = (Option *)(malloc(sizeof(Option) * num_options));
+    // GVariantIter *iter;
+    // g_variant_get(var, "a(ssia(s))", &iter);
+    // for (int i = 0; i < num_options ; i++)
+    // {
+    //     if(i==8)
+    //         continue;
+    //     printf("i = %d\n" , i);
+    //     GVariantIter *array_iter;
+    //     g_variant_iter_loop(iter, "(ssia(s))", &opt[i].option_name, &opt[i].default_value,
+    //                         &opt[i].num_supported, &array_iter);
+    // }
+    return num_options;
+}
 void get_supported_media(PrinterObj *p)
 {
     GError *error = NULL;
@@ -312,6 +336,14 @@ PrinterObj *update_basic_printer_options(FrontendObj *f, gchar *printer_name)
 
     update_basic_options(p);
     return p;
+}
+void get_all_printer_options(FrontendObj *f, gchar *printer_name)
+{
+    PrinterObj *p = g_hash_table_lookup(f->printer, printer_name);
+    g_assert_nonnull(p);
+    int num_options;
+    Option *options;
+    num_options = get_all_options(p, &options);
 }
 void get_printer_capabilities(FrontendObj *f, gchar *printer_name)
 {

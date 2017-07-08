@@ -28,6 +28,7 @@ void update_basic_options(PrinterObj *);
 PrinterCapabilities get_capabilities(PrinterObj *);
 void print_capabilities(PrinterObj *);
 void get_option_default(PrinterObj *, gchar *);
+int get_all_options(PrinterObj *, Option **);
 void get_supported_values_raw(PrinterObj *, gchar *);
 void get_supported_media(PrinterObj *);
 void get_supported_color(PrinterObj *);
@@ -56,6 +57,7 @@ void activate_backends(FrontendObj *);
 gboolean add_printer(FrontendObj *, PrinterObj *, gchar *, gchar *); 
 gboolean remove_printer(FrontendObj *, char *);
 PrinterObj *update_basic_printer_options(FrontendObj *, gchar *);
+void get_all_printer_options(FrontendObj *f, gchar *printer_name); //for now: just print the values
 void get_printer_capabilities(FrontendObj *, gchar *);
 void get_printer_option_default(FrontendObj *, gchar *, gchar *);
 void get_printer_supported_values_raw(FrontendObj *, gchar *, gchar *);
@@ -153,11 +155,6 @@ struct _FrontendObj
     GHashTable *printer;
 };
 
-struct _GenericOption
-{
-    char *option_name;
-    int num_supported;
-    char** supported_values;
-    char *value;
-};
 #endif
+
+//todo: clean up, normalize all names and types

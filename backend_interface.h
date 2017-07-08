@@ -236,7 +236,8 @@ void print_backend_complete_get_printer_capabilities (
 void print_backend_complete_get_all_attributes (
     PrintBackend *object,
     GDBusMethodInvocation *invocation,
-    gint num_attributes);
+    gint num_attributes,
+    GVariant *attributes);
 
 void print_backend_complete_get_default_media (
     PrintBackend *object,
@@ -508,6 +509,7 @@ void print_backend_call_get_all_attributes (
 gboolean print_backend_call_get_all_attributes_finish (
     PrintBackend *proxy,
     gint *out_num_attributes,
+    GVariant **out_attributes,
     GAsyncResult *res,
     GError **error);
 
@@ -515,6 +517,7 @@ gboolean print_backend_call_get_all_attributes_sync (
     PrintBackend *proxy,
     const gchar *arg_printer_name,
     gint *out_num_attributes,
+    GVariant **out_attributes,
     GCancellable *cancellable,
     GError **error);
 
