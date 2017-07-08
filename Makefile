@@ -1,7 +1,10 @@
 FLAGS=$(shell pkg-config --libs --cflags gio-2.0 gio-unix-2.0 glib-2.0)
-.PHONY:all gen
+.PHONY:all gen make_build_dir
 
-all: print_frontend print_backend_cups
+all: create_build_dir print_frontend print_backend_cups
+
+create_build_dir:
+	mkdir -p build/
 
 gen:genback genfront
 
