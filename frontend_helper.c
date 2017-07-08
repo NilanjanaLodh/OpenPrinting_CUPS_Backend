@@ -113,18 +113,6 @@ int get_all_options(PrinterObj *p, Option **options)
                                                &num_options, &var, NULL, &error);
     printf("Num_options is %d\n", num_options);
     unpack_option_array(var,num_options, options);
-    // Option *opt = (Option *)(malloc(sizeof(Option) * num_options));
-    // GVariantIter *iter;
-    // g_variant_get(var, "a(ssia(s))", &iter);
-    // for (int i = 0; i < num_options ; i++)
-    // {
-    //     if(i==8)
-    //         continue;
-    //     printf("i = %d\n" , i);
-    //     GVariantIter *array_iter;
-    //     g_variant_iter_loop(iter, "(ssia(s))", &opt[i].option_name, &opt[i].default_value,
-    //                         &opt[i].num_supported, &array_iter);
-    // }
     return num_options;
 }
 void get_supported_media(PrinterObj *p)

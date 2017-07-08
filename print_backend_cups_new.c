@@ -327,17 +327,15 @@ static gboolean on_handle_get_all_attributes(PrintBackend *interface,
     GVariant *variant;
     builder = g_variant_builder_new(G_VARIANT_TYPE("a(ssia(s))"));
 
-    int c=0;
     for (int i = 0; i < count; i++)
     {        
-        c++;
-        GVariant *tuple = pack_option(&options[0]);
+        GVariant *tuple = pack_option(&options[i]);
         g_variant_builder_add_value(builder, tuple);
     }
 
     variant = g_variant_new("a(ssia(s))", builder);
 
-    print_backend_complete_get_all_attributes(interface, invocation, c, variant);
+    print_backend_complete_get_all_attributes(interface, invocation, count, variant);
     return TRUE;
 }
 

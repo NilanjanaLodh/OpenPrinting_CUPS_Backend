@@ -57,18 +57,21 @@ void unpack_option_array(GVariant *var, int num_options, Option **options)
     int i, j;
     char *str;
     GVariantIter *iter;
-
+    GVariantIter *array_iter;
+    char *name, *default_val;
+    int num_sup;
     g_variant_get(var, "a(ssia(s))", &iter);
     for (i = 0; i < num_options; i++)
     {
-        // if(i==8)
-        //     continue;
-        printf("i = %d\n", i);
-        GVariantIter *array_iter;
-        g_variant_iter_loop(iter, "(ssia(s))", &opt[i].option_name, &opt[i].default_value,
-                            &opt[i].num_supported, &array_iter);
-        opt[i].supported_values = new_cstring_array(opt[i].num_supported);
-        for (j = 0; j < opt[i].num_supported; j++)
+        //printf("i = %d\n", i);
+
+        g_variant_iter_loop(iter, "(ssia(s))", &name, &default_val,
+                            &num_sup, &array_iter);
+        opt[i].option_name = get_string_copy(name);
+        opt[i].default_value = get_string_copy(default_val);
+        opt[i].num_supported = num_sup;
+        opt[i].supported_values = new_cstring_array(num_sup);
+        for (j = 0; j < num_sup ; j++)
         {
             g_variant_iter_loop(array_iter, "(s)", &str);
             opt[i].supported_values[j] = get_string_copy(str); //mem
@@ -100,8 +103,8 @@ GVariant *pack_string_array(int num_val, char **val)
 GVariant *pack_option(const Option *opt)
 {
     GVariant **t = g_new(GVariant *, 4);
-    t[0] = g_variant_new_string("YO");
-    t[1] = g_variant_new_string("NA");//("s", get_string_copy(opt->default_value));
+    t[0] = g_variant_new_string(opt->option_name);
+    t[1] = g_variant_new_string(opt->default_value); //("s", get_string_copy(opt->default_value));
     t[2] = g_variant_new_int32(opt->num_supported);
     t[3] = pack_string_array(opt->num_supported, opt->supported_values);
     GVariant *tuple_variant = g_variant_new_tuple(t, 4);
