@@ -1,6 +1,8 @@
 # PrintDialog_Backend
+
 Contains implementation of the CUPS and IPP Backends for the Common Printing Dialog Project (as a part of GSoC 2017)
 This README just contains information on building and running the project. For more details see [Project Wiki](https://github.com/NilanjanaLodh/PrintDialog_Backend/wiki  "Project Wiki")
+
 Build and installation
 ----
 - make gen
