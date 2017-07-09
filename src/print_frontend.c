@@ -7,8 +7,6 @@
 #include "frontend_helper.h"
 #include "common_helper.h"
 
-#define DIALOG_BUS_NAME "org.openprinting.PrintFrontend"
-#define DIALOG_OBJ_PATH "/"
 static void on_name_acquired(GDBusConnection *connection, const gchar *name, gpointer user_data);
 static void on_printer_added(GDBusConnection *connection,
                              const gchar *sender_name,
@@ -54,8 +52,6 @@ on_name_acquired(GDBusConnection *connection,
                  const gchar *name,
                  gpointer user_data)
 {
-    PrintFrontend *skeleton;
-    skeleton = print_frontend_skeleton_new();
     GError *error = NULL;
 
     g_dbus_connection_signal_subscribe(connection,
@@ -80,7 +76,7 @@ on_name_acquired(GDBusConnection *connection,
                                        user_data,                       //user_data
                                        NULL);
 
-    g_dbus_interface_skeleton_export(G_DBUS_INTERFACE_SKELETON(skeleton), connection, DIALOG_OBJ_PATH, &error);
+    g_dbus_interface_skeleton_export(G_DBUS_INTERFACE_SKELETON(f->skeleton), connection, DIALOG_OBJ_PATH, &error);
     g_assert_no_error(error);
 
     //print_frontend_emit_get_backend(skeleton);
@@ -89,7 +85,7 @@ on_name_acquired(GDBusConnection *connection,
     I have created the following thread just for testing purpose.
     In reality you don't need a separate thread to parse commands because you already have a GUI. 
     **/
-    g_thread_new("parse_commands_thread", parse_commands, skeleton);
+    g_thread_new("parse_commands_thread", parse_commands, f->skeleton);
 }
 static void on_printer_added(GDBusConnection *connection,
                              const gchar *sender_name,

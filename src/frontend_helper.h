@@ -10,6 +10,8 @@
 #include "backend_interface.h"
 #include "frontend_interface.h"
 
+#define DIALOG_BUS_NAME "org.openprinting.PrintFrontend"
+#define DIALOG_OBJ_PATH "/"
 #define DBUS_DIR "/usr/share/print-backends"
 #define BACKEND_PREFIX "org.openprinting.Backend"
 
@@ -149,6 +151,7 @@ struct _PrinterObj
 };
 struct _FrontendObj
 {
+    PrintFrontend *skeleton;
     int num_backends;
     GHashTable *backend;
     int num_printers;

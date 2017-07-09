@@ -239,6 +239,7 @@ char *get_default_color(PrinterObj *p)
 FrontendObj *get_new_FrontendObj()
 {
     FrontendObj *f = malloc(sizeof(FrontendObj));
+    f->skeleton = print_frontend_skeleton_new();
     f->num_backends = 0;
     f->backend = g_hash_table_new(g_str_hash, g_str_equal);
     f->num_printers = 0;
