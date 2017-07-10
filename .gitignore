@@ -1,3 +1,4 @@
 *.o
 print_backend_cups
 print_frontend
+.vscode/
