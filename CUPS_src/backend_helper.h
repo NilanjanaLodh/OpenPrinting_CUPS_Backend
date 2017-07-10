@@ -6,8 +6,8 @@
 #include <glib.h>
 #include <string.h>
 #include <cups/cups.h>
-#include "../src/backend_interface.h"
-#include "../src/common_helper.h"
+#include "backend_interface.h"
+#include "common_helper.h"
 
 
 #define CAPABILITY_COPIES (1)
