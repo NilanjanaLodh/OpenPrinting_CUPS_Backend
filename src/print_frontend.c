@@ -2,122 +2,31 @@
 #include <stdlib.h>
 #include <glib.h>
 #include <string.h>
-#include "frontend_interface.h"
-#include "backend_interface.h"
+
 #include "frontend_helper.h"
 #include "common_helper.h"
 
-static void on_name_acquired(GDBusConnection *connection, const gchar *name, gpointer user_data);
-static void on_printer_added(GDBusConnection *connection,
-                             const gchar *sender_name,
-                             const gchar *object_path,
-                             const gchar *interface_name,
-                             const gchar *signal_name,
-                             GVariant *parameters,
-                             gpointer user_data);
-static void on_printer_removed(GDBusConnection *connection,
-                               const gchar *sender_name,
-                               const gchar *object_path,
-                               const gchar *interface_name,
-                               const gchar *signal_name,
-                               GVariant *parameters,
-                               gpointer user_data);
 void display_help();
 gpointer parse_commands(gpointer user_data);
 FrontendObj *f;
 int main(int argc, char **argv)
 {
-    // printers = g_hash_table_new(g_str_hash, g_str_equal);
-    //backends = g_hash_table_new(g_str_hash, g_str_equal);
     char *dialog_bus_name = malloc(300);
     if (argc > 1) //this is for creating multiple instances of a dialog simultaneously
-        sprintf(dialog_bus_name, "%s%s", DIALOG_BUS_NAME, argv[1]);
+        f = get_new_FrontendObj(argv[1]);
     else
-        sprintf(dialog_bus_name, "%s", DIALOG_BUS_NAME);
-    f = get_new_FrontendObj();
-    g_bus_own_name(G_BUS_TYPE_SESSION,
-                   dialog_bus_name,
-                   0,                //flags
-                   NULL,             //bus_acquired_handler
-                   on_name_acquired, //name acquired handler
-                   NULL,             //name_lost handler
-                   f,                //user_data
-                   NULL);            //user_data free function
+        f = get_new_FrontendObj(NULL);
+    
+    g_thread_new("parse_commands_thread", parse_commands, NULL);
+    connect_to_dbus(f);
     GMainLoop *loop = g_main_loop_new(NULL, FALSE);
     g_main_loop_run(loop);
 }
 
-static void
-on_name_acquired(GDBusConnection *connection,
-                 const gchar *name,
-                 gpointer user_data)
-{
-    GError *error = NULL;
-
-    g_dbus_connection_signal_subscribe(connection,
-                                       NULL,                            //Sender name
-                                       "org.openprinting.PrintBackend", //Sender interface
-                                       PRINTER_ADDED_SIGNAL,            //Signal name
-                                       NULL,                            /**match on all object paths**/
-                                       NULL,                            /**match on all arguments**/
-                                       0,                               //Flags
-                                       on_printer_added,                //callback
-                                       user_data,                       //user_data
-                                       NULL);
-
-    g_dbus_connection_signal_subscribe(connection,
-                                       NULL,                            //Sender name
-                                       "org.openprinting.PrintBackend", //Sender interface
-                                       PRINTER_REMOVED_SIGNAL,          //Signal name
-                                       NULL,                            /**match on all object paths**/
-                                       NULL,                            /**match on all arguments**/
-                                       0,                               //Flags
-                                       on_printer_removed,              //callback
-                                       user_data,                       //user_data
-                                       NULL);
-
-    g_dbus_interface_skeleton_export(G_DBUS_INTERFACE_SKELETON(f->skeleton), connection, DIALOG_OBJ_PATH, &error);
-    g_assert_no_error(error);
-
-    //print_frontend_emit_get_backend(skeleton);
-    activate_backends(f);
-    /**
-    I have created the following thread just for testing purpose.
-    In reality you don't need a separate thread to parse commands because you already have a GUI. 
-    **/
-    g_thread_new("parse_commands_thread", parse_commands, f->skeleton);
-}
-static void on_printer_added(GDBusConnection *connection,
-                             const gchar *sender_name,
-                             const gchar *object_path,
-                             const gchar *interface_name,
-                             const gchar *signal_name,
-                             GVariant *parameters,
-                             gpointer user_data)
-{
-
-    PrinterObj *p = get_new_PrinterObj();
-    fill_basic_options(p, parameters);
-    add_printer(f, p, sender_name, object_path);
-    print_basic_options(p);
-}
-static void on_printer_removed(GDBusConnection *connection,
-                               const gchar *sender_name,
-                               const gchar *object_path,
-                               const gchar *interface_name,
-                               const gchar *signal_name,
-                               GVariant *parameters,
-                               gpointer user_data)
-{
-    char *printer_name;
-    g_variant_get(parameters, "(s)", &printer_name);
-    remove_printer(f,printer_name);
-    g_message("Removed Printer %s!\n", printer_name);
-}
-
 gpointer parse_commands(gpointer user_data)
 {
-    PrintFrontend *skeleton = (PrintFrontend *)user_data;
+    printf("parse_commands\n");
+    fflush(stdout);
     char buf[100];
     while (1)
     {
@@ -126,33 +35,33 @@ gpointer parse_commands(gpointer user_data)
         scanf("%s", buf);
         if (strcmp(buf, "stop") == 0)
         {
-            print_frontend_emit_stop_listing(skeleton);
+            disconnect_from_dbus(f);
             g_message("Stopping front end..\n");
             exit(0);
         }
         else if (strcmp(buf, "refresh") == 0)
         {
-            print_frontend_emit_refresh_backend(skeleton);
+            refresh_printer_list(f);
             g_message("Getting changes in printer list..\n");
         }
         else if (strcmp(buf, "hide-remote-cups") == 0)
         {
-            print_frontend_emit_hide_remote_printers_cups(skeleton);
+            hide_remote_cups_printers(f);
             g_message("Hiding remote printers discovered by the cups backend..\n");
         }
         else if (strcmp(buf, "unhide-remote-cups") == 0)
         {
-            print_frontend_emit_unhide_remote_printers_cups(skeleton);
+            unhide_remote_cups_printers(f);
             g_message("Unhiding remote printers discovered by the cups backend..\n");
         }
         else if (strcmp(buf, "hide-temporary-cups") == 0)
         {
-            print_frontend_emit_hide_temporary_printers_cups(skeleton);
+            hide_temporary_cups_printers(f);            
             g_message("Hiding remote printers discovered by the cups backend..\n");
         }
         else if (strcmp(buf, "unhide-temporary-cups") == 0)
         {
-            print_frontend_emit_unhide_temporary_printers_cups(skeleton);
+            unhide_temporary_cups_printers(f);            
             g_message("Unhiding remote printers discovered by the cups backend..\n");
         }
         else if (strcmp(buf, "update-basic") == 0)
@@ -169,7 +78,7 @@ gpointer parse_commands(gpointer user_data)
             g_message("Getting basic capabilities ..\n");
             get_printer_capabilities(f, printer_name);
         }
-        else if (strcmp(buf, "get-all-options")==0)
+        else if (strcmp(buf, "get-all-options") == 0)
         {
             char printer_name[100];
             scanf("%s", printer_name);

@@ -54,11 +54,18 @@ void apply_settings(PrinterObj *);
 /**********FrontendObj definitions*******************************/
 typedef struct _FrontendObj FrontendObj;
 
-FrontendObj *get_new_FrontendObj();
+FrontendObj *get_new_FrontendObj(char *instance_name);
+void connect_to_dbus(FrontendObj *);
+void disconnect_from_dbus(FrontendObj *);
 void activate_backends(FrontendObj *);
 gboolean add_printer(FrontendObj *, PrinterObj *, gchar *, gchar *); 
 gboolean remove_printer(FrontendObj *, char *);
 PrinterObj *update_basic_printer_options(FrontendObj *, gchar *);
+void refresh_printer_list(FrontendObj *f);
+void hide_remote_cups_printers(FrontendObj *f);
+void unhide_remote_cups_printers(FrontendObj *f);
+void hide_temporary_cups_printers(FrontendObj *f);
+void unhide_temporary_cups_printers(FrontendObj *f);
 void get_all_printer_options(FrontendObj *f, gchar *printer_name); //for now: just print the values
 void get_printer_capabilities(FrontendObj *, gchar *);
 void get_printer_option_default(FrontendObj *, gchar *, gchar *);
@@ -152,6 +159,8 @@ struct _PrinterObj
 struct _FrontendObj
 {
     PrintFrontend *skeleton;
+    char *bus_name;
+
     int num_backends;
     GHashTable *backend;
     int num_printers;

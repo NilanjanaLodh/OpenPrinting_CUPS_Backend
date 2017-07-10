@@ -112,7 +112,7 @@ int get_all_options(PrinterObj *p, Option **options)
     print_backend_call_get_all_attributes_sync(p->backend_proxy, p->name,
                                                &num_options, &var, NULL, &error);
     printf("Num_options is %d\n", num_options);
-    unpack_option_array(var,num_options, options);
+    unpack_option_array(var, num_options, options);
     return num_options;
 }
 void get_supported_media(PrinterObj *p)
@@ -235,16 +235,102 @@ char *get_default_color(PrinterObj *p)
     g_message("default color: %s", p->defaults.color);
 }
 /************************************************* FrontendObj********************************************/
+static void on_printer_added(GDBusConnection *connection,
+                             const gchar *sender_name,
+                             const gchar *object_path,
+                             const gchar *interface_name,
+                             const gchar *signal_name,
+                             GVariant *parameters,
+                             gpointer user_data)
+{
+    FrontendObj *f = (FrontendObj *)user_data;
+    PrinterObj *p = get_new_PrinterObj();
+    fill_basic_options(p, parameters);
+    add_printer(f, p, sender_name, object_path);
+    print_basic_options(p);
+}
+static void on_printer_removed(GDBusConnection *connection,
+                               const gchar *sender_name,
+                               const gchar *object_path,
+                               const gchar *interface_name,
+                               const gchar *signal_name,
+                               GVariant *parameters,
+                               gpointer user_data)
+{
+    FrontendObj *f = (FrontendObj *)user_data;
+    char *printer_name;
+    g_variant_get(parameters, "(s)", &printer_name);
+    remove_printer(f, printer_name);
+    g_message("Removed Printer %s!\n", printer_name);
+}
+static void
+on_name_acquired(GDBusConnection *connection,
+                 const gchar *name,
+                 gpointer user_data)
+{
+    printf("on name acquired.\n");
+    fflush(stdout);
+    FrontendObj *f = (FrontendObj *)user_data;
+    GError *error = NULL;
 
-FrontendObj *get_new_FrontendObj()
+    g_dbus_connection_signal_subscribe(connection,
+                                       NULL,                            //Sender name
+                                       "org.openprinting.PrintBackend", //Sender interface
+                                       PRINTER_ADDED_SIGNAL,            //Signal name
+                                       NULL,                            /**match on all object paths**/
+                                       NULL,                            /**match on all arguments**/
+                                       0,                               //Flags
+                                       on_printer_added,                //callback
+                                       user_data,                       //user_data
+                                       NULL);
+
+    g_dbus_connection_signal_subscribe(connection,
+                                       NULL,                            //Sender name
+                                       "org.openprinting.PrintBackend", //Sender interface
+                                       PRINTER_REMOVED_SIGNAL,          //Signal name
+                                       NULL,                            /**match on all object paths**/
+                                       NULL,                            /**match on all arguments**/
+                                       0,                               //Flags
+                                       on_printer_removed,              //callback
+                                       user_data,                       //user_data
+                                       NULL);
+
+    g_dbus_interface_skeleton_export(G_DBUS_INTERFACE_SKELETON(f->skeleton), connection, DIALOG_OBJ_PATH, &error);
+    g_assert_no_error(error);
+    activate_backends(f);
+}
+FrontendObj *get_new_FrontendObj(char *instance_name)
 {
     FrontendObj *f = malloc(sizeof(FrontendObj));
     f->skeleton = print_frontend_skeleton_new();
+    if (!instance_name)
+        f->bus_name = DIALOG_BUS_NAME;
+    else
+    {
+        char tmp[300];
+        sprintf(tmp, "%s%s", DIALOG_BUS_NAME, instance_name);
+        f->bus_name = get_string_copy(tmp);
+    }
     f->num_backends = 0;
     f->backend = g_hash_table_new(g_str_hash, g_str_equal);
     f->num_printers = 0;
     f->printer = g_hash_table_new(g_str_hash, g_str_equal);
     return f;
+}
+void connect_to_dbus(FrontendObj *f)
+{
+    g_bus_own_name(G_BUS_TYPE_SESSION,
+                   f->bus_name,
+                   0,                //flags
+                   NULL,             //bus_acquired_handler
+                   on_name_acquired, //name acquired handler
+                   NULL,             //name_lost handler
+                   f,                //user_data
+                   NULL);            //user_data free function
+}
+void disconnect_from_dbus(FrontendObj *f)
+{
+    print_frontend_emit_stop_listing(f->skeleton);
 }
 void activate_backends(FrontendObj *f)
 {
@@ -287,7 +373,26 @@ PrintBackend *create_backend_from_file(const char *backend_file_name)
     g_assert_no_error(error);
     return proxy;
 }
-
+void refresh_printer_list(FrontendObj *f)
+{
+    print_frontend_emit_refresh_backend(f->skeleton);
+}
+void hide_remote_cups_printers(FrontendObj *f)
+{
+    print_frontend_emit_hide_remote_printers_cups(f->skeleton);
+}
+void unhide_remote_cups_printers(FrontendObj *f)
+{
+    print_frontend_emit_unhide_remote_printers_cups(f->skeleton);
+}
+void hide_temporary_cups_printers(FrontendObj *f)
+{
+    print_frontend_emit_hide_temporary_printers_cups(f->skeleton);
+}
+void unhide_temporary_cups_printers(FrontendObj *f)
+{
+    print_frontend_emit_unhide_temporary_printers_cups(f->skeleton);
+}
 gboolean add_printer(FrontendObj *f, PrinterObj *p, gchar *backend_name, gchar *obj_path)
 {
     //g_message("backend name and object path : %s %s", backend_name, obj_path);
