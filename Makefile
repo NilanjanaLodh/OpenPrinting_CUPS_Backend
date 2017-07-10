@@ -4,9 +4,9 @@ FLAGS+=-I$(DIR)/src
 FLAGS+=-L$(DIR)/src
 
 
-.PHONY:all gen 
+.PHONY:all gen release
 
-all:   print_frontend print_backend_cups
+all:   print_frontend print_backend_cups release
 
 
 gen:genback genfront
@@ -48,3 +48,7 @@ clean:
 
 install:
 	./install.sh
+
+release: src/libCPD.a src/libCPDcore.a 
+	cp src/*.a release/libs
+	cp src/*.h release/headers
