@@ -8,7 +8,7 @@
 #include <cups/cups.h>
 #include "../src/backend_interface.h"
 #include "../src/common_helper.h"
-#include <glib.h>
+
 
 #define CAPABILITY_COPIES (1)
 #define CAPABILITY_MEDIA (1 << 1)

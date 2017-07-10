@@ -14,4 +14,7 @@ cp aux/org.openprinting.Backend.CUPS.service /usr/share/dbus-1/services
 echo "installing configuration files in /usr/share/print-backends .."
 mkdir -p /usr/share/print-backends
 cp aux/org.openprinting.Backend.CUPS /usr/share/print-backends
+
+echo "creating directory for log file at  ~/.print-backends/logs/"
+mkdir -p ~/.print_backends/logs/
 echo "Done."

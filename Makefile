@@ -20,17 +20,20 @@ CUPS_src/%.o: CUPS_src/%.c
 src/%.o: src/%.c
 	gcc -o $@ $^ -c $(FLAGS)
 
+src/libCPD.a: src/backend_interface.o src/frontend_interface.o src/common_helper.o src/frontend_helper.o 
+	ar rcs -o src/libCPD.a $^
+
 print_backend_cups: CUPS_src/print_backend_cups.o src/backend_interface.o src/common_helper.o CUPS_src/backend_helper.o
 	gcc -o $@ $^ $(FLAGS) -lcups
 
-print_frontend: src/print_frontend.o src/backend_interface.o src/frontend_interface.o src/common_helper.o src/frontend_helper.o
-	gcc -o $@ $^ $(FLAGS)
+print_frontend: src/print_frontend.o src/libCPD.a
+	gcc -o $@ $^ $(FLAGS) -Lsrc -lCPD
 
 clean_gen:
 	rm -f src/backend_interface.* src/frontend_interface.*
 
 clean:
-	rm -f print_backend_cups print_frontend CUPS_src/*.o src/*.o
+	rm -f print_backend_cups print_frontend CUPS_src/*.o src/*.o src/*.a
 
 install:
 	./install.sh
