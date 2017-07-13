@@ -560,7 +560,7 @@ Option *get_NA_option()
     o->default_value = "NA";
     o->num_supported = 0;
     o->supported_values = new_cstring_array(1);
-    o->supported_values[0]="bub";
+    o->supported_values[0] = "bub";
 
     return o;
 }
@@ -634,6 +634,25 @@ const char *get_printer_state(PrinterCUPS *p)
         str = map->state[ippGetInteger(attr, 0)];
     }
     return str;
+}
+gboolean print_file(PrinterCUPS *p, char *file_path)
+{
+    ensure_printer_connection(p);
+    int num_options = 0;
+    cups_option_t *options;
+    /* Print a single file */
+    int job_id = 0;
+    num_options = cupsAddOption(CUPS_COPIES, "1", num_options, &options);
+    num_options = cupsAddOption(CUPS_ORIENTATION, "2", num_options, &options);
+    job_id = cupsPrintFile2(p->http, p->name, file_path, "testing", num_options, options);
+    if (job_id)
+    {
+        g_message("File printed!\n");
+        return TRUE;
+    }
+
+    g_message("Error printing file :(\n");
+    return FALSE;
 }
 /*********Mappings********/
 Mappings *get_new_Mappings()

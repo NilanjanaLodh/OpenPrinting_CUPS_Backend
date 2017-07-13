@@ -297,16 +297,24 @@ static gboolean on_handle_ping(PrintBackend *interface,
     const char *dialog_name = g_dbus_method_invocation_get_sender(invocation); /// potential risk
     PrinterCUPS *p = get_printer_by_name(b, dialog_name, printer_name);
     print_backend_complete_ping(interface, invocation);
-    Option *options;
-    int count = get_all_attributes(p, &options);
-    int i;
-    printf("PING***********************\n");
-    for (i = 0; i < count; i++)
-    {
-        print_option(&options[i]);
-    }
+    print_file(p, "./CUPS_src/print_backend_cups.c");
     return TRUE;
 }
+
+static gboolean on_handle_print_file(PrintBackend *interface,
+                                     GDBusMethodInvocation *invocation,
+                                     const gchar *printer_name,
+                                     const gchar *file_path,
+                                     gpointer user_data)
+{
+    const char *dialog_name = g_dbus_method_invocation_get_sender(invocation); /// potential risk
+    PrinterCUPS *p = get_printer_by_name(b, dialog_name, printer_name);
+    
+    gboolean status = print_file(p, file_path);
+    print_backend_complete_print_file(interface,invocation,status);
+    return TRUE;
+}
+
 static gboolean on_handle_get_all_attributes(PrintBackend *interface,
                                              GDBusMethodInvocation *invocation,
                                              const gchar *printer_name,
@@ -328,7 +336,7 @@ static gboolean on_handle_get_all_attributes(PrintBackend *interface,
     builder = g_variant_builder_new(G_VARIANT_TYPE("a(ssia(s))"));
 
     for (int i = 0; i < count; i++)
-    {        
+    {
         GVariant *tuple = pack_option(&options[i]);
         g_variant_builder_add_value(builder, tuple);
     }
@@ -482,6 +490,10 @@ void connect_to_signals()
                      "handle-get-default-printer",              //signal name
                      G_CALLBACK(on_handle_get_default_printer), //callback
                      NULL);
+    g_signal_connect(skeleton,                         //instance
+                     "handle-print-file",              //signal name
+                     G_CALLBACK(on_handle_print_file), //callback
+                     NULL);
     // g_signal_connect(skeleton,                                //instance
     //                  "handle-get-default-value",              //signal name
     //                  G_CALLBACK(on_handle_get_default_value), //callback
@@ -522,11 +534,6 @@ void connect_to_signals()
                      "handle-get-supported-color",              //signal name
                      G_CALLBACK(on_handle_get_supported_color), //callback
                      NULL);
-    // g_signal_connect(skeleton,                                    //instance
-    //                  "handle-get-supported-quality",              //signal name
-    //                  G_CALLBACK(on_handle_get_supported_quality), //callback
-    //                  NULL);
-
     g_signal_connect(skeleton,                                //instance
                      "handle-get-printer-state",              //signal name
                      G_CALLBACK(on_handle_get_printer_state), //callback
@@ -535,11 +542,6 @@ void connect_to_signals()
                      "handle-is-accepting-jobs",              //signal name
                      G_CALLBACK(on_handle_is_accepting_jobs), //callback
                      NULL);
-    // g_signal_connect(skeleton,                             //instance
-    //                  "handle-get-resolution",              //signal name
-    //                  G_CALLBACK(on_handle_get_resolution), //callback
-    //                  NULL);
-    // /**subscribe to signals **/
 
     g_dbus_connection_signal_subscribe(b->dbus_connection,
                                        NULL,                             //Sender name

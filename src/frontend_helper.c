@@ -234,6 +234,17 @@ char *get_default_color(PrinterObj *p)
 
     g_message("default color: %s", p->defaults.color);
 }
+
+gboolean _print_file(PrinterObj *p, char *file_path)
+{
+    gboolean success;
+    print_backend_call_print_file_sync(p->backend_proxy, p->name, file_path, &success, NULL, NULL);
+    if(success)
+        printf("File printed successfully.\n");
+    else
+        printf("Error printing file.\n");
+    return success;
+}
 /************************************************* FrontendObj********************************************/
 static void on_printer_added(GDBusConnection *connection,
                              const gchar *sender_name,
@@ -301,7 +312,7 @@ on_name_acquired(GDBusConnection *connection,
     g_assert_no_error(error);
     activate_backends(f);
 }
-FrontendObj *get_new_FrontendObj(char *instance_name, event_callback add_cb , event_callback rem_cb)
+FrontendObj *get_new_FrontendObj(char *instance_name, event_callback add_cb, event_callback rem_cb)
 {
     FrontendObj *f = malloc(sizeof(FrontendObj));
     f->skeleton = print_frontend_skeleton_new();
@@ -562,6 +573,12 @@ void pingtest(FrontendObj *f, gchar *printer_name)
     PrinterObj *p = g_hash_table_lookup(f->printer, printer_name);
     g_assert_nonnull(p);
     print_backend_call_ping_sync(p->backend_proxy, p->name, NULL, NULL);
+}
+gboolean print_file(FrontendObj *f, gchar *printer_name, gchar *file_path)
+{
+    PrinterObj *p = g_hash_table_lookup(f->printer, printer_name);
+    g_assert_nonnull(p);
+    return _print_file(p,file_path);
 }
 char *get_default_printer(FrontendObj *f, gchar *backend_name)
 {

@@ -52,7 +52,9 @@ void get_quality(PrinterObj *);              // to to
 void set_quality(PrinterObj *, gchar *);     //todo
 char *get_default_color(PrinterObj *);
 void set_color_mode(PrinterObj *, gchar *);
-void apply_settings(PrinterObj *);
+void apply_settings(PrinterObj *);//to do
+gboolean _print_file(PrinterObj *p , char *file_path);
+
 
 /**********FrontendObj definitions*******************************/
 typedef struct _FrontendObj FrontendObj;
@@ -89,7 +91,7 @@ void set_printer_quality(FrontendObj *, gchar *, gchar *); //todo
 char *get_printer_color_mode(FrontendObj *, gchar *);
 void set_printer_color_mode(FrontendObj *, gchar *, gchar *); //to do
 void apply_printer_settings(FrontendObj *, gchar *);
-void print_job(FrontendObj *, gchar *);
+gboolean print_file(FrontendObj *, gchar *, gchar *);
 void pingtest(FrontendObj *, gchar *);
 void get_printer_default_media(FrontendObj *, gchar *);
 char *get_default_printer(FrontendObj *, gchar *);

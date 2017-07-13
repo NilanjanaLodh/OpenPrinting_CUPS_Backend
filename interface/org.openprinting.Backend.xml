@@ -85,6 +85,11 @@
             <arg name="num_values" direction="out" type="i"/>
             <arg name="values" direction="out" type="a(s)" />
         </method>
+        <method name="printFile">
+            <arg name="printer_name" direction="in" type="s" />
+            <arg name="file_path_name" direction="in" type="s"/>
+            <arg name="result" direction="out" type="b" />
+        </method>
         <method name="ping">
             <arg name="printer_name" direction="in" type="s" />
         </method>

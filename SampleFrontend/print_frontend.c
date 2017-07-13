@@ -192,6 +192,12 @@ gpointer parse_commands(gpointer user_data)
             scanf("%s", backend_name);
             get_default_printer(f, backend_name);
         }
+        else if (strcmp(buf, "print-file") == 0)
+        {
+            char printer_name[100] , file_path[200];
+            scanf("%s%s", printer_name , file_path);
+            print_file(f,printer_name, file_path);
+        }
     }
 }
 
@@ -216,6 +222,7 @@ void display_help()
     printf("%s\n", "get-supported-resolution <printer name>");
     printf("%s\n", "get-default-color <printer name>");
     printf("%s\n", "get-supported-color <printer name>");
+    printf("print-file <printer-name> <file path>\n");
 
     printf("%s\n", "get-default-orientation <printer name>");
     // printf("%s\n","get-supported-quality <printer name>");

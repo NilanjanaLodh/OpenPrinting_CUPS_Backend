@@ -115,6 +115,8 @@ const char *get_default(PrinterCUPS *p, char *option_name);
 int get_supported(PrinterCUPS *p, char ***supported_values, const char *option_name);
 
 int get_all_attributes(PrinterCUPS *p, Option **options);
+
+gboolean print_file(PrinterCUPS *p, char *file_path);
 /**********Mapping related functions*****************/
 Mappings *get_new_Mappings();
 
