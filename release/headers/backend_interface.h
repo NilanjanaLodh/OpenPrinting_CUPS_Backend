@@ -170,6 +170,12 @@ struct _PrintBackendIface
     GDBusMethodInvocation *invocation,
     const gchar *arg_printer_name);
 
+  gboolean (*handle_print_file) (
+    PrintBackend *object,
+    GDBusMethodInvocation *invocation,
+    const gchar *arg_printer_name,
+    const gchar *arg_file_path_name);
+
   void (*printer_added) (
     PrintBackend *object,
     const gchar *arg_printer_name,
@@ -282,6 +288,11 @@ void print_backend_complete_get_supported_color (
     GDBusMethodInvocation *invocation,
     gint num_values,
     GVariant *values);
+
+void print_backend_complete_print_file (
+    PrintBackend *object,
+    GDBusMethodInvocation *invocation,
+    gboolean result);
 
 void print_backend_complete_ping (
     PrintBackend *object,
@@ -686,6 +697,28 @@ gboolean print_backend_call_get_supported_color_sync (
     const gchar *arg_printer_name,
     gint *out_num_values,
     GVariant **out_values,
+    GCancellable *cancellable,
+    GError **error);
+
+void print_backend_call_print_file (
+    PrintBackend *proxy,
+    const gchar *arg_printer_name,
+    const gchar *arg_file_path_name,
+    GCancellable *cancellable,
+    GAsyncReadyCallback callback,
+    gpointer user_data);
+
+gboolean print_backend_call_print_file_finish (
+    PrintBackend *proxy,
+    gboolean *out_result,
+    GAsyncResult *res,
+    GError **error);
+
+gboolean print_backend_call_print_file_sync (
+    PrintBackend *proxy,
+    const gchar *arg_printer_name,
+    const gchar *arg_file_path_name,
+    gboolean *out_result,
     GCancellable *cancellable,
     GError **error);
 
