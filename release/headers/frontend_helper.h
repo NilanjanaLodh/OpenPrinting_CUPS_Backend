@@ -23,6 +23,9 @@ typedef struct _PrinterCapabilities PrinterCapabilities;
 /**********PrinterObj definitions*******************************/
 // Don't use these functions directly use the Fr
 typedef struct _PrinterObj PrinterObj;
+
+typedef int (*event_callback)(void *);
+
 PrinterObj *get_new_PrinterObj();
 void fill_basic_options(PrinterObj *, GVariant *);
 void print_basic_options(PrinterObj *);
@@ -54,7 +57,7 @@ void apply_settings(PrinterObj *);
 /**********FrontendObj definitions*******************************/
 typedef struct _FrontendObj FrontendObj;
 
-FrontendObj *get_new_FrontendObj(char *instance_name);
+FrontendObj *get_new_FrontendObj(char *instance_name, event_callback add_cb , event_callback remove_cb);
 void connect_to_dbus(FrontendObj *);
 void disconnect_from_dbus(FrontendObj *);
 void activate_backends(FrontendObj *);
@@ -160,6 +163,8 @@ struct _FrontendObj
 {
     PrintFrontend *skeleton;
     char *bus_name;
+    event_callback add_cb;
+    event_callback rem_cb;
 
     int num_backends;
     GHashTable *backend;

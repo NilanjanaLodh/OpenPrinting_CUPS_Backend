@@ -248,6 +248,7 @@ static void on_printer_added(GDBusConnection *connection,
     fill_basic_options(p, parameters);
     add_printer(f, p, sender_name, object_path);
     print_basic_options(p);
+    f->add_cb(p);
 }
 static void on_printer_removed(GDBusConnection *connection,
                                const gchar *sender_name,
@@ -262,6 +263,7 @@ static void on_printer_removed(GDBusConnection *connection,
     g_variant_get(parameters, "(s)", &printer_name);
     remove_printer(f, printer_name);
     g_message("Removed Printer %s!\n", printer_name);
+    f->rem_cb(printer_name);
 }
 static void
 on_name_acquired(GDBusConnection *connection,
@@ -299,7 +301,7 @@ on_name_acquired(GDBusConnection *connection,
     g_assert_no_error(error);
     activate_backends(f);
 }
-FrontendObj *get_new_FrontendObj(char *instance_name)
+FrontendObj *get_new_FrontendObj(char *instance_name, event_callback add_cb , event_callback rem_cb)
 {
     FrontendObj *f = malloc(sizeof(FrontendObj));
     f->skeleton = print_frontend_skeleton_new();
@@ -311,6 +313,8 @@ FrontendObj *get_new_FrontendObj(char *instance_name)
         sprintf(tmp, "%s%s", DIALOG_BUS_NAME, instance_name);
         f->bus_name = get_string_copy(tmp);
     }
+    f->add_cb = add_cb;
+    f->rem_cb = rem_cb;
     f->num_backends = 0;
     f->backend = g_hash_table_new(g_str_hash, g_str_equal);
     f->num_printers = 0;

@@ -1,6 +1,13 @@
 #ifndef _COMMON_HELPER_H_
 #define _COMMON_HELPER_H_
 
+#include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
+#include <glib.h>
+#include "backend_interface.h"
+#include "frontend_interface.h"
+
 #define PRINTER_ADDED_ARGS "(sssssbs)"
 #define new_cstring_array(x) ((char **)(malloc(sizeof(char *) * x)))
 

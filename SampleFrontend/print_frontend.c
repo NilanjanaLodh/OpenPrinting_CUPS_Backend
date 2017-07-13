@@ -8,14 +8,28 @@
 void display_help();
 gpointer parse_commands(gpointer user_data);
 FrontendObj *f;
+
+static int add_printer_callback(PrinterObj *p)
+{
+    printf("print_frontend.c : Printer %s added!\n", p->name);
+}
+
+static int remove_printer_callback(char *printer_name)
+{
+    printf("print_frontend.c : Printer %s removed!\n", printer_name);
+}
+
 int main(int argc, char **argv)
 {
+    event_callback add_cb = (event_callback)add_printer_callback;
+    event_callback rem_cb = (event_callback)remove_printer_callback;
+
     char *dialog_bus_name = malloc(300);
     if (argc > 1) //this is for creating multiple instances of a dialog simultaneously
-        f = get_new_FrontendObj(argv[1]);
+        f = get_new_FrontendObj(argv[1], add_cb, rem_cb);
     else
-        f = get_new_FrontendObj(NULL);
-    
+        f = get_new_FrontendObj(NULL, add_cb, rem_cb);
+
     g_thread_new("parse_commands_thread", parse_commands, NULL);
     connect_to_dbus(f);
     GMainLoop *loop = g_main_loop_new(NULL, FALSE);
@@ -55,12 +69,12 @@ gpointer parse_commands(gpointer user_data)
         }
         else if (strcmp(buf, "hide-temporary-cups") == 0)
         {
-            hide_temporary_cups_printers(f);            
+            hide_temporary_cups_printers(f);
             g_message("Hiding remote printers discovered by the cups backend..\n");
         }
         else if (strcmp(buf, "unhide-temporary-cups") == 0)
         {
-            unhide_temporary_cups_printers(f);            
+            unhide_temporary_cups_printers(f);
             g_message("Unhiding remote printers discovered by the cups backend..\n");
         }
         else if (strcmp(buf, "update-basic") == 0)
