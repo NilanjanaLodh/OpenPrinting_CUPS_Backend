@@ -239,7 +239,7 @@ gboolean _print_file(PrinterObj *p, char *file_path)
 {
     gboolean success;
     print_backend_call_print_file_sync(p->backend_proxy, p->name, file_path, &success, NULL, NULL);
-    if(success)
+    if (success)
         printf("File printed successfully.\n");
     else
         printf("Error printing file.\n");
@@ -578,7 +578,7 @@ gboolean print_file(FrontendObj *f, gchar *printer_name, gchar *file_path)
 {
     PrinterObj *p = g_hash_table_lookup(f->printer, printer_name);
     g_assert_nonnull(p);
-    return _print_file(p,file_path);
+    return _print_file(p, get_absolute_path(file_path));
 }
 char *get_default_printer(FrontendObj *f, gchar *backend_name)
 {

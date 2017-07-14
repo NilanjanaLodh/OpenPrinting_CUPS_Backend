@@ -2,6 +2,7 @@
 #define _COMMON_HELPER_H_
 
 #include <stdio.h>
+#include <unistd.h>
 #include <string.h>
 #include <stdlib.h>
 #include <glib.h>
@@ -72,5 +73,5 @@ void unpack_string_array(GVariant *variant, int num_val, char ***val);
 void unpack_option_array(GVariant *var, int num_options, Option **options);
 GVariant *pack_string_array(int num_val, char **val);
 GVariant *pack_option(const Option *opt);
-
+char *get_absolute_path(char *file_path);
 #endif

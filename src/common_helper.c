@@ -107,6 +107,20 @@ GVariant *pack_option(const Option *opt)
     return tuple_variant;
 }
 
+char *get_absolute_path(char *file_path)
+{
+    if(!file_path)
+        return NULL;
+    
+    if(file_path[0]=='/')
+        return file_path;
+    
+    char fp[1024],cwd[512];
+    getcwd(cwd, sizeof(cwd));
+    sprintf(fp,"%s/%s", cwd, file_path);
+    printf("%s\n", fp);
+    return get_string_copy(fp);
+}
 /**************Option************************************/
 void print_option(const Option *opt)
 {
