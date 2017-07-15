@@ -6,6 +6,8 @@
 #include <string.h>
 #include <stdlib.h>
 #include <glib.h>
+#include <sys/types.h>
+#include <pwd.h>
 #include "backend_interface.h"
 #include "frontend_interface.h"
 

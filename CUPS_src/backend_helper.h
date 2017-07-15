@@ -117,6 +117,8 @@ int get_supported(PrinterCUPS *p, char ***supported_values, const char *option_n
 int get_all_attributes(PrinterCUPS *p, Option **options);
 
 gboolean print_file(PrinterCUPS *p, char *file_path);
+
+int get_active_jobs_count(PrinterCUPS *p);
 /**********Mapping related functions*****************/
 Mappings *get_new_Mappings();
 

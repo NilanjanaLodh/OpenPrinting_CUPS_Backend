@@ -90,6 +90,10 @@
             <arg name="file_path_name" direction="in" type="s"/>
             <arg name="result" direction="out" type="b" />
         </method>
+        <method name="getActiveJobsCount">
+            <arg name="printer_name" direction="in" type="s"/>
+            <arg name="job_count" direction="out" type="i"/>
+        </method>
         <method name="ping">
             <arg name="printer_name" direction="in" type="s" />
         </method>

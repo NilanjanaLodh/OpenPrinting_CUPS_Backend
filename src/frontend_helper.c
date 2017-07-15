@@ -245,6 +245,13 @@ gboolean _print_file(PrinterObj *p, char *file_path)
         printf("Error printing file.\n");
     return success;
 }
+int _get_active_jobs_count(PrinterObj *p)
+{
+    int count;
+    print_backend_call_get_active_jobs_count_sync(p->backend_proxy , p->name , &count , NULL , NULL);
+    printf("%d jobs currently active.\n", count);
+    return count;
+}
 /************************************************* FrontendObj********************************************/
 static void on_printer_added(GDBusConnection *connection,
                              const gchar *sender_name,
@@ -592,4 +599,11 @@ char *get_default_printer(FrontendObj *f, gchar *backend_name)
     print_backend_call_get_default_printer_sync(proxy, &def, NULL, NULL);
     printf("%s\n", def);
     return def;
+}
+int get_active_jobs_count(FrontendObj *f, gchar *printer_name)
+{
+    PrinterObj *p = g_hash_table_lookup(f->printer, printer_name);
+    g_assert_nonnull(p);
+
+    return _get_active_jobs_count(p);
 }

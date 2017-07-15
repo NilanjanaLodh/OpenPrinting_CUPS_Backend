@@ -297,7 +297,7 @@ static gboolean on_handle_ping(PrintBackend *interface,
     const char *dialog_name = g_dbus_method_invocation_get_sender(invocation); /// potential risk
     PrinterCUPS *p = get_printer_by_name(b, dialog_name, printer_name);
     print_backend_complete_ping(interface, invocation);
-    print_file(p, "./CUPS_src/print_backend_cups.c");
+    printf("%d\n", get_active_jobs_count(p));
     return TRUE;
 }
 
@@ -309,9 +309,9 @@ static gboolean on_handle_print_file(PrintBackend *interface,
 {
     const char *dialog_name = g_dbus_method_invocation_get_sender(invocation); /// potential risk
     PrinterCUPS *p = get_printer_by_name(b, dialog_name, printer_name);
-    
+
     gboolean status = print_file(p, file_path);
-    print_backend_complete_print_file(interface,invocation,status);
+    print_backend_complete_print_file(interface, invocation, status);
     return TRUE;
 }
 
@@ -346,7 +346,16 @@ static gboolean on_handle_get_all_attributes(PrintBackend *interface,
     print_backend_complete_get_all_attributes(interface, invocation, count, variant);
     return TRUE;
 }
-
+static gboolean on_handle_get_active_jobs_count(PrintBackend *interface,
+                                                GDBusMethodInvocation *invocation,
+                                                const gchar *printer_name,
+                                                gpointer user_data)
+{
+    const char *dialog_name = g_dbus_method_invocation_get_sender(invocation); /// potential risk
+    PrinterCUPS *p = get_printer_by_name(b, dialog_name, printer_name);
+    print_backend_complete_get_active_jobs_count(interface , invocation, get_active_jobs_count(p));
+    return TRUE;
+}
 static gboolean on_handle_get_default_media(PrintBackend *interface,
                                             GDBusMethodInvocation *invocation,
                                             const gchar *printer_name,
@@ -542,7 +551,10 @@ void connect_to_signals()
                      "handle-is-accepting-jobs",              //signal name
                      G_CALLBACK(on_handle_is_accepting_jobs), //callback
                      NULL);
-
+    g_signal_connect(skeleton,                                    //instance
+                     "handle-get-active-jobs-count",              //signal name
+                     G_CALLBACK(on_handle_get_active_jobs_count), //callback
+                     NULL);
     g_dbus_connection_signal_subscribe(b->dbus_connection,
                                        NULL,                             //Sender name
                                        "org.openprinting.PrintFrontend", //Sender interface

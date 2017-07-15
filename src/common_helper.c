@@ -1,6 +1,5 @@
 #include "common_helper.h"
 
-
 gboolean get_boolean(const char *g)
 {
     if (!g)
@@ -66,7 +65,7 @@ void unpack_option_array(GVariant *var, int num_options, Option **options)
         opt[i].default_value = get_string_copy(default_val);
         opt[i].num_supported = num_sup;
         opt[i].supported_values = new_cstring_array(num_sup);
-        for (j = 0; j < num_sup ; j++)
+        for (j = 0; j < num_sup; j++)
         {
             g_variant_iter_loop(array_iter, "(s)", &str);
             opt[i].supported_values[j] = get_string_copy(str); //mem
@@ -109,15 +108,24 @@ GVariant *pack_option(const Option *opt)
 
 char *get_absolute_path(char *file_path)
 {
-    if(!file_path)
+    if (!file_path)
         return NULL;
-    
-    if(file_path[0]=='/')
+
+    if (file_path[0] == '/')
         return file_path;
-    
-    char fp[1024],cwd[512];
+
+    if (file_path[0] == '~')
+    {
+        struct passwd *passwdEnt = getpwuid(getuid());
+        char *home = passwdEnt->pw_dir;
+        char fp[1024] , suffix[512];
+        strcpy(suffix,file_path+2);
+        sprintf(fp,"%s/%s", home,suffix);
+        return get_string_copy(fp);
+    }
+    char fp[1024], cwd[512];
     getcwd(cwd, sizeof(cwd));
-    sprintf(fp,"%s/%s", cwd, file_path);
+    sprintf(fp, "%s/%s", cwd, file_path);
     printf("%s\n", fp);
     return get_string_copy(fp);
 }

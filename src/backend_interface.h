@@ -69,6 +69,11 @@ struct _PrintBackendIface
     gint arg_x_res,
     gint arg_y_res);
 
+  gboolean (*handle_get_active_jobs_count) (
+    PrintBackend *object,
+    GDBusMethodInvocation *invocation,
+    const gchar *arg_printer_name);
+
   gboolean (*handle_get_all_attributes) (
     PrintBackend *object,
     GDBusMethodInvocation *invocation,
@@ -293,6 +298,11 @@ void print_backend_complete_print_file (
     PrintBackend *object,
     GDBusMethodInvocation *invocation,
     gboolean result);
+
+void print_backend_complete_get_active_jobs_count (
+    PrintBackend *object,
+    GDBusMethodInvocation *invocation,
+    gint job_count);
 
 void print_backend_complete_ping (
     PrintBackend *object,
@@ -719,6 +729,26 @@ gboolean print_backend_call_print_file_sync (
     const gchar *arg_printer_name,
     const gchar *arg_file_path_name,
     gboolean *out_result,
+    GCancellable *cancellable,
+    GError **error);
+
+void print_backend_call_get_active_jobs_count (
+    PrintBackend *proxy,
+    const gchar *arg_printer_name,
+    GCancellable *cancellable,
+    GAsyncReadyCallback callback,
+    gpointer user_data);
+
+gboolean print_backend_call_get_active_jobs_count_finish (
+    PrintBackend *proxy,
+    gint *out_job_count,
+    GAsyncResult *res,
+    GError **error);
+
+gboolean print_backend_call_get_active_jobs_count_sync (
+    PrintBackend *proxy,
+    const gchar *arg_printer_name,
+    gint *out_job_count,
     GCancellable *cancellable,
     GError **error);
 

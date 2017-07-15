@@ -654,6 +654,14 @@ gboolean print_file(PrinterCUPS *p, char *file_path)
     g_message("Error printing file :(\n");
     return FALSE;
 }
+int get_active_jobs_count(PrinterCUPS *p)
+{
+    ensure_printer_connection(p);
+    cups_job_t *jobs;
+    int num_jobs=  cupsGetJobs2(p->http, &jobs, p->name, 0, CUPS_WHICHJOBS_ACTIVE);
+    cupsFreeJobs(num_jobs, jobs);
+    return num_jobs;
+}
 /*********Mappings********/
 Mappings *get_new_Mappings()
 {

@@ -198,6 +198,12 @@ gpointer parse_commands(gpointer user_data)
             scanf("%s%s", printer_name , file_path);
             print_file(f,printer_name, file_path);
         }
+        else if (strcmp(buf, "get-active-jobs-count") == 0)
+        {
+            char printer_name[100];
+            scanf("%s", printer_name);
+            get_active_jobs_count(f, printer_name);
+        }
     }
 }
 
@@ -212,6 +218,7 @@ void display_help()
     printf("%s\n", "hide-temporary-cups");
     printf("%s\n", "unhide-temporary-cups");
     printf("%s\n", "get-capabilities <printer name>");
+    printf("get-all-options <printer-name>\n");
     printf("%s\n", "ping <printer name>");
     printf("%s\n", "get-default-printer <backend name>");
     // printf("%s\n","get-option-default <printer name> <option name>");
@@ -223,6 +230,7 @@ void display_help()
     printf("%s\n", "get-default-color <printer name>");
     printf("%s\n", "get-supported-color <printer name>");
     printf("print-file <printer-name> <file path>\n");
+    printf("get-active-jobs-count <printer-name>\n");
 
     printf("%s\n", "get-default-orientation <printer name>");
     // printf("%s\n","get-supported-quality <printer name>");

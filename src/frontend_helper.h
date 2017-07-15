@@ -54,6 +54,7 @@ char *get_default_color(PrinterObj *);
 void set_color_mode(PrinterObj *, gchar *);
 void apply_settings(PrinterObj *);//to do
 gboolean _print_file(PrinterObj *p , char *file_path);
+int _get_active_jobs_count(PrinterObj *);
 
 
 /**********FrontendObj definitions*******************************/
@@ -95,6 +96,7 @@ gboolean print_file(FrontendObj *, gchar *, gchar *);
 void pingtest(FrontendObj *, gchar *);
 void get_printer_default_media(FrontendObj *, gchar *);
 char *get_default_printer(FrontendObj *, gchar *);
+int get_active_jobs_count(FrontendObj *, gchar *);
 
 /***************************************************************/
 PrintBackend *create_backend_from_file( const char *);
