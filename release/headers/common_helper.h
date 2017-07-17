@@ -21,6 +21,17 @@ typedef struct _Option
     char **supported_values;
     char *default_value;
 } Option;
+
+typedef struct _Job
+{
+    int job_id;
+    char *title;
+    char *printer;
+    char *user;
+    char *state;
+    char *submitted_at;
+    int size;
+} Job;
 /*********Option related functions*****************/
 void print_option(const Option *opt);
 
@@ -69,10 +80,20 @@ void print_option(const Option *opt);
 #define UNHIDE_REMOTE_CUPS_SIGNAL "UnhideRemotePrintersCUPS"
 #define HIDE_TEMP_CUPS_SIGNAL "HideTemporaryPrintersCUPS"
 #define UNHIDE_TEMP_CUPS_SIGNAL "UnhideTemporaryPrintersCUPS"
+
+#define JOB_STATE_ABORTED "Aborted"
+#define JOB_STATE_CANCELLED "Cancelled"
+#define JOB_STATE_COMPLETED "Completed"
+#define JOB_STATE_HELD "Held"
+#define JOB_STATE_PENDING "Pending" 
+#define JOB_STATE_PRINTING "Printing"
+#define JOB_STATE_STOPPED "Stopped"
+
 gboolean get_boolean(const char *);
 char *get_string_copy(const char *);
 void unpack_string_array(GVariant *variant, int num_val, char ***val);
 void unpack_option_array(GVariant *var, int num_options, Option **options);
+void unpack_job_array(GVariant *var, int num_jobs, Job *jobs);
 GVariant *pack_string_array(int num_val, char **val);
 GVariant *pack_option(const Option *opt);
 char *get_absolute_path(char *file_path);

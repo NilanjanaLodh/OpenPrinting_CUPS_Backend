@@ -97,6 +97,7 @@ void pingtest(FrontendObj *, gchar *);
 void get_printer_default_media(FrontendObj *, gchar *);
 char *get_default_printer(FrontendObj *, gchar *);
 int get_active_jobs_count(FrontendObj *, gchar *);
+int get_all_jobs(FrontendObj *, Job **j, gboolean active_only);
 
 /***************************************************************/
 PrintBackend *create_backend_from_file( const char *);
