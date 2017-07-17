@@ -248,7 +248,7 @@ gboolean _print_file(PrinterObj *p, char *file_path)
 int _get_active_jobs_count(PrinterObj *p)
 {
     int count;
-    print_backend_call_get_active_jobs_count_sync(p->backend_proxy , p->name , &count , NULL , NULL);
+    print_backend_call_get_active_jobs_count_sync(p->backend_proxy, p->name, &count, NULL, NULL);
     printf("%d jobs currently active.\n", count);
     return count;
 }
@@ -606,4 +606,39 @@ int get_active_jobs_count(FrontendObj *f, gchar *printer_name)
     g_assert_nonnull(p);
 
     return _get_active_jobs_count(p);
+}
+
+int get_all_jobs(FrontendObj *f, Job **j, gboolean active_only)
+{
+    GHashTableIter iter;
+    gpointer key, value;
+
+    int num_jobs[f->num_backends];
+    GVariant *var[f->num_backends];
+    g_hash_table_iter_init(&iter, f->backend);
+
+    int i = 0;
+    int total_jobs = 0;
+    while (g_hash_table_iter_next(&iter, &key, &value))
+    {
+        /** Polling all the backends for their active jobs**/
+        PrintBackend *proxy = (PrintBackend *)value;
+        if (active_only)
+            print_backend_call_get_all_active_jobs_sync(proxy, &(num_jobs[i]), &(var[i]), NULL, NULL);
+        else
+            print_backend_call_get_all_jobs_sync(proxy, &(num_jobs[i]), &(var[i]), NULL, NULL);
+        
+        printf("%d jobs\n", num_jobs[i]);
+        total_jobs += num_jobs[i];
+    }
+    Job *jobs = g_new(Job, total_jobs);
+    int n = 0;
+    for (i = 0; i < f->num_backends; i++)
+    {
+        unpack_job_array(var[i], num_jobs[i], jobs + n);
+        n += num_jobs[i];
+    }
+
+    *j = jobs;
+    return total_jobs;
 }

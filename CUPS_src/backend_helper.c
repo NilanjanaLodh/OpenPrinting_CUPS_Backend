@@ -322,7 +322,57 @@ cups_dest_t *get_dest_by_name(BackendObj *b, const char *dialog_name, const char
     }
     return p->dest;
 }
+GVariant *get_all_jobs(BackendObj *b, char *dialog_name, int *num_jobs, gboolean active_only)
+{
+    int CUPS_JOB_FLAG;
+    if(active_only)
+        CUPS_JOB_FLAG = CUPS_WHICHJOBS_ACTIVE;
+    else
+        CUPS_JOB_FLAG = CUPS_WHICHJOBS_ALL;
+    
+    GHashTable *printers = get_dialog_printers(b, dialog_name);
 
+    GVariantBuilder *builder;
+    GVariant *variant;
+    builder = g_variant_builder_new(G_VARIANT_TYPE("a(isssssi)"));
+
+    GHashTableIter iter;
+    gpointer key, value;
+    g_hash_table_iter_init(&iter, printers);
+
+    int ncurr=0;
+    int n = 0;
+
+    int num_printers = g_hash_table_size(printers);
+    cups_job_t **jobs = g_new(cups_job_t *, num_printers);
+
+    int i_printer = 0;
+    while (g_hash_table_iter_next(&iter, &key, &value))
+    {
+        /** iterate over all the printers of this dialog **/
+        PrinterCUPS *p = (PrinterCUPS *)value;
+        ensure_printer_connection(p);
+        printf(" .. %s ..", p->name);
+        ncurr = cupsGetJobs2(p->http, &(jobs[i_printer]), p->name, 0, CUPS_JOB_FLAG); //change later
+        printf("%d\n", ncurr);
+        n += ncurr;
+
+        for (int i = 0; i < ncurr; i++)
+        {
+            printf("i = %d\n", i);
+            printf("%d %s\n", jobs[i_printer][i].id, jobs[i_printer][i].title);
+
+            g_variant_builder_add_value(builder, pack_cups_job(jobs[i_printer][i]));
+        }
+        cupsFreeJobs(ncurr, jobs[i_printer]);
+        i_printer++;
+    }
+    free(jobs);
+
+    *num_jobs = n;
+    variant = g_variant_new("a(isssssi)", builder);
+    return variant;
+}
 /***************************PrinterObj********************************/
 PrinterCUPS *get_new_PrinterCUPS(cups_dest_t *dest)
 {
@@ -658,9 +708,19 @@ int get_active_jobs_count(PrinterCUPS *p)
 {
     ensure_printer_connection(p);
     cups_job_t *jobs;
-    int num_jobs=  cupsGetJobs2(p->http, &jobs, p->name, 0, CUPS_WHICHJOBS_ACTIVE);
+    int num_jobs = cupsGetJobs2(p->http, &jobs, p->name, 0, CUPS_WHICHJOBS_ACTIVE);
     cupsFreeJobs(num_jobs, jobs);
     return num_jobs;
+}
+void printAllJobs(PrinterCUPS *p)
+{
+    ensure_printer_connection(p);
+    cups_job_t *jobs;
+    int num_jobs = cupsGetJobs2(p->http, &jobs, p->name, 1, CUPS_WHICHJOBS_ALL);
+    for (int i = 0; i < num_jobs; i++)
+    {
+        print_job(&jobs[i]);
+    }
 }
 /*********Mappings********/
 Mappings *get_new_Mappings()
@@ -892,4 +952,49 @@ char *extract_media_from_ipp(ipp_attribute_t *attr, int index, PrinterCUPS *p)
                                       p->dinfo, 0,
                                       &size);
     return str;
+}
+void print_job(cups_job_t *j)
+{
+    printf("title : %s\n", j->title);
+    printf("dest : %s\n", j->dest);
+    printf("job-id : %d\n", j->id);
+    printf("user : %s\n", j->user);
+
+    char *state = translate_job_state(j->state);
+    printf("state : %s\n", state);
+}
+char *translate_job_state(ipp_jstate_t state)
+{
+    switch (state)
+    {
+    case IPP_JSTATE_ABORTED:
+        return JOB_STATE_ABORTED;
+    case IPP_JSTATE_CANCELED:
+        return JOB_STATE_CANCELLED;
+    case IPP_JSTATE_HELD:
+        return JOB_STATE_HELD;
+    case IPP_JSTATE_PENDING:
+        return JOB_STATE_PENDING;
+    case IPP_JSTATE_PROCESSING:
+        return JOB_STATE_PRINTING;
+    case IPP_JSTATE_STOPPED:
+        return JOB_STATE_STOPPED;
+    case IPP_JSTATE_COMPLETED:
+        return JOB_STATE_COMPLETED;
+    }
+}
+GVariant *pack_cups_job(cups_job_t job)
+{
+    printf("%s\n", job.dest);
+    GVariant **t = g_new(GVariant *, 7);
+    t[0] = g_variant_new_int32(job.id);
+    t[1] = g_variant_new_string(job.title);
+    t[2] = g_variant_new_string(job.dest);
+    t[3] = g_variant_new_string(job.user);
+    t[4] = g_variant_new_string(translate_job_state(job.state));
+    t[5] = g_variant_new_string(httpGetDateString(job.creation_time));
+    t[6] = g_variant_new_int32(job.size);
+    GVariant *tuple_variant = g_variant_new_tuple(t, 7);
+    g_free(t);
+    return tuple_variant;
 }

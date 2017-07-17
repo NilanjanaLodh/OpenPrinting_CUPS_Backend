@@ -118,9 +118,9 @@ char *get_absolute_path(char *file_path)
     {
         struct passwd *passwdEnt = getpwuid(getuid());
         char *home = passwdEnt->pw_dir;
-        char fp[1024] , suffix[512];
-        strcpy(suffix,file_path+2);
-        sprintf(fp,"%s/%s", home,suffix);
+        char fp[1024], suffix[512];
+        strcpy(suffix, file_path + 2);
+        sprintf(fp, "%s/%s", home, suffix);
         return get_string_copy(fp);
     }
     char fp[1024], cwd[512];
@@ -128,6 +128,28 @@ char *get_absolute_path(char *file_path)
     sprintf(fp, "%s/%s", cwd, file_path);
     printf("%s\n", fp);
     return get_string_copy(fp);
+}
+void unpack_job_array(GVariant *var, int num_jobs, Job *jobs)
+{
+    int i;
+    char *str;
+    GVariantIter *iter;
+    g_variant_get(var, "a(isssssi)", &iter);
+    int jobid, size;
+    char *title, *printer, *user, *state, *submit_time;
+    for (i = 0; i < num_jobs ; i++)
+    {
+        g_variant_iter_loop(iter, "(isssssi)", &jobid, &title, &printer , &user, &state, &submit_time , &size);
+        jobs[i].job_id = jobid;
+        jobs[i].title = get_string_copy(title);
+        jobs[i].printer = get_string_copy(printer);
+        jobs[i].user = get_string_copy(user);
+        jobs[i].state = get_string_copy(state);
+        jobs[i].submitted_at = get_string_copy(submit_time);
+        jobs[i].size = size;
+
+        printf("Printer %s ; state %s \n",printer, state);
+    }
 }
 /**************Option************************************/
 void print_option(const Option *opt)

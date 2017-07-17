@@ -89,7 +89,7 @@ void refresh_printer_list(BackendObj *b, char *dialog_name);
 GHashTable *get_dialog_printers(BackendObj *b, const char *dialog_name);
 cups_dest_t *get_dest_by_name(BackendObj *b, const char *dialog_name, const char *printer_name);
 PrinterCUPS *get_printer_by_name(BackendObj *b, const char *dialog_name, const char *printer_name);
-
+GVariant *get_all_jobs(BackendObj *b, char *dialog_name, int *num_jobs, gboolean active_only);
 /*********Printer related functions******************/
 PrinterCUPS *get_new_PrinterCUPS(cups_dest_t *dest);
 gboolean ensure_printer_connection(PrinterCUPS *p);
@@ -139,5 +139,7 @@ char *extract_string_from_ipp(ipp_attribute_t *attr, int index);
 char *extract_orientation_from_ipp(ipp_attribute_t *attr, int index);
 char *extract_quality_from_ipp(ipp_attribute_t *attr, int index);
 char *extract_media_from_ipp(ipp_attribute_t *attr, int index , PrinterCUPS *p);
-
+void print_job(cups_job_t *j);
+GVariant *pack_cups_job(cups_job_t job);
+char* translate_job_state(ipp_jstate_t );
 #endif

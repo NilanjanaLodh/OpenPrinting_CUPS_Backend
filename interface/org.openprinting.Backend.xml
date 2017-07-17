@@ -94,6 +94,17 @@
             <arg name="printer_name" direction="in" type="s"/>
             <arg name="job_count" direction="out" type="i"/>
         </method>
+        <method name="getAllActiveJobs">
+            <arg name="num_jobs" direction="out" type="i"/>
+            <arg name="jobs" direction="out" type="a(isssssi)"/>
+            <!--job contents: job-id , title, printer, user, state , submitted at , size -->
+        </method>
+        <method name="getAllJobs">
+            <arg name="num_jobs" direction="out" type="i"/>
+            <arg name="jobs" direction="out" type="a(isssssi)"/>
+
+            <!--job contents: job-id , title, printer, user, state , submitted at , size -->
+        </method>
         <method name="ping">
             <arg name="printer_name" direction="in" type="s" />
         </method>

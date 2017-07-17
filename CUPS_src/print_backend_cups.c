@@ -297,7 +297,7 @@ static gboolean on_handle_ping(PrintBackend *interface,
     const char *dialog_name = g_dbus_method_invocation_get_sender(invocation); /// potential risk
     PrinterCUPS *p = get_printer_by_name(b, dialog_name, printer_name);
     print_backend_complete_ping(interface, invocation);
-    printf("%d\n", get_active_jobs_count(p));
+    printAllJobs(p);
     return TRUE;
 }
 
@@ -346,6 +346,7 @@ static gboolean on_handle_get_all_attributes(PrintBackend *interface,
     print_backend_complete_get_all_attributes(interface, invocation, count, variant);
     return TRUE;
 }
+
 static gboolean on_handle_get_active_jobs_count(PrintBackend *interface,
                                                 GDBusMethodInvocation *invocation,
                                                 const gchar *printer_name,
@@ -353,7 +354,28 @@ static gboolean on_handle_get_active_jobs_count(PrintBackend *interface,
 {
     const char *dialog_name = g_dbus_method_invocation_get_sender(invocation); /// potential risk
     PrinterCUPS *p = get_printer_by_name(b, dialog_name, printer_name);
-    print_backend_complete_get_active_jobs_count(interface , invocation, get_active_jobs_count(p));
+    print_backend_complete_get_active_jobs_count(interface, invocation, get_active_jobs_count(p));
+    return TRUE;
+}
+static gboolean on_handle_get_all_active_jobs(PrintBackend *interface,
+                                              GDBusMethodInvocation *invocation,
+                                              gpointer user_data)
+{
+    const char *dialog_name = g_dbus_method_invocation_get_sender(invocation); /// potential risk
+    int n;
+    GVariant *variant = get_all_jobs(b, dialog_name, &n, TRUE);
+    printf("n = %d\n",n);
+    print_backend_complete_get_all_active_jobs(interface, invocation, n, variant);
+    return TRUE;
+}
+static gboolean on_handle_get_all_jobs(PrintBackend *interface,
+                                       GDBusMethodInvocation *invocation,
+                                       gpointer user_data)
+{
+    const char *dialog_name = g_dbus_method_invocation_get_sender(invocation); /// potential risk
+    int n;
+    GVariant *variant = get_all_jobs(b, dialog_name, &n, FALSE);
+    print_backend_complete_get_all_jobs(interface, invocation, n, variant);
     return TRUE;
 }
 static gboolean on_handle_get_default_media(PrintBackend *interface,
@@ -554,6 +576,20 @@ void connect_to_signals()
     g_signal_connect(skeleton,                                    //instance
                      "handle-get-active-jobs-count",              //signal name
                      G_CALLBACK(on_handle_get_active_jobs_count), //callback
+                     NULL);
+
+    g_signal_connect(skeleton,                                  //instance
+                     "handle-get-all-active-jobs",              //signal name
+                     G_CALLBACK(on_handle_get_all_active_jobs), //callback
+                     NULL);
+
+    g_signal_connect(skeleton,                                  //instance
+                     "handle-get-all-active-jobs",              //signal name
+                     G_CALLBACK(on_handle_get_all_active_jobs), //callback
+                     NULL);
+    g_signal_connect(skeleton,                           //instance
+                     "handle-get-all-jobs",              //signal name
+                     G_CALLBACK(on_handle_get_all_jobs), //callback
                      NULL);
     g_dbus_connection_signal_subscribe(b->dbus_connection,
                                        NULL,                             //Sender name

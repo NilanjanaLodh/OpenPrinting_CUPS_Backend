@@ -194,15 +194,27 @@ gpointer parse_commands(gpointer user_data)
         }
         else if (strcmp(buf, "print-file") == 0)
         {
-            char printer_name[100] , file_path[200];
-            scanf("%s%s", printer_name , file_path);
-            print_file(f,printer_name, file_path);
+            char printer_name[100], file_path[200];
+            scanf("%s%s", printer_name, file_path);
+            print_file(f, printer_name, file_path);
         }
         else if (strcmp(buf, "get-active-jobs-count") == 0)
         {
             char printer_name[100];
             scanf("%s", printer_name);
             get_active_jobs_count(f, printer_name);
+        }
+        else if (strcmp(buf, "get-all-jobs") == 0)
+        {
+            int active_only;
+            scanf("%d", &active_only);
+            Job *j;
+            int x = get_all_jobs(f, &j, active_only);
+            int i;
+            for(i=0;i<x;i++)
+            {
+                printf("%d .. %s  .. %s  .. %s  .. %s\n",j[i].job_id, j[i].title , j[i].printer , j[i].state , j[i].submitted_at);
+            }
         }
     }
 }
@@ -231,6 +243,7 @@ void display_help()
     printf("%s\n", "get-supported-color <printer name>");
     printf("print-file <printer-name> <file path>\n");
     printf("get-active-jobs-count <printer-name>\n");
+    printf("get-all-jobs <0 for all jobs; 1 for only active>\n");
 
     printf("%s\n", "get-default-orientation <printer name>");
     // printf("%s\n","get-supported-quality <printer name>");
