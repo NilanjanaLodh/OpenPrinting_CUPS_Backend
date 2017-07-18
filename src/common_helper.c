@@ -148,7 +148,7 @@ void unpack_job_array(GVariant *var, int num_jobs, Job *jobs)
         jobs[i].submitted_at = get_string_copy(submit_time);
         jobs[i].size = size;
 
-        printf("Printer %s ; state %s \n",printer, state);
+        //printf("Printer %s ; state %s \n",printer, state);
     }
 }
 /**************Option************************************/

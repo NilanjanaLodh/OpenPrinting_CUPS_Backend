@@ -613,8 +613,8 @@ int get_all_jobs(FrontendObj *f, Job **j, gboolean active_only)
     GHashTableIter iter;
     gpointer key, value;
 
-    int num_jobs[f->num_backends];
-    GVariant *var[f->num_backends];
+    int *num_jobs= g_new(int, f->num_backends);
+    GVariant **var= g_new(GVariant* , f->num_backends);
     g_hash_table_iter_init(&iter, f->backend);
 
     int i = 0;

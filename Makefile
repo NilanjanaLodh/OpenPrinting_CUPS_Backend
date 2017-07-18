@@ -2,7 +2,7 @@ DIR := ${CURDIR}
 FLAGS=$(shell pkg-config --libs --cflags gio-2.0 gio-unix-2.0 glib-2.0)
 FLAGS+=-I$(DIR)/src
 FLAGS+=-L$(DIR)/src
-
+FLAGS+=-g
 
 .PHONY:all gen release
 
