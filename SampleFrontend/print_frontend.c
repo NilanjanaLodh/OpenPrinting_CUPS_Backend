@@ -52,31 +52,31 @@ gpointer parse_commands(gpointer user_data)
             g_message("Stopping front end..\n");
             exit(0);
         }
-        // else if (strcmp(buf, "refresh") == 0)
-        // {
-        //     refresh_printer_list(f);
-        //     g_message("Getting changes in printer list..\n");
-        // }
-        // else if (strcmp(buf, "hide-remote-cups") == 0)
-        // {
-        //     hide_remote_cups_printers(f);
-        //     g_message("Hiding remote printers discovered by the cups backend..\n");
-        // }
-        // else if (strcmp(buf, "unhide-remote-cups") == 0)
-        // {
-        //     unhide_remote_cups_printers(f);
-        //     g_message("Unhiding remote printers discovered by the cups backend..\n");
-        // }
-        // else if (strcmp(buf, "hide-temporary-cups") == 0)
-        // {
-        //     hide_temporary_cups_printers(f);
-        //     g_message("Hiding remote printers discovered by the cups backend..\n");
-        // }
-        // else if (strcmp(buf, "unhide-temporary-cups") == 0)
-        // {
-        //     unhide_temporary_cups_printers(f);
-        //     g_message("Unhiding remote printers discovered by the cups backend..\n");
-        // }
+        else if (strcmp(buf, "refresh") == 0)
+        {
+            refresh_printer_list(f);
+            g_message("Getting changes in printer list..\n");
+        }
+        else if (strcmp(buf, "hide-remote-cups") == 0)
+        {
+            hide_remote_cups_printers(f);
+            g_message("Hiding remote printers discovered by the cups backend..\n");
+        }
+        else if (strcmp(buf, "unhide-remote-cups") == 0)
+        {
+            unhide_remote_cups_printers(f);
+            g_message("Unhiding remote printers discovered by the cups backend..\n");
+        }
+        else if (strcmp(buf, "hide-temporary-cups") == 0)
+        {
+            hide_temporary_cups_printers(f);
+            g_message("Hiding remote printers discovered by the cups backend..\n");
+        }
+        else if (strcmp(buf, "unhide-temporary-cups") == 0)
+        {
+            unhide_temporary_cups_printers(f);
+            g_message("Unhiding remote printers discovered by the cups backend..\n");
+        }
         // else if (strcmp(buf, "update-basic") == 0)
         // {
         //     char printer_name[100];

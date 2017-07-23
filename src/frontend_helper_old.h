@@ -56,17 +56,17 @@ int _get_active_jobs_count(PrinterObj *);
 typedef struct _FrontendObj FrontendObj;
 
 FrontendObj *get_new_FrontendObj(char *instance_name, event_callback add_cb , event_callback remove_cb);
-void connect_to_dbus(FrontendObj *);
-void disconnect_from_dbus(FrontendObj *);
-void activate_backends(FrontendObj *);
-gboolean add_printer(FrontendObj *, PrinterObj *, gchar *, gchar *); 
-gboolean remove_printer(FrontendObj *, char *);
+void connect_to_dbus(FrontendObj *);//
+void disconnect_from_dbus(FrontendObj *);//
+void activate_backends(FrontendObj *);//
+gboolean add_printer(FrontendObj *, PrinterObj *, gchar *, gchar *); //
+gboolean remove_printer(FrontendObj *, char *);//
 PrinterObj *update_basic_printer_options(FrontendObj *, gchar *);
-void refresh_printer_list(FrontendObj *f);
-void hide_remote_cups_printers(FrontendObj *f);
-void unhide_remote_cups_printers(FrontendObj *f);
-void hide_temporary_cups_printers(FrontendObj *f);
-void unhide_temporary_cups_printers(FrontendObj *f);
+void refresh_printer_list(FrontendObj *f);//
+void hide_remote_cups_printers(FrontendObj *f);//
+void unhide_remote_cups_printers(FrontendObj *f);//
+void hide_temporary_cups_printers(FrontendObj *f);//
+void unhide_temporary_cups_printers(FrontendObj *f);//
 Option* get_all_printer_options(FrontendObj *f, gchar *printer_name , int *); //for now: just print the values
 char* get_printer_capabilities(FrontendObj *, gchar *);
 char* get_printer_option_default(FrontendObj *, gchar *, gchar *);

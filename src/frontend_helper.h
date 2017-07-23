@@ -47,7 +47,11 @@ void disconnect_from_dbus(FrontendObj *);
 void activate_backends(FrontendObj *);
 gboolean add_printer(FrontendObj *f, PrinterObj *p);
 gboolean remove_printer(FrontendObj *f, char *printer_name);
-
+void refresh_printer_list(FrontendObj *f);
+void hide_remote_cups_printers(FrontendObj *f);
+void unhide_remote_cups_printers(FrontendObj *f);
+void hide_temporary_cups_printers(FrontendObj *f);
+void unhide_temporary_cups_printers(FrontendObj *f);
 PrintBackend *create_backend_from_file(const char *);
 
 /*******************************************************************************************/

@@ -221,6 +221,38 @@ gboolean remove_printer(FrontendObj *f, char *printer_name)
     return FALSE;
 }
 
+void refresh_printer_list(FrontendObj *f)
+{
+    print_frontend_emit_refresh_backend(f->skeleton);
+}
+
+/**
+ * Hide the remote printers of the CUPS backend
+ */
+void hide_remote_cups_printers(FrontendObj *f)
+{
+    print_frontend_emit_hide_remote_printers_cups(f->skeleton);
+}
+void unhide_remote_cups_printers(FrontendObj *f)
+{
+    print_frontend_emit_unhide_remote_printers_cups(f->skeleton);
+}
+
+/**
+ * Hide those (temporary) printers which have been discovered by the CUPS backend,
+ * but haven't been yet set up locally
+ */
+void hide_temporary_cups_printers(FrontendObj *f)
+{
+    print_frontend_emit_hide_temporary_printers_cups(f->skeleton);
+}
+void unhide_temporary_cups_printers(FrontendObj *f)
+{
+    print_frontend_emit_unhide_temporary_printers_cups(f->skeleton);
+}
+
+
+
 /**
 ________________________________________________ PrinterObj __________________________________________
 **/
