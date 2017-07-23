@@ -265,6 +265,11 @@ gboolean printer_is_accepting_jobs(FrontendObj *f, char *printer_name, char *bac
     PrinterObj *p = find_PrinterObj(f,printer_name,backend_name);
     return is_accepting_jobs(p);
 }
+char *get_printer_state(FrontendObj *f, char *printer_name, char *backend_name)
+{
+    PrinterObj *p = find_PrinterObj(f,printer_name,backend_name);
+    return get_state(p);
+}
 
 /**
 ________________________________________________ PrinterObj __________________________________________
@@ -324,6 +329,16 @@ gboolean is_accepting_jobs(PrinterObj *p)
 
     g_message("%d", p->is_accepting_jobs);
     return p->is_accepting_jobs;
+}
+
+char* get_state(PrinterObj *p)
+{
+    GError *error = NULL;
+    print_backend_call_get_printer_state_sync(p->backend_proxy, p->name, &p->state, NULL, &error);
+    g_assert_no_error(error);
+
+    g_message("%s", p->state);
+    return p->state;
 }
 /**
  * ________________________________utility functions__________________________

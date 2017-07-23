@@ -76,6 +76,7 @@ PrinterObj *find_PrinterObj(FrontendObj *, char *printer_name, char *backend_nam
  * to avoid repeated hash table lookup everytime.
  */
 gboolean printer_is_accepting_jobs(FrontendObj *, char *printer_name, char *backend_name);
+char *get_printer_state(FrontendObj *, char *printer_name, char *backend_name);
 
 /*******************************************************************************************/
 
@@ -107,6 +108,7 @@ PrinterObj *get_new_PrinterObj();
 void fill_basic_options(PrinterObj *, GVariant *);
 void print_basic_options(PrinterObj *);
 gboolean is_accepting_jobs(PrinterObj *);
+char* get_state(PrinterObj *);
 
 /************************************************************************************************/
 struct _Settings

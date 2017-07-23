@@ -146,12 +146,13 @@ gpointer parse_commands(gpointer user_data)
         //     scanf("%s", printer_name);
         //     get_printer_supported_orientation(f, printer_name);
         // }
-        // else if (strcmp(buf, "get-state") == 0)
-        // {
-        //     char printer_name[100];
-        //     scanf("%s", printer_name);
-        //     get_printer_state(f, printer_name);
-        // }
+        else if (strcmp(buf, "get-state") == 0)
+        {
+            char printer_name[100];
+            char backend_name[100];
+            scanf("%s%s", printer_name, backend_name);
+            get_printer_state(f, printer_name,backend_name);
+        }
         else if (strcmp(buf, "is-accepting-jobs") == 0)
         {
             char printer_name[100];
