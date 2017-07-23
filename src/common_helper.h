@@ -11,11 +11,11 @@
 #include "backend_interface.h"
 #include "frontend_interface.h"
 
-#define PRINTER_ADDED_ARGS "(sssssbs)"
+#define PRINTER_ADDED_ARGS "(sssssbss)"
 #define new_cstring_array(x) ((char **)(malloc(sizeof(char *) * x)))
 
 typedef struct _Option
-{
+{ //move to frontend helper??
     const char *option_name;
     int num_supported;
     char **supported_values;
@@ -23,7 +23,7 @@ typedef struct _Option
 } Option;
 
 typedef struct _Job
-{
+{ //move to frontend helper ??
     int job_id;
     char *title;
     char *printer;
@@ -32,6 +32,7 @@ typedef struct _Job
     char *submitted_at;
     int size;
 } Job;
+
 /*********Option related functions*****************/
 void print_option(const Option *opt);
 
@@ -95,6 +96,6 @@ void unpack_string_array(GVariant *variant, int num_val, char ***val);
 void unpack_option_array(GVariant *var, int num_options, Option **options);
 void unpack_job_array(GVariant *var, int num_jobs, Job *jobs);
 GVariant *pack_string_array(int num_val, char **val);
-GVariant *pack_option(const Option *opt);
+GVariant *pack_option(const Option *opt);//move to frontend helper
 char *get_absolute_path(char *file_path);
 #endif

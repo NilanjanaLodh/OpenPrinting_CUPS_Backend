@@ -6,7 +6,7 @@ FLAGS+=-g
 
 .PHONY:all gen release
 
-all:   print_frontend print_backend_cups
+all: print_frontend print_backend_cups
 
 
 gen:genback genfront

@@ -11,7 +11,7 @@
 #include "backend_interface.h"
 #include "frontend_interface.h"
 
-#define PRINTER_ADDED_ARGS "(sssssbs)"
+#define PRINTER_ADDED_ARGS "(sssssbss)"
 #define new_cstring_array(x) ((char **)(malloc(sizeof(char *) * x)))
 
 typedef struct _Option

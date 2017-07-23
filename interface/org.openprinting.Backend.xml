@@ -8,11 +8,15 @@
             <arg name="printer_uri" direction="out" type="s" />
             <arg name="printer_is_accepting_jobs" direction="out" type="b" />
             <arg name="printer_state" direction="out" type="s" />
+            <arg name="backend_name" direction="out" type="s"/>
             <!--<arg name="auth_info_reqd" direction="out" type="s"/> -->
         </signal>
         <signal name="PrinterRemoved">
             <arg name="printer_name" type="s" />
         </signal>
+        <method name="GetBackendName">
+            <arg name="backend_name" direction="out" type="s" />
+        </method>
         <method name="ActivateBackend"></method>
         <method name="getDefaultPrinter">
             <arg name="printer_name" direction="out" type="s"/>
@@ -102,8 +106,11 @@
         <method name="getAllJobs">
             <arg name="num_jobs" direction="out" type="i"/>
             <arg name="jobs" direction="out" type="a(isssssi)"/>
-
             <!--job contents: job-id , title, printer, user, state , submitted at , size -->
+        </method>
+        <method name="applySettings">
+            <arg name="printer_name" direction="in" type="s" />
+            <arg name="settings" direction="in" type="a(ss)"/>
         </method>
         <method name="ping">
             <arg name="printer_name" direction="in" type="s" />
@@ -169,10 +176,6 @@
             <arg name="printer_name" direction="in" type="s" />
             <arg name="color_mode" direction="in" type="s"/>
             <arg name="possible" direction="out" type="b"/>
-        </method>
-        <method name="applySettings">
-            <arg name="printer_name" direction="in" type="s" />
-            <!-- add arguments here-->
         </method>
     </interface>
 </node>

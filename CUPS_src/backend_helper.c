@@ -199,7 +199,8 @@ void send_printer_added_signal(BackendObj *b, const char *dialog_name, cups_dest
                                  cups_retrieve_string(dest, "printer-make-and-model"),
                                  cups_retrieve_string(dest, "device-uri"),
                                  cups_is_accepting_jobs(dest),
-                                 cups_printer_state(dest));
+                                 cups_printer_state(dest),
+                                 "CUPS");
 
     GError *error = NULL;
     g_dbus_connection_emit_signal(b->dbus_connection,
