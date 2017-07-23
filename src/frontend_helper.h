@@ -131,10 +131,33 @@ PrinterObj *find_PrinterObj(FrontendObj *, char *printer_name, char *backend_nam
  * it may be more efficient to use approach 2 ,
  * to avoid repeated hash table lookup everytime.
  */
+
 gboolean printer_is_accepting_jobs(FrontendObj *, char *printer_name, char *backend_name);
 char *get_printer_state(FrontendObj *, char *printer_name, char *backend_name);
 Options *get_all_printer_options(FrontendObj *, char *printer_name, char *backend_name);
+int get_active_jobs_count(FrontendObj *, char *printer_name, char *backend_name);
 
+/**
+ * Get the list of (all/active) jobs
+ * 
+ * @param j : pointer to a Job array; the retrieved Job list array is stored at this location
+ * @param active_only : when set to true , retrieves only the active jobs; 
+ *                      otherwise fetches all(active + completed + stopped) jobs
+ *                      Retrieves jobs for all users.
+ * 
+ * returns : number of jobs(i.e. length of the Job array)
+ * 
+ */
+int get_all_jobs(FrontendObj *, Job **j, gboolean active_only);
+
+/**
+ * Wrapper to _print_file(PrinterObj* , char *file_path)
+ * Submits a single file for printing,
+ * using the settings stored in the corresponding PrinterObj
+ * 
+ * returns: job id
+ */
+int print_file(FrontendObj *, char *file_name, char *printer_name , char*backend_name);
 /*******************************************************************************************/
 
 /**
@@ -187,17 +210,67 @@ char *get_state(PrinterObj *);
  */
 Options *get_all_options(PrinterObj *);
 
+/**
+ * Get number of active jobs(pending + paused + printing)
+ * for the printer
+ */
+int _get_active_jobs_count(PrinterObj *);
+
+/**
+ * Submits a single file for printing, using the settings stored in 
+ * p->settings
+ */
+int _print_file(PrinterObj *p, char* file_path);
+
+
+
+
 /************************************************************************************************/
+/**
+______________________________________ Settings __________________________________________
+
+**/
+
+/**
+ * Takes care of the settings the user sets with the help of the dialog.
+ * These settings will be used when sending a print job
+ */
 struct _Settings
 {
     int count;
     GHashTable *table; /** [name] --> [value] **/
     //planned functions:
-    // add
-    // clear
     // disable
+    // serialize settings into a GVariant of type a(ss)
 };
 
+/**
+ * Get an empty Settings struct with no 'settings' in it
+ */
+Settings *get_new_Settings();
+
+/**
+ * Add the particular 'setting' to the Settings struct
+ * If the setting already exists, its value is updated instead.
+ * 
+ * Eg. add_setting(s,"copies","1") 
+ */
+void add_setting(Settings *, char* name , char *val);
+
+/**
+ * Clear the setting specified by @name
+ * 
+ * @returns
+ * TRUE , if the setting was cleared
+ * FALSE , if the setting wasn't there and thus couldn't be cleared
+ */
+gboolean clear_setting(Settings * , char* name);
+
+/************************************************************************************************/
+/**
+______________________________________ Options __________________________________________
+
+**/
 struct _Options
 {
     int count;

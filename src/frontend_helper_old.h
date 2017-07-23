@@ -49,7 +49,7 @@ void get_orientation(PrinterObj *);
 void get_quality(PrinterObj *);              // to to
 char *get_default_color(PrinterObj *);
 gboolean _print_file(PrinterObj *p , char *file_path);
-int _get_active_jobs_count(PrinterObj *);
+int _get_active_jobs_count(PrinterObj *);//
 
 
 /**********FrontendObj definitions*******************************/
@@ -68,7 +68,7 @@ void unhide_remote_cups_printers(FrontendObj *f);//
 void hide_temporary_cups_printers(FrontendObj *f);//
 void unhide_temporary_cups_printers(FrontendObj *f);//
 Option* get_all_printer_options(FrontendObj *f, gchar *printer_name , int *); //for now: just print the values
-char* get_printer_capabilities(FrontendObj *, gchar *);
+char* get_printer_capabilities(FrontendObj *, gchar *);//X
 char* get_printer_option_default(FrontendObj *, gchar *, gchar *);
 char* get_printer_supported_values_raw(FrontendObj *, gchar *, gchar *);
 char* get_printer_supported_media(FrontendObj *, gchar *);
@@ -76,7 +76,7 @@ char* get_printer_supported_color(FrontendObj *, gchar *);
 char* get_printer_supported_quality(FrontendObj *, gchar *);
 char* get_printer_supported_orientation(FrontendObj *, gchar *);
 char* get_printer_supported_resolution(FrontendObj *, gchar *);
-char *get_printer_state(FrontendObj *, gchar *);
+char *get_printer_state(FrontendObj *, gchar *);//
 gboolean printer_is_accepting_jobs(FrontendObj *, gchar *);
 char *get_printer_default_resolution(FrontendObj *, gchar *);
 char *get_printer_default_orientation(FrontendObj *, gchar *);

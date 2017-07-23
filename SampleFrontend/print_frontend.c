@@ -152,7 +152,7 @@ gpointer parse_commands(gpointer user_data)
             char printer_name[100];
             char backend_name[100];
             scanf("%s%s", printer_name, backend_name);
-            get_printer_state(f, printer_name,backend_name);
+            get_printer_state(f, printer_name, backend_name);
         }
         else if (strcmp(buf, "is-accepting-jobs") == 0)
         {
@@ -201,12 +201,13 @@ gpointer parse_commands(gpointer user_data)
         //     scanf("%s%s", printer_name, file_path);
         //     print_file(f, printer_name, file_path);
         // }
-        // else if (strcmp(buf, "get-active-jobs-count") == 0)
-        // {
-        //     char printer_name[100];
-        //     scanf("%s", printer_name);
-        //     get_active_jobs_count(f, printer_name);
-        // }
+        else if (strcmp(buf, "get-active-jobs-count") == 0)
+        {
+            char printer_name[100];
+            char backend_name[100];
+            scanf("%s%s", printer_name, backend_name);
+            get_active_jobs_count(f, printer_name, backend_name);
+        }
         // else if (strcmp(buf, "get-all-jobs") == 0)
         // {
         //     int active_only;
