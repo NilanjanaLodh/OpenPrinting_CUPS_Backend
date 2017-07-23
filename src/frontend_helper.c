@@ -251,7 +251,20 @@ void unhide_temporary_cups_printers(FrontendObj *f)
     print_frontend_emit_unhide_temporary_printers_cups(f->skeleton);
 }
 
+PrinterObj *find_PrinterObj(FrontendObj *f, char *printer_name, char *backend_name)
+{
+    char hashtable_key[512];
+    sprintf(hashtable_key , "%s#%s", printer_name, backend_name);
 
+    PrinterObj *p = g_hash_table_lookup(f->printer, hashtable_key);
+    g_assert_nonnull(p);
+    return p;
+}
+gboolean printer_is_accepting_jobs(FrontendObj *f, char *printer_name, char *backend_name)
+{
+    PrinterObj *p = find_PrinterObj(f,printer_name,backend_name);
+    return is_accepting_jobs(p);
+}
 
 /**
 ________________________________________________ PrinterObj __________________________________________
@@ -302,6 +315,16 @@ void print_basic_options(PrinterObj *p)
               p->backend_name);
 }
 
+gboolean is_accepting_jobs(PrinterObj *p)
+{
+    GError *error = NULL;
+    print_backend_call_is_accepting_jobs_sync(p->backend_proxy, p->name,
+                                              &p->is_accepting_jobs, NULL, &error);
+    g_assert_no_error(error);
+
+    g_message("%d", p->is_accepting_jobs);
+    return p->is_accepting_jobs;
+}
 /**
  * ________________________________utility functions__________________________
  */

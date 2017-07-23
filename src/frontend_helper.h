@@ -53,6 +53,29 @@ void unhide_remote_cups_printers(FrontendObj *f);
 void hide_temporary_cups_printers(FrontendObj *f);
 void unhide_temporary_cups_printers(FrontendObj *f);
 PrintBackend *create_backend_from_file(const char *);
+PrinterObj *find_PrinterObj(FrontendObj *, char *printer_name, char *backend_name);
+
+/** 
+ * The following functions are just wrappers for the respective functions of PrinterObj
+ * 
+ * You could use these,
+ * or call the PrinterObj functions directly instead.
+ * 
+ * For instance,
+ * 
+ * Approach 1
+ * gboolean b = printer_is_accepting_jobs(f,"HP-Printer", "CUPS");
+ * 
+ * Approach 2
+ * PrinterObj *p= find_PrinterObj(f,"HP-Printer","CUPS");
+ * gboolean b = is_accepting_jobs(p);
+ * 
+ * Note
+ * If you have are going to repeatedly going to call functions for the same printer,
+ * it may be more efficient to use approach 2 ,
+ * to avoid repeated hash table lookup everytime.
+ */
+gboolean printer_is_accepting_jobs(FrontendObj *, char *printer_name, char *backend_name);
 
 /*******************************************************************************************/
 
@@ -83,6 +106,7 @@ struct _PrinterObj
 PrinterObj *get_new_PrinterObj();
 void fill_basic_options(PrinterObj *, GVariant *);
 void print_basic_options(PrinterObj *);
+gboolean is_accepting_jobs(PrinterObj *);
 
 /************************************************************************************************/
 struct _Settings

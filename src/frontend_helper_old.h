@@ -41,7 +41,7 @@ void get_supported_quality(PrinterObj *);
 void get_supported_orientation(PrinterObj *);
 void get_supported_resolution(PrinterObj *);
 void get_state(PrinterObj *);
-void is_accepting_jobs(PrinterObj *);
+void is_accepting_jobs(PrinterObj *); //
 char *get_media(PrinterObj *);
 
 void get_resolution(PrinterObj *);
@@ -61,7 +61,7 @@ void disconnect_from_dbus(FrontendObj *);//
 void activate_backends(FrontendObj *);//
 gboolean add_printer(FrontendObj *, PrinterObj *, gchar *, gchar *); //
 gboolean remove_printer(FrontendObj *, char *);//
-PrinterObj *update_basic_printer_options(FrontendObj *, gchar *);
+PrinterObj *update_basic_printer_options(FrontendObj *, gchar *);//X
 void refresh_printer_list(FrontendObj *f);//
 void hide_remote_cups_printers(FrontendObj *f);//
 void unhide_remote_cups_printers(FrontendObj *f);//

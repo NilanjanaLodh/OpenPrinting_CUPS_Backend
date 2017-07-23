@@ -152,12 +152,13 @@ gpointer parse_commands(gpointer user_data)
         //     scanf("%s", printer_name);
         //     get_printer_state(f, printer_name);
         // }
-        // else if (strcmp(buf, "is-accepting-jobs") == 0)
-        // {
-        //     char printer_name[100];
-        //     scanf("%s", printer_name);
-        //     printer_is_accepting_jobs(f, printer_name);
-        // }
+        else if (strcmp(buf, "is-accepting-jobs") == 0)
+        {
+            char printer_name[100];
+            char backend_name[100];
+            scanf("%s%s", printer_name, backend_name);
+            printer_is_accepting_jobs(f, printer_name, backend_name);
+        }
         // else if (strcmp(buf, "get-default-resolution") == 0)
         // {
         //     char printer_name[100];
@@ -226,7 +227,6 @@ void display_help()
     printf("%s\n", "refresh");
     printf("%s\n", "hide-remote-cups");
     printf("%s\n", "unhide-remote-cups");
-    printf("%s\n", "update-basic <printer name>");
     printf("%s\n", "hide-temporary-cups");
     printf("%s\n", "unhide-temporary-cups");
     printf("%s\n", "get-capabilities <printer name>");
@@ -249,5 +249,5 @@ void display_help()
     // printf("%s\n","get-supported-quality <printer name>");
     printf("%s\n", "get-supported-orientation <printer name>");
     printf("%s\n", "get-state <printer name>");
-    printf("%s\n", "is-accepting-jobs <printer name>");
+    printf("%s\n", "is-accepting-jobs <printer name> <backend name(like \"CUPS\")>");
 }
