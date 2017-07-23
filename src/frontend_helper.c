@@ -74,18 +74,7 @@ on_name_acquired(GDBusConnection *connection,
     activate_backends(f);
 }
 
-/**
- * Get a new FrontendObj instance
- * 
- * @params
- * 
- * instance name: The suffix to be used for the dbus name for Frontend
- *              supply NULL for no suffix
- * 
- * add_cb : The callback function to call when a new printer is added
- * rem_cb : The callback function to call when a printer is removed
- * 
- */
+
 FrontendObj *get_new_FrontendObj(char *instance_name, event_callback add_cb, event_callback rem_cb)
 {
     FrontendObj *f = malloc(sizeof(FrontendObj));
@@ -107,9 +96,7 @@ FrontendObj *get_new_FrontendObj(char *instance_name, event_callback add_cb, eve
     return f;
 }
 
-/**
- * Start the frontend D-Bus Service
- */
+
 void connect_to_dbus(FrontendObj *f)
 {
     g_bus_own_name(G_BUS_TYPE_SESSION,
@@ -122,25 +109,12 @@ void connect_to_dbus(FrontendObj *f)
                    NULL);            //user_data free function
 }
 
-/**
- * Notify Backend services before stopping Frontend
- */
+
 void disconnect_from_dbus(FrontendObj *f)
 {
     print_frontend_emit_stop_listing(f->skeleton);
 }
 
-/**
- * Discover the currently installed backends and activate them
- * 
- * 
- * 
- * Reads the DBUS_DIR folder to find the files installed by 
- * the respective backends , 
- * For eg:  org.openprinting.Backend.XYZ
- * 
- * XYZ = Backend suffix, using which it will be identified henceforth 
- */
 void activate_backends(FrontendObj *f)
 {
     DIR *d;
@@ -171,10 +145,6 @@ void activate_backends(FrontendObj *f)
     }
 }
 
-/**
- * Read the file installed by the backend and create a proxy object 
- * using the backend service name and object path.
- */
 PrintBackend *create_backend_from_file(const char *backend_file_name)
 {
     PrintBackend *proxy;
@@ -192,9 +162,6 @@ PrintBackend *create_backend_from_file(const char *backend_file_name)
     return proxy;
 }
 
-/**
- * Add the printer to the FrontendObj instance
- */
 gboolean add_printer(FrontendObj *f, PrinterObj *p)
 {
     /**
@@ -207,9 +174,7 @@ gboolean add_printer(FrontendObj *f, PrinterObj *p)
     return TRUE;
 }
 
-/**
- * Remove the printer from FrontendObj
- */
+
 gboolean remove_printer(FrontendObj *f, char *printer_name)
 {
     if (g_hash_table_contains(f->printer, printer_name))
@@ -226,9 +191,7 @@ void refresh_printer_list(FrontendObj *f)
     print_frontend_emit_refresh_backend(f->skeleton);
 }
 
-/**
- * Hide the remote printers of the CUPS backend
- */
+
 void hide_remote_cups_printers(FrontendObj *f)
 {
     print_frontend_emit_hide_remote_printers_cups(f->skeleton);
@@ -238,10 +201,7 @@ void unhide_remote_cups_printers(FrontendObj *f)
     print_frontend_emit_unhide_remote_printers_cups(f->skeleton);
 }
 
-/**
- * Hide those (temporary) printers which have been discovered by the CUPS backend,
- * but haven't been yet set up locally
- */
+
 void hide_temporary_cups_printers(FrontendObj *f)
 {
     print_frontend_emit_hide_temporary_printers_cups(f->skeleton);
@@ -260,6 +220,10 @@ PrinterObj *find_PrinterObj(FrontendObj *f, char *printer_name, char *backend_na
     g_assert_nonnull(p);
     return p;
 }
+
+/** 
+ * The following functions are wrappers to the corresponding PrinterObj functions
+*/
 gboolean printer_is_accepting_jobs(FrontendObj *f, char *printer_name, char *backend_name)
 {
     PrinterObj *p = find_PrinterObj(f,printer_name,backend_name);
@@ -270,7 +234,11 @@ char *get_printer_state(FrontendObj *f, char *printer_name, char *backend_name)
     PrinterObj *p = find_PrinterObj(f,printer_name,backend_name);
     return get_state(p);
 }
-
+Options *get_all_printer_options(FrontendObj *f, char *printer_name, char *backend_name)
+{
+    PrinterObj *p = find_PrinterObj(f,printer_name,backend_name);
+    return get_all_options(p);
+}
 /**
 ________________________________________________ PrinterObj __________________________________________
 **/
@@ -278,12 +246,10 @@ ________________________________________________ PrinterObj ____________________
 PrinterObj *get_new_PrinterObj()
 {
     PrinterObj *p = malloc(sizeof(PrinterObj));
+    p->options = get_new_Options();
     return p;
 }
 
-/**
- * Fill the basic options of PrinterObj from the GVariant returned with the printerAdded signal
- */
 void fill_basic_options(PrinterObj *p, GVariant *gv)
 {
     g_variant_get(gv, PRINTER_ADDED_ARGS,
@@ -297,9 +263,7 @@ void fill_basic_options(PrinterObj *p, GVariant *gv)
                   &(p->backend_name));
 }
 
-/**
- * Print the basic options of PrinterObj
- */
+
 void print_basic_options(PrinterObj *p)
 {
     g_message(" Printer %s\n\
@@ -340,6 +304,29 @@ char* get_state(PrinterObj *p)
     g_message("%s", p->state);
     return p->state;
 }
+
+Options* get_all_options(PrinterObj *p)
+{
+    GError *error = NULL;
+    int num_options;
+    GVariant *var;
+    print_backend_call_get_all_attributes_sync(p->backend_proxy, p->name,
+                                               &num_options, &var, NULL, &error);
+    printf("Num_options is %d\n", num_options);
+    unpack_options(var, num_options , p->options);
+
+    return p->options;
+}
+
+/**
+________________________________________________ Options __________________________________________
+**/
+Options* get_new_Options()
+{
+    Options *o = g_new0(Options,1);
+    o->table = g_hash_table_new(g_str_hash, g_str_equal);
+    return o;
+}
 /**
  * ________________________________utility functions__________________________
  */
@@ -348,4 +335,35 @@ char *concat(char *a, char *b)
     char str[512];
     sprintf(str, "%s#%s", a, b);
     return get_string_copy(str);
+}
+
+void unpack_options(GVariant *var, int num_options, Options *options)
+{
+    options->count = num_options;
+    int i, j;
+    char *str;
+    GVariantIter *iter;
+    GVariantIter *array_iter;
+    char *name, *default_val;
+    int num_sup;
+    g_variant_get(var, "a(ssia(s))", &iter);
+    Option *opt;
+    for (i = 0; i < num_options; i++)
+    {
+        //printf("i = %d\n", i);
+        opt = g_new0(Option,1);
+        g_variant_iter_loop(iter, "(ssia(s))", &name, &default_val,
+                            &num_sup, &array_iter);
+        opt->option_name = get_string_copy(name);
+        opt->default_value = get_string_copy(default_val);
+        opt->num_supported = num_sup;
+        opt->supported_values = new_cstring_array(num_sup);
+        for (j = 0; j < num_sup; j++)
+        {
+            g_variant_iter_loop(array_iter, "(s)", &str);
+            opt->supported_values[j] = get_string_copy(str); 
+        }
+        g_hash_table_insert(options->table, (gpointer)opt->option_name , (gpointer)opt);
+        print_option(opt);
+    }
 }

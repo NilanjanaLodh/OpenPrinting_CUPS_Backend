@@ -41,18 +41,74 @@ struct _FrontendObj
     int num_printers;
     GHashTable *printer; /**[printer name] --> [PrinterObj] **/
 };
+
+/**
+ * Get a new FrontendObj instance
+ * 
+ * @params
+ * 
+ * instance name: The suffix to be used for the dbus name for Frontend
+ *              supply NULL for no suffix
+ * 
+ * add_cb : The callback function to call when a new printer is added
+ * rem_cb : The callback function to call when a printer is removed
+ * 
+ */
 FrontendObj *get_new_FrontendObj(char *instance_name, event_callback add_cb, event_callback remove_cb);
+
+/**
+ * Start the frontend D-Bus Service
+ */
 void connect_to_dbus(FrontendObj *);
+
+/**
+ * Notify Backend services before stopping Frontend
+ */
 void disconnect_from_dbus(FrontendObj *);
+
+/**
+ * Discover the currently installed backends and activate them
+ * 
+ * 
+ * 
+ * Reads the DBUS_DIR folder to find the files installed by 
+ * the respective backends , 
+ * For eg:  org.openprinting.Backend.XYZ
+ * 
+ * XYZ = Backend suffix, using which it will be identified henceforth 
+ */
 void activate_backends(FrontendObj *);
+
+/**
+ * Add the printer to the FrontendObj instance
+ */
 gboolean add_printer(FrontendObj *f, PrinterObj *p);
+
+/**
+ * Remove the printer from FrontendObj
+ */
 gboolean remove_printer(FrontendObj *f, char *printer_name);
 void refresh_printer_list(FrontendObj *f);
+
+/**
+ * Hide the remote printers of the CUPS backend
+ */
 void hide_remote_cups_printers(FrontendObj *f);
 void unhide_remote_cups_printers(FrontendObj *f);
+
+/**
+ * Hide those (temporary) printers which have been discovered by the CUPS backend,
+ * but haven't been yet set up locally
+ */
 void hide_temporary_cups_printers(FrontendObj *f);
 void unhide_temporary_cups_printers(FrontendObj *f);
+
+/**
+ * Read the file installed by the backend and create a proxy object 
+ * using the backend service name and object path.
+ */
 PrintBackend *create_backend_from_file(const char *);
+
 PrinterObj *find_PrinterObj(FrontendObj *, char *printer_name, char *backend_name);
 
 /** 
@@ -77,6 +133,7 @@ PrinterObj *find_PrinterObj(FrontendObj *, char *printer_name, char *backend_nam
  */
 gboolean printer_is_accepting_jobs(FrontendObj *, char *printer_name, char *backend_name);
 char *get_printer_state(FrontendObj *, char *printer_name, char *backend_name);
+Options *get_all_printer_options(FrontendObj *, char *printer_name, char *backend_name);
 
 /*******************************************************************************************/
 
@@ -105,10 +162,30 @@ struct _PrinterObj
     Settings *settings;
 };
 PrinterObj *get_new_PrinterObj();
+
+/**
+ * Fill the basic options of PrinterObj from the GVariant returned with the printerAdded signal
+ */
 void fill_basic_options(PrinterObj *, GVariant *);
+
+/**
+ * Print the basic options of PrinterObj
+ */
 void print_basic_options(PrinterObj *);
 gboolean is_accepting_jobs(PrinterObj *);
-char* get_state(PrinterObj *);
+char *get_state(PrinterObj *);
+
+/**
+ * Get all advanced supported options for the printer.
+ * This function populates the 'options' variable of the PrinterObj structure, 
+ * and returns the same.
+ * Each option has 
+ *  option name,
+ *  default value,
+ *  number of supported values, 
+ *  array of supported values
+ */
+Options *get_all_options(PrinterObj *);
 
 /************************************************************************************************/
 struct _Settings
@@ -124,12 +201,23 @@ struct _Settings
 struct _Options
 {
     int count;
-    GHashTable *table; /**[name] --> Option **/
+    GHashTable *table; /**[name] --> Option struct**/
 };
+
+/**
+ * Get an empty Options struct with no 'options' in it
+ */
+Options *get_new_Options();
 
 /**
  * ________________________________utility functions__________________________
  */
 
-char *concat(char *, char *);
+char *concat(char *printer_name, char *backend_name);
+
+/**
+ * 'Unpack' (Deserialize) the GVariant returned in get_all_options
+ * and fill the Options structure approriately
+ */
+void unpack_options(GVariant *var, int num_options, Options *options);
 #endif

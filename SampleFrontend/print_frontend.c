@@ -91,13 +91,14 @@ gpointer parse_commands(gpointer user_data)
         //     g_message("Getting basic capabilities ..\n");
         //     get_printer_capabilities(f, printer_name);
         // }
-        // else if (strcmp(buf, "get-all-options") == 0)
-        // {
-        //     char printer_name[100];
-        //     scanf("%s", printer_name);
-        //     g_message("Getting all attributes ..\n");
-        //     get_all_printer_options(f, printer_name);
-        // }
+        else if (strcmp(buf, "get-all-options") == 0)
+        {
+            char printer_name[100];
+            char backend_name[100];
+            scanf("%s%s", printer_name, backend_name);
+            g_message("Getting all attributes ..\n");
+            get_all_printer_options(f, printer_name, backend_name);
+        }
         // else if (strcmp(buf, "get-option-default") == 0)
         // {
         //     char printer_name[100], option_name[100];
