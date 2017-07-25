@@ -92,7 +92,9 @@
         <method name="printFile">
             <arg name="printer_name" direction="in" type="s" />
             <arg name="file_path_name" direction="in" type="s"/>
-            <arg name="result" direction="out" type="b" />
+            <arg name="num_settings" direction="in" type="i"/>
+            <arg name="settings" direction="in" type="a(ss)"/>
+            <arg name="jobid" direction="out" type="i" />
         </method>
         <method name="getActiveJobsCount">
             <arg name="printer_name" direction="in" type="s"/>

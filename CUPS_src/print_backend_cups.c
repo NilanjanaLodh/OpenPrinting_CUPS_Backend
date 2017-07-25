@@ -305,13 +305,15 @@ static gboolean on_handle_print_file(PrintBackend *interface,
                                      GDBusMethodInvocation *invocation,
                                      const gchar *printer_name,
                                      const gchar *file_path,
+                                     int num_settings,
+                                     GVariant *settings,
                                      gpointer user_data)
 {
     const char *dialog_name = g_dbus_method_invocation_get_sender(invocation); /// potential risk
     PrinterCUPS *p = get_printer_by_name(b, dialog_name, printer_name);
 
-    gboolean status = print_file(p, file_path);
-    print_backend_complete_print_file(interface, invocation, status);
+    int job_id = print_file(p, file_path, num_settings , settings);
+    print_backend_complete_print_file(interface, invocation, job_id);
     return TRUE;
 }
 

@@ -192,7 +192,9 @@ struct _PrintBackendIface
     PrintBackend *object,
     GDBusMethodInvocation *invocation,
     const gchar *arg_printer_name,
-    const gchar *arg_file_path_name);
+    const gchar *arg_file_path_name,
+    gint arg_num_settings,
+    GVariant *arg_settings);
 
   void (*printer_added) (
     PrintBackend *object,
@@ -316,7 +318,7 @@ void print_backend_complete_get_supported_color (
 void print_backend_complete_print_file (
     PrintBackend *object,
     GDBusMethodInvocation *invocation,
-    gboolean result);
+    gint jobid);
 
 void print_backend_complete_get_active_jobs_count (
     PrintBackend *object,
@@ -764,13 +766,15 @@ void print_backend_call_print_file (
     PrintBackend *proxy,
     const gchar *arg_printer_name,
     const gchar *arg_file_path_name,
+    gint arg_num_settings,
+    GVariant *arg_settings,
     GCancellable *cancellable,
     GAsyncReadyCallback callback,
     gpointer user_data);
 
 gboolean print_backend_call_print_file_finish (
     PrintBackend *proxy,
-    gboolean *out_result,
+    gint *out_jobid,
     GAsyncResult *res,
     GError **error);
 
@@ -778,7 +782,9 @@ gboolean print_backend_call_print_file_sync (
     PrintBackend *proxy,
     const gchar *arg_printer_name,
     const gchar *arg_file_path_name,
-    gboolean *out_result,
+    gint arg_num_settings,
+    GVariant *arg_settings,
+    gint *out_jobid,
     GCancellable *cancellable,
     GError **error);
 

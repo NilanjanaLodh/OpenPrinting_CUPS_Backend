@@ -103,14 +103,28 @@ void unhide_remote_cups_printers(FrontendObj *f);
 void hide_temporary_cups_printers(FrontendObj *f);
 void unhide_temporary_cups_printers(FrontendObj *f);
 
+
 /**
  * Read the file installed by the backend and create a proxy object 
  * using the backend service name and object path.
  */
 PrintBackend *create_backend_from_file(const char *);
 
+/**
+ * Find the PrinterObj instance with a particular name ans backend name.
+ */
 PrinterObj *find_PrinterObj(FrontendObj *, char *printer_name, char *backend_name);
 
+
+/**
+ * Get the default printer for a particular backend
+ * 
+ * @param backend_name : The name of the backend
+ *                          Can be just the suffix("CUPS")
+ *                          or
+ *                          the complete name ("org.openprinting.Backend.CUPS")
+ */
+char *get_default_printer(FrontendObj *, char *backend_name);
 /** 
  * The following functions are just wrappers for the respective functions of PrinterObj
  * 
@@ -157,7 +171,7 @@ int get_all_jobs(FrontendObj *, Job **j, gboolean active_only);
  * 
  * returns: job id
  */
-int print_file(FrontendObj *, char *file_name, char *printer_name , char*backend_name);
+int print_file(FrontendObj *, char *file_path, char *printer_name , char*backend_name);
 /*******************************************************************************************/
 
 /**
@@ -222,6 +236,15 @@ int _get_active_jobs_count(PrinterObj *);
  */
 int _print_file(PrinterObj *p, char* file_path);
 
+/**
+ * Wrapper for the add_setting(Settings* , ..) function.
+ * Adds the desired setting to p->settings.
+ * Updates the value if the setting already exits.
+ * 
+ * @param name : name of the setting
+ * @param val : value of the setting
+ */
+void add_setting_to_printer(PrinterObj *p , char *name  , char*val);
 
 
 
@@ -240,7 +263,6 @@ struct _Settings
     int count;
     GHashTable *table; /** [name] --> [value] **/
     //planned functions:
-    // disable
     // serialize settings into a GVariant of type a(ss)
 };
 
@@ -265,6 +287,12 @@ void add_setting(Settings *, char* name , char *val);
  * FALSE , if the setting wasn't there and thus couldn't be cleared
  */
 gboolean clear_setting(Settings * , char* name);
+
+/**
+ * Serialize the Settings struct into a GVariant of type a(ss)
+ * so that it can be sent as an argument over D-Bus
+ */
+GVariant *serialize_Settings(Settings *s);
 
 /************************************************************************************************/
 /**

@@ -215,6 +215,19 @@ PrinterObj *find_PrinterObj(FrontendObj *f, char *printer_name, char *backend_na
     return p;
 }
 
+char *get_default_printer(FrontendObj *f, char *backend_name)
+{
+    PrintBackend *proxy = g_hash_table_lookup(f->backend, backend_name);
+    if (!proxy)
+    {
+        proxy = create_backend_from_file(backend_name);
+    }
+    g_assert_nonnull(proxy);
+    char *def;
+    print_backend_call_get_default_printer_sync(proxy, &def, NULL, NULL);
+    printf("%s\n", def);
+    return def;
+}
 /** 
  * The following functions are wrappers to the corresponding PrinterObj functions
 */
@@ -273,7 +286,11 @@ int get_all_jobs(FrontendObj *f, Job **j, gboolean active_only)
     *j = jobs;
     return total_jobs;
 }
-
+int print_file(FrontendObj *f, char *file_path, char *printer_name, char *backend_name)
+{
+    PrinterObj *p = find_PrinterObj(f, printer_name, backend_name);
+    return _print_file(p, file_path);
+}
 /**
 ________________________________________________ PrinterObj __________________________________________
 **/
@@ -282,7 +299,7 @@ PrinterObj *get_new_PrinterObj()
 {
     PrinterObj *p = malloc(sizeof(PrinterObj));
     p->options = NULL;
-    //p->settings= ;
+    p->settings = get_new_Settings();
     return p;
 }
 
@@ -368,6 +385,23 @@ int _get_active_jobs_count(PrinterObj *p)
     printf("%d jobs currently active.\n", count);
     return count;
 }
+int _print_file(PrinterObj *p, char *file_path)
+{
+    int jobid;
+    print_backend_call_print_file_sync(p->backend_proxy, p->name, file_path,
+                                       p->settings->count,
+                                       serialize_Settings(p->settings),
+                                       &jobid, NULL, NULL);
+    if (jobid)
+        printf("File printed successfully.\n");
+    else
+        printf("Error printing file.\n");
+    return jobid;
+}
+void add_setting_to_printer(PrinterObj *p, char *name, char *val)
+{
+    add_setting(p->settings, name, val);
+}
 
 /**
 ________________________________________________ Settings __________________________________________
@@ -410,6 +444,30 @@ gboolean clear_setting(Settings *s, char *name)
     {
         return FALSE;
     }
+}
+
+GVariant *serialize_Settings(Settings *s)
+{
+    GVariantBuilder *builder;
+    GVariant *variant;
+    builder = g_variant_builder_new(G_VARIANT_TYPE("a(ss)"));
+
+    GHashTableIter iter;
+    g_hash_table_iter_init(&iter, s->table);
+
+    gpointer key, value;
+    for (int i = 0; i < s->count; i++)
+    {
+        g_hash_table_iter_next(&iter, &key, &value);
+        g_message("%s : %s", (char *)key, (char *)value);
+        g_variant_builder_add(builder, "(ss)", key, value);
+    }
+
+    if (s->count == 0)
+        g_variant_builder_add(builder, "(ss)", "NA", "NA");
+
+    variant = g_variant_new("a(ss)", builder);
+    return variant;
 }
 /**
 ________________________________________________ Options __________________________________________

@@ -1061,19 +1061,43 @@ static const _ExtendedGDBusArgInfo _print_backend_method_info_print_file_IN_ARG_
   FALSE
 };
 
+static const _ExtendedGDBusArgInfo _print_backend_method_info_print_file_IN_ARG_num_settings =
+{
+  {
+    -1,
+    (gchar *) "num_settings",
+    (gchar *) "i",
+    NULL
+  },
+  FALSE
+};
+
+static const _ExtendedGDBusArgInfo _print_backend_method_info_print_file_IN_ARG_settings =
+{
+  {
+    -1,
+    (gchar *) "settings",
+    (gchar *) "a(ss)",
+    NULL
+  },
+  FALSE
+};
+
 static const _ExtendedGDBusArgInfo * const _print_backend_method_info_print_file_IN_ARG_pointers[] =
 {
   &_print_backend_method_info_print_file_IN_ARG_printer_name,
   &_print_backend_method_info_print_file_IN_ARG_file_path_name,
+  &_print_backend_method_info_print_file_IN_ARG_num_settings,
+  &_print_backend_method_info_print_file_IN_ARG_settings,
   NULL
 };
 
-static const _ExtendedGDBusArgInfo _print_backend_method_info_print_file_OUT_ARG_result =
+static const _ExtendedGDBusArgInfo _print_backend_method_info_print_file_OUT_ARG_jobid =
 {
   {
     -1,
-    (gchar *) "result",
-    (gchar *) "b",
+    (gchar *) "jobid",
+    (gchar *) "i",
     NULL
   },
   FALSE
@@ -1081,7 +1105,7 @@ static const _ExtendedGDBusArgInfo _print_backend_method_info_print_file_OUT_ARG
 
 static const _ExtendedGDBusArgInfo * const _print_backend_method_info_print_file_OUT_ARG_pointers[] =
 {
-  &_print_backend_method_info_print_file_OUT_ARG_result,
+  &_print_backend_method_info_print_file_OUT_ARG_jobid,
   NULL
 };
 
@@ -2545,6 +2569,8 @@ print_backend_default_init (PrintBackendIface *iface)
    * @invocation: A #GDBusMethodInvocation.
    * @arg_printer_name: Argument passed by remote caller.
    * @arg_file_path_name: Argument passed by remote caller.
+   * @arg_num_settings: Argument passed by remote caller.
+   * @arg_settings: Argument passed by remote caller.
    *
    * Signal emitted when a remote caller is invoking the <link linkend="gdbus-method-org-openprinting-PrintBackend.printFile">printFile()</link> D-Bus method.
    *
@@ -2560,8 +2586,8 @@ print_backend_default_init (PrintBackendIface *iface)
     NULL,
     g_cclosure_marshal_generic,
     G_TYPE_BOOLEAN,
-    3,
-    G_TYPE_DBUS_METHOD_INVOCATION, G_TYPE_STRING, G_TYPE_STRING);
+    5,
+    G_TYPE_DBUS_METHOD_INVOCATION, G_TYPE_STRING, G_TYPE_STRING, G_TYPE_INT, G_TYPE_VARIANT);
 
   /**
    * PrintBackend::handle-get-active-jobs-count:
@@ -4748,6 +4774,8 @@ _out:
  * @proxy: A #PrintBackendProxy.
  * @arg_printer_name: Argument to pass with the method invocation.
  * @arg_file_path_name: Argument to pass with the method invocation.
+ * @arg_num_settings: Argument to pass with the method invocation.
+ * @arg_settings: Argument to pass with the method invocation.
  * @cancellable: (allow-none): A #GCancellable or %NULL.
  * @callback: A #GAsyncReadyCallback to call when the request is satisfied or %NULL.
  * @user_data: User data to pass to @callback.
@@ -4763,15 +4791,19 @@ print_backend_call_print_file (
     PrintBackend *proxy,
     const gchar *arg_printer_name,
     const gchar *arg_file_path_name,
+    gint arg_num_settings,
+    GVariant *arg_settings,
     GCancellable *cancellable,
     GAsyncReadyCallback callback,
     gpointer user_data)
 {
   g_dbus_proxy_call (G_DBUS_PROXY (proxy),
     "printFile",
-    g_variant_new ("(ss)",
+    g_variant_new ("(ssi@a(ss))",
                    arg_printer_name,
-                   arg_file_path_name),
+                   arg_file_path_name,
+                   arg_num_settings,
+                   arg_settings),
     G_DBUS_CALL_FLAGS_NONE,
     -1,
     cancellable,
@@ -4782,7 +4814,7 @@ print_backend_call_print_file (
 /**
  * print_backend_call_print_file_finish:
  * @proxy: A #PrintBackendProxy.
- * @out_result: (out): Return location for return parameter or %NULL to ignore.
+ * @out_jobid: (out): Return location for return parameter or %NULL to ignore.
  * @res: The #GAsyncResult obtained from the #GAsyncReadyCallback passed to print_backend_call_print_file().
  * @error: Return location for error or %NULL.
  *
@@ -4793,7 +4825,7 @@ print_backend_call_print_file (
 gboolean
 print_backend_call_print_file_finish (
     PrintBackend *proxy,
-    gboolean *out_result,
+    gint *out_jobid,
     GAsyncResult *res,
     GError **error)
 {
@@ -4802,8 +4834,8 @@ print_backend_call_print_file_finish (
   if (_ret == NULL)
     goto _out;
   g_variant_get (_ret,
-                 "(b)",
-                 out_result);
+                 "(i)",
+                 out_jobid);
   g_variant_unref (_ret);
 _out:
   return _ret != NULL;
@@ -4814,7 +4846,9 @@ _out:
  * @proxy: A #PrintBackendProxy.
  * @arg_printer_name: Argument to pass with the method invocation.
  * @arg_file_path_name: Argument to pass with the method invocation.
- * @out_result: (out): Return location for return parameter or %NULL to ignore.
+ * @arg_num_settings: Argument to pass with the method invocation.
+ * @arg_settings: Argument to pass with the method invocation.
+ * @out_jobid: (out): Return location for return parameter or %NULL to ignore.
  * @cancellable: (allow-none): A #GCancellable or %NULL.
  * @error: Return location for error or %NULL.
  *
@@ -4829,16 +4863,20 @@ print_backend_call_print_file_sync (
     PrintBackend *proxy,
     const gchar *arg_printer_name,
     const gchar *arg_file_path_name,
-    gboolean *out_result,
+    gint arg_num_settings,
+    GVariant *arg_settings,
+    gint *out_jobid,
     GCancellable *cancellable,
     GError **error)
 {
   GVariant *_ret;
   _ret = g_dbus_proxy_call_sync (G_DBUS_PROXY (proxy),
     "printFile",
-    g_variant_new ("(ss)",
+    g_variant_new ("(ssi@a(ss))",
                    arg_printer_name,
-                   arg_file_path_name),
+                   arg_file_path_name,
+                   arg_num_settings,
+                   arg_settings),
     G_DBUS_CALL_FLAGS_NONE,
     -1,
     cancellable,
@@ -4846,8 +4884,8 @@ print_backend_call_print_file_sync (
   if (_ret == NULL)
     goto _out;
   g_variant_get (_ret,
-                 "(b)",
-                 out_result);
+                 "(i)",
+                 out_jobid);
   g_variant_unref (_ret);
 _out:
   return _ret != NULL;
@@ -6852,7 +6890,7 @@ print_backend_complete_get_supported_color (
  * print_backend_complete_print_file:
  * @object: A #PrintBackend.
  * @invocation: (transfer full): A #GDBusMethodInvocation.
- * @result: Parameter to return.
+ * @jobid: Parameter to return.
  *
  * Helper function used in service implementations to finish handling invocations of the <link linkend="gdbus-method-org-openprinting-PrintBackend.printFile">printFile()</link> D-Bus method. If you instead want to finish handling an invocation by returning an error, use g_dbus_method_invocation_return_error() or similar.
  *
@@ -6862,11 +6900,11 @@ void
 print_backend_complete_print_file (
     PrintBackend *object,
     GDBusMethodInvocation *invocation,
-    gboolean result)
+    gint jobid)
 {
   g_dbus_method_invocation_return_value (invocation,
-    g_variant_new ("(b)",
-                   result));
+    g_variant_new ("(i)",
+                   jobid));
 }
 
 /**

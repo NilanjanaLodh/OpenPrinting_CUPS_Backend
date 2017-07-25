@@ -326,11 +326,11 @@ cups_dest_t *get_dest_by_name(BackendObj *b, const char *dialog_name, const char
 GVariant *get_all_jobs(BackendObj *b, char *dialog_name, int *num_jobs, gboolean active_only)
 {
     int CUPS_JOB_FLAG;
-    if(active_only)
+    if (active_only)
         CUPS_JOB_FLAG = CUPS_WHICHJOBS_ACTIVE;
     else
         CUPS_JOB_FLAG = CUPS_WHICHJOBS_ALL;
-    
+
     GHashTable *printers = get_dialog_printers(b, dialog_name);
 
     GVariantBuilder *builder;
@@ -341,7 +341,7 @@ GVariant *get_all_jobs(BackendObj *b, char *dialog_name, int *num_jobs, gboolean
     gpointer key, value;
     g_hash_table_iter_init(&iter, printers);
 
-    int ncurr=0;
+    int ncurr = 0;
     int n = 0;
 
     int num_printers = g_hash_table_size(printers);
@@ -686,24 +686,42 @@ const char *get_printer_state(PrinterCUPS *p)
     }
     return str;
 }
-gboolean print_file(PrinterCUPS *p, char *file_path)
+int print_file(PrinterCUPS *p, char *file_path, int num_settings, GVariant *settings)
 {
     ensure_printer_connection(p);
     int num_options = 0;
     cups_option_t *options;
+
+    GVariantIter *iter;
+    g_variant_get(settings, "a(ss)", &iter);
+
+    int i = 0;
+    char *option_name, *option_value;
+    for (i = 0; i < num_settings; i++)
+    {
+        g_variant_iter_loop(iter, "(ss)", &option_name, &option_value);
+        printf(" %s : %s\n", option_name, option_value);
+
+        /**
+         * to do:
+         * instead of directly adding the option,convert it from the frontend's lingo 
+         * to the specific lingo of the backend
+         */
+        num_options = cupsAddOption(option_name, option_value, num_options, &options);
+    }
     /* Print a single file */
     int job_id = 0;
-    num_options = cupsAddOption(CUPS_COPIES, "1", num_options, &options);
-    num_options = cupsAddOption(CUPS_ORIENTATION, "2", num_options, &options);
-    job_id = cupsPrintFile2(p->http, p->name, file_path, "testing", num_options, options);
+    job_id = cupsPrintFile2(p->http, p->name, file_path, "Testing", num_options, options);
     if (job_id)
     {
         g_message("File printed!\n");
-        return TRUE;
+    }
+    else
+    {
+        g_message("Error printing file :(\n");
     }
 
-    g_message("Error printing file :(\n");
-    return FALSE;
+    return job_id;
 }
 int get_active_jobs_count(PrinterCUPS *p)
 {
