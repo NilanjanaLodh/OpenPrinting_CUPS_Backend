@@ -386,6 +386,14 @@ Option *get_Option(PrinterObj *p, char *name)
     return (Option *)(g_hash_table_lookup(p->options->table, name));
 }
 
+char *get_default(PrinterObj *p, char *name)
+{
+    Option *o = get_Option(p,name);
+    if(!o)
+        return NULL;
+    return o->default_value;
+}
+
 int _get_active_jobs_count(PrinterObj *p)
 {
     int count;

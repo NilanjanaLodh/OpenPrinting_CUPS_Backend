@@ -146,7 +146,25 @@ char *get_default_printer(FrontendObj *, char *backend_name);
 
 gboolean printer_is_accepting_jobs(FrontendObj *, char *printer_name, char *backend_name);
 char *get_printer_state(FrontendObj *, char *printer_name, char *backend_name);
+
+/**
+ * Wrapper to get_all_options(PrinterObj *)
+ */
 Options *get_all_printer_options(FrontendObj *, char *printer_name, char *backend_name);
+
+/**
+ * Wrapper to get_default(PrinterObj * , char *name)
+ * 
+ * N.B : it is preferable to use the get_default() function instead of this 
+ * if you already have the PrinterObj*
+ *  
+ * @returns
+ * default value(char*) if the option with the desired name exists
+ * "NA" if the option is present , but default value isn't set
+ * NULL if the option with the particular name doesn't exist.
+ */
+char *get_option_default(FrontendObj* , char* option_name , char *printer_name , char*backend_name);
+
 int get_active_jobs_count(FrontendObj *, char *printer_name, char *backend_name);
 
 /**
@@ -170,6 +188,7 @@ int get_all_jobs(FrontendObj *, Job **j, gboolean active_only);
  * returns: job id
  */
 int print_file(FrontendObj *, char *file_path, char *printer_name, char *backend_name);
+
 /*******************************************************************************************/
 
 /**
@@ -229,7 +248,18 @@ Options *get_all_options(PrinterObj *);
  * Option* if the option was found
  * NULL if the option with desired name doesn't exist 
  */
-Option* get_Option(PrinterObj *p, char *name);
+Option *get_Option(PrinterObj *p, char *name);
+
+/**
+ * Get the default value corresponding to the option name
+ * 
+ * @returns
+ * default value(char*) if the option with the desired name exists
+ * "NA" if the option is present , but default value isn't set
+ * NULL if the option with the particular name doesn't exist.
+ * 
+ */
+char *get_default(PrinterObj *p, char *name);
 
 /**
  * Get number of active jobs(pending + paused + printing)
@@ -252,9 +282,6 @@ int _print_file(PrinterObj *p, char *file_path);
  * @param val : value of the setting
  */
 void add_setting_to_printer(PrinterObj *p, char *name, char *val);
-
-
-
 
 /************************************************************************************************/
 /**
