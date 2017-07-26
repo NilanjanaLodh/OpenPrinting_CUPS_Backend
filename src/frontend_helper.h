@@ -103,7 +103,6 @@ void unhide_remote_cups_printers(FrontendObj *f);
 void hide_temporary_cups_printers(FrontendObj *f);
 void unhide_temporary_cups_printers(FrontendObj *f);
 
-
 /**
  * Read the file installed by the backend and create a proxy object 
  * using the backend service name and object path.
@@ -114,7 +113,6 @@ PrintBackend *create_backend_from_file(const char *);
  * Find the PrinterObj instance with a particular name ans backend name.
  */
 PrinterObj *find_PrinterObj(FrontendObj *, char *printer_name, char *backend_name);
-
 
 /**
  * Get the default printer for a particular backend
@@ -171,7 +169,7 @@ int get_all_jobs(FrontendObj *, Job **j, gboolean active_only);
  * 
  * returns: job id
  */
-int print_file(FrontendObj *, char *file_path, char *printer_name , char*backend_name);
+int print_file(FrontendObj *, char *file_path, char *printer_name, char *backend_name);
 /*******************************************************************************************/
 
 /**
@@ -213,7 +211,7 @@ gboolean is_accepting_jobs(PrinterObj *);
 char *get_state(PrinterObj *);
 
 /**
- * Get all advanced supported options for the printer.
+ * Get all the advanced supported options for the printer.
  * This function populates the 'options' variable of the PrinterObj structure, 
  * and returns the same.
  * Each option has 
@@ -225,6 +223,15 @@ char *get_state(PrinterObj *);
 Options *get_all_options(PrinterObj *);
 
 /**
+ * Get a single Option struct corresponding to a particular name.
+ * 
+ * @returns
+ * Option* if the option was found
+ * NULL if the option with desired name doesn't exist 
+ */
+Option* get_Option(PrinterObj *p, char *name);
+
+/**
  * Get number of active jobs(pending + paused + printing)
  * for the printer
  */
@@ -234,7 +241,7 @@ int _get_active_jobs_count(PrinterObj *);
  * Submits a single file for printing, using the settings stored in 
  * p->settings
  */
-int _print_file(PrinterObj *p, char* file_path);
+int _print_file(PrinterObj *p, char *file_path);
 
 /**
  * Wrapper for the add_setting(Settings* , ..) function.
@@ -244,7 +251,8 @@ int _print_file(PrinterObj *p, char* file_path);
  * @param name : name of the setting
  * @param val : value of the setting
  */
-void add_setting_to_printer(PrinterObj *p , char *name  , char*val);
+void add_setting_to_printer(PrinterObj *p, char *name, char *val);
+
 
 
 
@@ -277,7 +285,7 @@ Settings *get_new_Settings();
  * 
  * Eg. add_setting(s,"copies","1") 
  */
-void add_setting(Settings *, char* name , char *val);
+void add_setting(Settings *, char *name, char *val);
 
 /**
  * Clear the setting specified by @name
@@ -286,7 +294,7 @@ void add_setting(Settings *, char* name , char *val);
  * TRUE , if the setting was cleared
  * FALSE , if the setting wasn't there and thus couldn't be cleared
  */
-gboolean clear_setting(Settings * , char* name);
+gboolean clear_setting(Settings *, char *name);
 
 /**
  * Serialize the Settings struct into a GVariant of type a(ss)

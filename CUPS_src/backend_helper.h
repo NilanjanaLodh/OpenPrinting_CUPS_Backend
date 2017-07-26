@@ -114,7 +114,7 @@ int get_print_quality_supported(PrinterCUPS *p, char ***supported_values);
 const char *get_default(PrinterCUPS *p, char *option_name);
 int get_supported(PrinterCUPS *p, char ***supported_values, const char *option_name);
 
-int get_all_attributes(PrinterCUPS *p, Option **options);
+int get_all_options(PrinterCUPS *p, Option **options);
 
 int print_file(PrinterCUPS *p, char *file_path , int num_settings , GVariant *settings);
 

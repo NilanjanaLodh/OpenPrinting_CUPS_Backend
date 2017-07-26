@@ -41,11 +41,6 @@ static void on_hide_remote_printers(GDBusConnection *connection,
                                     const gchar *signal_name,
                                     GVariant *parameters,
                                     gpointer not_used);
-static gboolean on_handle_list_basic_options(PrintBackend *interface,
-                                             GDBusMethodInvocation *invocation,
-                                             const gchar *printer_name,
-                                             gpointer user_data);
-
 void connect_to_signals();
 
 BackendObj *b;
@@ -226,43 +221,6 @@ static void on_unhide_temp_printers(GDBusConnection *connection,
         refresh_printer_list(b, dialog_name);
     }
 }
-gboolean on_handle_list_basic_options(PrintBackend *interface,
-                                      GDBusMethodInvocation *invocation,
-                                      const gchar *printer_name,
-                                      gpointer user_data)
-{
-    g_message("Listing basic options for %s", printer_name);
-    const char *dialog_name = g_dbus_method_invocation_get_sender(invocation); /// potential risk
-    PrinterCUPS *p = get_printer_by_name(b, dialog_name, printer_name);
-    cups_dest_t *dest = p->dest;
-    g_assert_nonnull(dest);
-    print_backend_complete_list_basic_options(interface, invocation,
-                                              cups_retrieve_string(dest, "printer-info"),
-                                              cups_retrieve_string(dest, "printer-location"),
-                                              cups_retrieve_string(dest, "printer-make-and-model"),
-                                              cups_is_accepting_jobs(dest),
-                                              cups_printer_state(dest)); //change
-    return TRUE;
-}
-static gboolean on_handle_get_printer_capabilities(PrintBackend *interface,
-                                                   GDBusMethodInvocation *invocation,
-                                                   const gchar *printer_name,
-                                                   gpointer user_data)
-{
-    g_message("Listing basic options for %s", printer_name);
-    const char *dialog_name = g_dbus_method_invocation_get_sender(invocation); /// potential risk
-    PrinterCUPS *p = get_printer_by_name(b, dialog_name, printer_name);
-    int capabilities = get_printer_capabilities(p);
-    print_backend_complete_get_printer_capabilities(interface, invocation,
-                                                    (capabilities & CAPABILITY_COPIES),
-                                                    (capabilities & CAPABILITY_MEDIA),
-                                                    (capabilities & CAPABILITY_NUMBER_UP),
-                                                    (capabilities & CAPABILITY_ORIENTATION),
-                                                    (capabilities & CAPABILITY_COLOR_MODE),
-                                                    (capabilities & CAPABILITY_QUALITY),
-                                                    (capabilities & CAPABILITY_SIDES),
-                                                    (capabilities & CAPABILITY_RESOLUTION));
-}
 
 static gboolean on_handle_is_accepting_jobs(PrintBackend *interface,
                                             GDBusMethodInvocation *invocation,
@@ -312,20 +270,20 @@ static gboolean on_handle_print_file(PrintBackend *interface,
     const char *dialog_name = g_dbus_method_invocation_get_sender(invocation); /// potential risk
     PrinterCUPS *p = get_printer_by_name(b, dialog_name, printer_name);
 
-    int job_id = print_file(p, file_path, num_settings , settings);
+    int job_id = print_file(p, file_path, num_settings, settings);
     print_backend_complete_print_file(interface, invocation, job_id);
     return TRUE;
 }
 
-static gboolean on_handle_get_all_attributes(PrintBackend *interface,
-                                             GDBusMethodInvocation *invocation,
-                                             const gchar *printer_name,
-                                             gpointer user_data)
+static gboolean on_handle_get_all_options(PrintBackend *interface,
+                                          GDBusMethodInvocation *invocation,
+                                          const gchar *printer_name,
+                                          gpointer user_data)
 {
     const char *dialog_name = g_dbus_method_invocation_get_sender(invocation); /// potential risk
     PrinterCUPS *p = get_printer_by_name(b, dialog_name, printer_name);
     Option *options;
-    int count = get_all_attributes(p, &options);
+    int count = get_all_options(p, &options);
     int i;
 
     for (i = 0; i < count; i++)
@@ -345,7 +303,7 @@ static gboolean on_handle_get_all_attributes(PrintBackend *interface,
 
     variant = g_variant_new("a(ssia(s))", builder);
 
-    print_backend_complete_get_all_attributes(interface, invocation, count, variant);
+    print_backend_complete_get_all_options(interface, invocation, count, variant);
     return TRUE;
 }
 
@@ -359,24 +317,14 @@ static gboolean on_handle_get_active_jobs_count(PrintBackend *interface,
     print_backend_complete_get_active_jobs_count(interface, invocation, get_active_jobs_count(p));
     return TRUE;
 }
-static gboolean on_handle_get_all_active_jobs(PrintBackend *interface,
-                                              GDBusMethodInvocation *invocation,
-                                              gpointer user_data)
-{
-    const char *dialog_name = g_dbus_method_invocation_get_sender(invocation); /// potential risk
-    int n;
-    GVariant *variant = get_all_jobs(b, dialog_name, &n, TRUE);
-    printf("n = %d\n",n);
-    print_backend_complete_get_all_active_jobs(interface, invocation, n, variant);
-    return TRUE;
-}
 static gboolean on_handle_get_all_jobs(PrintBackend *interface,
                                        GDBusMethodInvocation *invocation,
+                                       gboolean active_only,
                                        gpointer user_data)
 {
     const char *dialog_name = g_dbus_method_invocation_get_sender(invocation); /// potential risk
     int n;
-    GVariant *variant = get_all_jobs(b, dialog_name, &n, FALSE);
+    GVariant *variant = get_all_jobs(b, dialog_name, &n, active_only);
     print_backend_complete_get_all_jobs(interface, invocation, n, variant);
     return TRUE;
 }
@@ -502,18 +450,9 @@ void connect_to_signals()
                      "handle-activate-backend",              //signal name
                      G_CALLBACK(on_handle_activate_backend), //callback
                      NULL);
-
     g_signal_connect(skeleton,                                 //instance
-                     "handle-list-basic-options",              //signal name
-                     G_CALLBACK(on_handle_list_basic_options), //callback
-                     NULL);                                    //user_data
-    g_signal_connect(skeleton,                                 //instance
-                     "handle-get-all-attributes",              //signal name
-                     G_CALLBACK(on_handle_get_all_attributes), //callback
-                     NULL);
-    g_signal_connect(skeleton,                                       //instance
-                     "handle-get-printer-capabilities",              //signal name
-                     G_CALLBACK(on_handle_get_printer_capabilities), //callback
+                     "handle-get-all-options",                 //signal name
+                     G_CALLBACK(on_handle_get_all_options),    //callback
                      NULL);
     g_signal_connect(skeleton,                   //instance
                      "handle-ping",              //signal name
@@ -527,14 +466,6 @@ void connect_to_signals()
                      "handle-print-file",              //signal name
                      G_CALLBACK(on_handle_print_file), //callback
                      NULL);
-    // g_signal_connect(skeleton,                                //instance
-    //                  "handle-get-default-value",              //signal name
-    //                  G_CALLBACK(on_handle_get_default_value), //callback
-    //                  NULL);
-    // g_signal_connect(skeleton,                                   //instance
-    //                  "handle-get-supported-values-raw-string",   //signal name
-    //                  G_CALLBACK(on_handle_get_supported_values), //callback
-    //                  NULL);
     g_signal_connect(skeleton,                                //instance
                      "handle-get-default-media",              //signal name
                      G_CALLBACK(on_handle_get_default_media), //callback
@@ -579,20 +510,14 @@ void connect_to_signals()
                      "handle-get-active-jobs-count",              //signal name
                      G_CALLBACK(on_handle_get_active_jobs_count), //callback
                      NULL);
-
-    g_signal_connect(skeleton,                                  //instance
-                     "handle-get-all-active-jobs",              //signal name
-                     G_CALLBACK(on_handle_get_all_active_jobs), //callback
-                     NULL);
-
-    g_signal_connect(skeleton,                                  //instance
-                     "handle-get-all-active-jobs",              //signal name
-                     G_CALLBACK(on_handle_get_all_active_jobs), //callback
-                     NULL);
     g_signal_connect(skeleton,                           //instance
                      "handle-get-all-jobs",              //signal name
                      G_CALLBACK(on_handle_get_all_jobs), //callback
                      NULL);
+
+    /**
+     * To do: comment which signals are compulsory and which aren't
+     */
     g_dbus_connection_signal_subscribe(b->dbus_connection,
                                        NULL,                             //Sender name
                                        "org.openprinting.PrintFrontend", //Sender interface

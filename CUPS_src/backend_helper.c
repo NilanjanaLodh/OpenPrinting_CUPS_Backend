@@ -616,7 +616,7 @@ Option *get_NA_option()
     return o;
 }
 
-int get_all_attributes(PrinterCUPS *p, Option **options)
+int get_all_options(PrinterCUPS *p, Option **options)
 {
     ensure_printer_connection(p);
     char **attribute_names;

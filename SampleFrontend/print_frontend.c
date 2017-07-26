@@ -217,18 +217,18 @@ gpointer parse_commands(gpointer user_data)
             scanf("%s%s", printer_name, backend_name);
             get_active_jobs_count(f, printer_name, backend_name);
         }
-        // else if (strcmp(buf, "get-all-jobs") == 0)
-        // {
-        //     int active_only;
-        //     scanf("%d", &active_only);
-        //     Job *j;
-        //     int x = get_all_jobs(f, &j, active_only);
-        //     int i;
-        //     for(i=0;i<x;i++)
-        //     {
-        //         printf("%d .. %s  .. %s  .. %s  .. %s\n",j[i].job_id, j[i].title , j[i].printer , j[i].state , j[i].submitted_at);
-        //     }
-        // }
+        else if (strcmp(buf, "get-all-jobs") == 0)
+        {
+            int active_only;
+            scanf("%d", &active_only);
+            Job *j;
+            int x = get_all_jobs(f, &j, active_only);
+            int i;
+            for(i=0;i<x;i++)
+            {
+                printf("%d .. %s  .. %s  .. %s  .. %s\n",j[i].job_id, j[i].title , j[i].printer , j[i].state , j[i].submitted_at);
+            }
+        }
     }
 }
 

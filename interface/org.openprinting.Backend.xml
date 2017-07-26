@@ -21,14 +21,6 @@
         <method name="getDefaultPrinter">
             <arg name="printer_name" direction="out" type="s"/>
         </method>
-        <method name="listBasicOptions">
-            <arg name="printer_name" direction="in" type="s"/>
-            <arg name="printer_info" direction="out" type="s"/>
-            <arg name="printer_location" direction="out" type="s"/>
-            <arg name="printer_make_and_model" direction="out" type="s" />
-            <arg name="printer_is_accepting_jobs" direction="out" type="b" />
-            <arg name="printer_state" direction="out" type="s" />
-        </method>
         <method name="getPrinterState">
             <arg name="printer_name" direction="in" type="s"/>
             <arg name="state" direction="out" type="s"/>
@@ -37,22 +29,30 @@
             <arg name="printer_name" direction="in" type="s"/>
             <arg name="is_accepting" direction="out" type="b"/>
         </method>
-        <method name="getPrinterCapabilities">
+        <method name="GetAllOptions">
             <arg name="printer_name" direction="in" type="s" />
-            <arg name="copies" direction="out" type="b"/>
-            <arg name="media" direction="out" type="b"/>
-            <arg name="number_up" direction="out" type="b"/>
-            <arg name="orientation" direction="out" type="b"/>
-            <arg name="color_mode" direction="out" type="b"/>
-            <arg name="print_quality" direction="out" type="b"/>
-            <arg name="sides" direction="out" type="b"/>
-            <arg name="resolution" direction="out" type="b"/>
+            <arg name="num_options" direction="out" type="i" />
+            <arg name="options" direction="out" type="a(ssia(s))" />
         </method>
-        <method name="GetAllAttributes">
+        <method name="getActiveJobsCount">
+            <arg name="printer_name" direction="in" type="s"/>
+            <arg name="job_count" direction="out" type="i"/>
+        </method>
+        <method name="getAllJobs">
+            <arg name="num_jobs" direction="out" type="i"/>
+            <arg name="jobs" direction="out" type="a(isssssi)"/>
+            <arg name="active_only" direction="out" type="b"/>
+            <!--job contents: job-id , title, printer, user, state , submitted at , size -->
+        </method>
+        <method name="printFile">
             <arg name="printer_name" direction="in" type="s" />
-            <arg name="num_attributes" direction="out" type="i" />
-            <arg name="attributes" direction="out" type="a(ssia(s))" />
+            <arg name="file_path_name" direction="in" type="s"/>
+            <arg name="num_settings" direction="in" type="i"/>
+            <arg name="settings" direction="in" type="a(ss)"/>
+            <arg name="jobid" direction="out" type="i" />
         </method>
+
+
         <method name="getDefaultMedia">
             <arg name="printer_name" direction="in" type="s" />
             <arg name="media_name" direction="out" type="s"/>
@@ -89,46 +89,9 @@
             <arg name="num_values" direction="out" type="i"/>
             <arg name="values" direction="out" type="a(s)" />
         </method>
-        <method name="printFile">
-            <arg name="printer_name" direction="in" type="s" />
-            <arg name="file_path_name" direction="in" type="s"/>
-            <arg name="num_settings" direction="in" type="i"/>
-            <arg name="settings" direction="in" type="a(ss)"/>
-            <arg name="jobid" direction="out" type="i" />
-        </method>
-        <method name="getActiveJobsCount">
-            <arg name="printer_name" direction="in" type="s"/>
-            <arg name="job_count" direction="out" type="i"/>
-        </method>
-        <method name="getAllActiveJobs">
-            <arg name="num_jobs" direction="out" type="i"/>
-            <arg name="jobs" direction="out" type="a(isssssi)"/>
-            <!--job contents: job-id , title, printer, user, state , submitted at , size -->
-        </method>
-        <method name="getAllJobs">
-            <arg name="num_jobs" direction="out" type="i"/>
-            <arg name="jobs" direction="out" type="a(isssssi)"/>
-            <!--job contents: job-id , title, printer, user, state , submitted at , size -->
-        </method>
-        <method name="applySettings">
-            <arg name="printer_name" direction="in" type="s" />
-            <arg name="settings" direction="in" type="a(ss)"/>
-        </method>
         <method name="ping">
             <arg name="printer_name" direction="in" type="s" />
         </method>
-
-
-
-
-
-
-
-
-
-
-
-
         <method name="getDefaultValue">
             <arg name="printer_name" direction="in" type="s" />
             <arg name="option_name" direction="in" type="s"/>
@@ -145,22 +108,6 @@
             <arg name="num_values" direction="out" type="i"/>
             <arg name="values" direction="out" type="a(s)" />
         </method>
-        <method name="checkResolution">
-            <arg name="printer_name" direction="in" type="s" />
-            <arg name="x_res" direction="in" type="i"/>
-            <arg name="y_res" direction="in" type="i"/>
-            <arg name="possible" direction="out" type="b"/>
-        </method>
-        <method name="checkMedia">
-            <arg name="printer_name" direction="in" type="s" />
-            <arg name="media_name" direction="in" type="s"/>
-            <arg name="possible" direction="out" type="b"/>
-        </method>
-        <method name="checkOrientation">
-            <arg name="printer_name" direction="in" type="s" />
-            <arg name="orientation" direction="in" type="s"/>
-            <arg name="possible" direction="out" type="b"/>
-        </method>
         <method name="getPageRange">
             <arg name="printer_name" direction="in" type="s" />
             <arg name="ranges" direction="out" type="a(ii)"/>
@@ -168,16 +115,6 @@
         <method name="getQuality">
             <arg name="printer_name" direction="in" type="s" />
             <arg name="quality" direction="out" type="s"/>
-        </method>
-        <method name="checkQuality">
-            <arg name="printer_name" direction="in" type="s" />
-            <arg name="quality" direction="in" type="s"/>
-            <arg name="possible" direction="out" type="b"/>
-        </method>
-        <method name="checkColor">
-            <arg name="printer_name" direction="in" type="s" />
-            <arg name="color_mode" direction="in" type="s"/>
-            <arg name="possible" direction="out" type="b"/>
         </method>
     </interface>
 </node>

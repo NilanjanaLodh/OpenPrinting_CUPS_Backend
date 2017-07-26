@@ -361,7 +361,7 @@ Options *get_all_options(PrinterObj *p)
 {
     /** 
      * If the options were previously queried, 
-     * return them, instead of querying again
+     * return them, instead of querying again.
     */
     if (p->options)
         return p->options;
@@ -370,12 +370,20 @@ Options *get_all_options(PrinterObj *p)
     GError *error = NULL;
     int num_options;
     GVariant *var;
-    print_backend_call_get_all_attributes_sync(p->backend_proxy, p->name,
-                                               &num_options, &var, NULL, &error);
+    print_backend_call_get_all_options_sync(p->backend_proxy, p->name,
+                                            &num_options, &var, NULL, &error);
     printf("Num_options is %d\n", num_options);
     unpack_options(var, num_options, p->options);
 
     return p->options;
+}
+
+Option *get_Option(PrinterObj *p, char *name)
+{
+    get_all_options(p);
+    if(!g_hash_table_contains(p->options->table, name))
+        return NULL;
+    return (Option *)(g_hash_table_lookup(p->options->table, name));
 }
 
 int _get_active_jobs_count(PrinterObj *p)

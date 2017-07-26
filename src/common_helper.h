@@ -15,7 +15,7 @@
 #define new_cstring_array(x) ((char **)(malloc(sizeof(char *) * x)))
 
 typedef struct _Option
-{ //move to frontend helper??
+{ 
     const char *option_name;
     int num_supported;
     char **supported_values;
@@ -23,7 +23,7 @@ typedef struct _Option
 } Option;
 
 typedef struct _Job
-{ //move to frontend helper ??
+{ 
     int job_id;
     char *title;
     char *printer;
@@ -36,8 +36,33 @@ typedef struct _Job
 /*********Option related functions*****************/
 void print_option(const Option *opt);
 
+
+gboolean get_boolean(const char *);
+char *get_string_copy(const char *);
+void unpack_string_array(GVariant *variant, int num_val, char ***val);
+void unpack_option_array(GVariant *var, int num_options, Option **options);
+void unpack_job_array(GVariant *var, int num_jobs, Job *jobs);
+GVariant *pack_string_array(int num_val, char **val);
+GVariant *pack_option(const Option *opt);
+char *get_absolute_path(char *file_path);
 /*********LISTING OF ALL POSSIBLE OPTIONS*****/
 //Rename these to something better if needed
+/**
+ * Some standard option names.
+ * While adding settings, use these as option names
+ */
+
+#define CPD_OPTION_COPIES "copies"
+#define CPD_OPTION_JOB_HOLD_UNTIL "job-hold-until"
+#define CPD_OPTION_JOB_NAME "job-name"
+#define CPD_OPTION_JOB_PRIORITY "job-priority"
+#define CPD_OPTION_MEDIA "media"
+#define CPD_OPTION_NUMBER_UP "number-up"
+#define CPD_OPTION_ORIENTATION "orientation-requested"
+#define CPD_OPTION_RESOLUTION "printer-resolution"
+#define CPD_OPTION_COLOR_MODE "print-color-mode"
+#define CPD_OPTION_SIDES "sides"
+
 
 #define MEDIA_A4 "A4"
 #define MEDIA_A3 "A3"
@@ -90,12 +115,5 @@ void print_option(const Option *opt);
 #define JOB_STATE_PRINTING "Printing"
 #define JOB_STATE_STOPPED "Stopped"
 
-gboolean get_boolean(const char *);
-char *get_string_copy(const char *);
-void unpack_string_array(GVariant *variant, int num_val, char ***val);
-void unpack_option_array(GVariant *var, int num_options, Option **options);
-void unpack_job_array(GVariant *var, int num_jobs, Job *jobs);
-GVariant *pack_string_array(int num_val, char **val);
-GVariant *pack_option(const Option *opt);//move to frontend helper
-char *get_absolute_path(char *file_path);
+
 #endif
