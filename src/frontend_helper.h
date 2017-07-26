@@ -163,9 +163,33 @@ Options *get_all_printer_options(FrontendObj *, char *printer_name, char *backen
  * "NA" if the option is present , but default value isn't set
  * NULL if the option with the particular name doesn't exist.
  */
-char *get_option_default(FrontendObj* , char* option_name , char *printer_name , char*backend_name);
+char *get_default_value(FrontendObj *, char *option_name, char *printer_name, char *backend_name);
 
-int get_active_jobs_count(FrontendObj *, char *printer_name, char *backend_name);
+/**
+ * Wrapper to get_setting(PrinterObj * ,..)
+ * 
+ * N.B : it is preferable to use the get_setting() function instead of this 
+ * if you already have the PrinterObj*
+ * 
+ * @returns
+ * the value of the setting(if it exists)
+ * NULL if it doesn't exists
+ */
+char *get_setting_value(FrontendObj *, char *option_name, char *printer_name, char *backend_name);
+
+/**
+ * Wrapper to get_current(PrinterObj * ,..)
+ * 
+ * N.B : it is preferable to use the get_current() function instead of this 
+ * if you already have the PrinterObj*
+ * 
+ * @returns
+ * the current value of the option(if it exists)
+ * NULL if it doesn't exists
+ */
+char *get_current_value(FrontendObj *, char *option_name, char *printer_name, char *backend_name);
+
+ int get_active_jobs_count(FrontendObj *, char *printer_name, char *backend_name);
 
 /**
  * Get the list of (all/active) jobs
@@ -233,6 +257,10 @@ char *get_state(PrinterObj *);
  * Get all the advanced supported options for the printer.
  * This function populates the 'options' variable of the PrinterObj structure, 
  * and returns the same.
+ * 
+ * If the options haven't been fetched before, they are fetched from the backend. 
+ * Else, they previously fetched 'options' are returned
+ * 
  * Each option has 
  *  option name,
  *  default value,
@@ -262,6 +290,25 @@ Option *get_Option(PrinterObj *p, char *name);
 char *get_default(PrinterObj *p, char *name);
 
 /**
+ * Get the value of the setting corresponding to the name
+ * 
+ * @returns
+ * setting value(char*) if the setting with the desired name exists
+ * NULL if the setting with the particular name doesn't exist.
+ * 
+ */
+char *get_setting(PrinterObj *p, char *name);
+
+/**
+ * Get the 'current value' of the attribute with the particular name
+ * 
+ * If the setting with that name exists, that is returned , 
+ * else the default value is returned;
+ * i.e. , the settings override the defaults
+ */
+char *get_current(PrinterObj *p, char *name);
+
+/**
  * Get number of active jobs(pending + paused + printing)
  * for the printer
  */
@@ -283,6 +330,13 @@ int _print_file(PrinterObj *p, char *file_path);
  */
 void add_setting_to_printer(PrinterObj *p, char *name, char *val);
 
+/**
+ * Wrapper for the clear_setting(Settings* , ..) function.
+ * clear the desired setting from p->settings.
+ * 
+ * @param name : name of the setting
+ */
+gboolean clear_setting_from_printer(PrinterObj *p, char *name);
 /************************************************************************************************/
 /**
 ______________________________________ Settings __________________________________________

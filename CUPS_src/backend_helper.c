@@ -577,6 +577,7 @@ int get_print_quality_supported(PrinterCUPS *p, char ***supported_values)
 
 int get_job_creation_attributes(PrinterCUPS *p, char ***values)
 {
+    
     int count = get_supported(p, values, "job-creation-attributes");
 }
 

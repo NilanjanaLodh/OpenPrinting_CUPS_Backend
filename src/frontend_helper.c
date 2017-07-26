@@ -22,6 +22,7 @@ static void on_printer_added(GDBusConnection *connection,
     print_basic_options(p);
     f->add_cb(p);
 }
+
 static void on_printer_removed(GDBusConnection *connection,
                                const gchar *sender_name,
                                const gchar *object_path,
@@ -37,6 +38,7 @@ static void on_printer_removed(GDBusConnection *connection,
     g_message("Removed Printer %s!\n", printer_name);
     f->rem_cb(printer_name);
 }
+
 static void
 on_name_acquired(GDBusConnection *connection,
                  const gchar *name,
@@ -191,6 +193,7 @@ void hide_remote_cups_printers(FrontendObj *f)
 {
     print_frontend_emit_hide_remote_printers_cups(f->skeleton);
 }
+
 void unhide_remote_cups_printers(FrontendObj *f)
 {
     print_frontend_emit_unhide_remote_printers_cups(f->skeleton);
@@ -200,6 +203,7 @@ void hide_temporary_cups_printers(FrontendObj *f)
 {
     print_frontend_emit_hide_temporary_printers_cups(f->skeleton);
 }
+
 void unhide_temporary_cups_printers(FrontendObj *f)
 {
     print_frontend_emit_unhide_temporary_printers_cups(f->skeleton);
@@ -231,21 +235,43 @@ char *get_default_printer(FrontendObj *f, char *backend_name)
 /** 
  * The following functions are wrappers to the corresponding PrinterObj functions
 */
+
 gboolean printer_is_accepting_jobs(FrontendObj *f, char *printer_name, char *backend_name)
 {
     PrinterObj *p = find_PrinterObj(f, printer_name, backend_name);
     return is_accepting_jobs(p);
 }
+
 char *get_printer_state(FrontendObj *f, char *printer_name, char *backend_name)
 {
     PrinterObj *p = find_PrinterObj(f, printer_name, backend_name);
     return get_state(p);
 }
+
 Options *get_all_printer_options(FrontendObj *f, char *printer_name, char *backend_name)
 {
     PrinterObj *p = find_PrinterObj(f, printer_name, backend_name);
     return get_all_options(p);
 }
+
+char *get_default_value(FrontendObj *f, char *option_name, char *printer_name, char *backend_name)
+{
+    PrinterObj *p = find_PrinterObj(f, printer_name, backend_name);
+    return get_default(p, option_name);
+}
+
+char *get_setting_value(FrontendObj *f, char *option_name, char *printer_name, char *backend_name)
+{
+    PrinterObj *p = find_PrinterObj(f, printer_name, backend_name);
+    return get_setting(p, option_name);
+}
+
+char *get_current_value(FrontendObj *f, char *option_name, char *printer_name, char *backend_name)
+{
+    PrinterObj *p = find_PrinterObj(f, printer_name, backend_name);
+    return get_current(p, option_name);
+}
+
 int get_active_jobs_count(FrontendObj *f, char *printer_name, char *backend_name)
 {
     PrinterObj *p = find_PrinterObj(f, printer_name, backend_name);
@@ -286,6 +312,7 @@ int get_all_jobs(FrontendObj *f, Job **j, gboolean active_only)
     *j = jobs;
     return total_jobs;
 }
+
 int print_file(FrontendObj *f, char *file_path, char *printer_name, char *backend_name)
 {
     PrinterObj *p = find_PrinterObj(f, printer_name, backend_name);
@@ -381,17 +408,33 @@ Options *get_all_options(PrinterObj *p)
 Option *get_Option(PrinterObj *p, char *name)
 {
     get_all_options(p);
-    if(!g_hash_table_contains(p->options->table, name))
+    if (!g_hash_table_contains(p->options->table, name))
         return NULL;
     return (Option *)(g_hash_table_lookup(p->options->table, name));
 }
 
 char *get_default(PrinterObj *p, char *name)
 {
-    Option *o = get_Option(p,name);
-    if(!o)
+    Option *o = get_Option(p, name);
+    if (!o)
         return NULL;
     return o->default_value;
+}
+
+char *get_setting(PrinterObj *p, char *name)
+{
+    if (!g_hash_table_contains(p->settings->table, name))
+        return NULL;
+    return g_hash_table_lookup(p->settings->table, name);
+}
+
+char *get_current(PrinterObj *p, char *name)
+{
+    char *set = get_setting(p, name);
+    if (set)
+        return set;
+
+    return get_default(p, name);
 }
 
 int _get_active_jobs_count(PrinterObj *p)
@@ -416,7 +459,12 @@ int _print_file(PrinterObj *p, char *file_path)
 }
 void add_setting_to_printer(PrinterObj *p, char *name, char *val)
 {
+    printf("name = %s , value = %s\n" , name , val);
     add_setting(p->settings, name, val);
+}
+gboolean clear_setting_from_printer(PrinterObj *p, char *name)
+{
+    clear_setting(p->settings,name);
 }
 
 /**

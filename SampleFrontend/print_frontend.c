@@ -89,12 +89,46 @@ gpointer parse_commands(gpointer user_data)
         {
             char printer_name[100], backend_name[100], option_name[100];
             scanf("%s%s%s", option_name, printer_name, backend_name);
-            PrinterObj *p = find_PrinterObj(f, printer_name, backend_name);
-            char *ans = get_default(p, option_name);
+            char *ans = get_default_value(f, option_name, printer_name, backend_name);
             if (!ans)
                 printf("Option %s doesn't exist.", option_name);
             else
                 printf("Default : %s\n", ans);
+        }
+        else if (strcmp(buf, "get-setting") == 0)
+        {
+            char printer_name[100], backend_name[100], setting_name[100];
+            scanf("%s%s%s", setting_name, printer_name, backend_name);
+            char *ans = get_setting_value(f, setting_name, printer_name, backend_name);
+            if (!ans)
+                printf("Setting %s doesn't exist.\n", setting_name);
+            else
+                printf("Setting value : %s\n", ans);
+        }
+        else if (strcmp(buf, "get-current") == 0)
+        {
+            char printer_name[100], backend_name[100], option_name[100];
+            scanf("%s%s%s", option_name, printer_name, backend_name);
+            char *ans = get_current_value(f, option_name, printer_name, backend_name);
+            if (!ans)
+                printf("Option %s doesn't exist.", option_name);
+            else
+                printf("Current value : %s\n", ans);
+        }
+        else if (strcmp(buf, "add-setting") == 0)
+        {
+            char printer_name[100], backend_name[100], option_name[100], option_val[100];
+            scanf("%s %s %s %s", option_name, option_val, printer_name, backend_name);
+            PrinterObj *p = find_PrinterObj(f, printer_name, backend_name);
+            printf("%s : %s\n", option_name, option_val);
+            add_setting_to_printer(p, get_string_copy(option_name), get_string_copy(option_val));
+        }
+        else if (strcmp(buf, "clear-setting") == 0)
+        {
+            char printer_name[100], backend_name[100], option_name[100];
+            scanf("%s%s%s", option_name, printer_name, backend_name);
+            PrinterObj *p = find_PrinterObj(f, printer_name, backend_name);
+            clear_setting_from_printer(p, option_name);
         }
         else if (strcmp(buf, "get-state") == 0)
         {
@@ -172,9 +206,6 @@ void display_help()
     printf("%s\n", "unhide-remote-cups");
     printf("%s\n", "hide-temporary-cups");
     printf("%s\n", "unhide-temporary-cups");
-    //printf("%s\n", "get-capabilities <printer name>");
-    printf("get-all-options <printer-name> <backend-name>\n");
-
     //printf("%s\n", "ping <printer name> ");
     printf("%s\n", "get-default-printer <backend name>");
     printf("print-file <file path> <printer_name> <backend_name>\n");
@@ -182,5 +213,11 @@ void display_help()
     printf("get-all-jobs <0 for all jobs; 1 for only active>\n");
     printf("%s\n", "get-state <printer name> <backend name>");
     printf("%s\n", "is-accepting-jobs <printer name> <backend name(like \"CUPS\")>");
+
+    printf("get-all-options <printer-name> <backend-name>\n");
     printf("%s\n", "get-default <option name> <printer name> <backend name>");
+    printf("%s\n", "get-setting <option name> <printer name> <backend name>");
+    printf("%s\n", "get-current <option name> <printer name> <backend name>");
+    printf("%s\n", "add-setting <option name> <option value> <printer name> <backend name>");
+    printf("%s\n", "clear-setting <option name> <printer name> <backend name>");
 }
