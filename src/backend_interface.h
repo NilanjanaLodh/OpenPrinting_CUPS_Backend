@@ -38,13 +38,10 @@ struct _PrintBackendIface
     GDBusMethodInvocation *invocation,
     const gchar *arg_printer_name);
 
-  gboolean (*handle_get_all_active_jobs) (
-    PrintBackend *object,
-    GDBusMethodInvocation *invocation);
-
   gboolean (*handle_get_all_jobs) (
     PrintBackend *object,
-    GDBusMethodInvocation *invocation);
+    GDBusMethodInvocation *invocation,
+    gboolean arg_active_only);
 
   gboolean (*handle_get_all_options) (
     PrintBackend *object,
@@ -207,12 +204,6 @@ void print_backend_complete_get_active_jobs_count (
     PrintBackend *object,
     GDBusMethodInvocation *invocation,
     gint job_count);
-
-void print_backend_complete_get_all_active_jobs (
-    PrintBackend *object,
-    GDBusMethodInvocation *invocation,
-    gint num_jobs,
-    GVariant *jobs);
 
 void print_backend_complete_get_all_jobs (
     PrintBackend *object,
@@ -455,28 +446,9 @@ gboolean print_backend_call_get_active_jobs_count_sync (
     GCancellable *cancellable,
     GError **error);
 
-void print_backend_call_get_all_active_jobs (
-    PrintBackend *proxy,
-    GCancellable *cancellable,
-    GAsyncReadyCallback callback,
-    gpointer user_data);
-
-gboolean print_backend_call_get_all_active_jobs_finish (
-    PrintBackend *proxy,
-    gint *out_num_jobs,
-    GVariant **out_jobs,
-    GAsyncResult *res,
-    GError **error);
-
-gboolean print_backend_call_get_all_active_jobs_sync (
-    PrintBackend *proxy,
-    gint *out_num_jobs,
-    GVariant **out_jobs,
-    GCancellable *cancellable,
-    GError **error);
-
 void print_backend_call_get_all_jobs (
     PrintBackend *proxy,
+    gboolean arg_active_only,
     GCancellable *cancellable,
     GAsyncReadyCallback callback,
     gpointer user_data);
@@ -490,6 +462,7 @@ gboolean print_backend_call_get_all_jobs_finish (
 
 gboolean print_backend_call_get_all_jobs_sync (
     PrintBackend *proxy,
+    gboolean arg_active_only,
     gint *out_num_jobs,
     GVariant **out_jobs,
     GCancellable *cancellable,

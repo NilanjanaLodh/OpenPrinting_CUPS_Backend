@@ -39,9 +39,9 @@
             <arg name="job_count" direction="out" type="i"/>
         </method>
         <method name="getAllJobs">
+            <arg name="active_only" direction="in" type="b"/>
             <arg name="num_jobs" direction="out" type="i"/>
-            <arg name="jobs" direction="out" type="a(isssssi)"/>
-            <arg name="active_only" direction="out" type="b"/>
+            <arg name="jobs" direction="out" type="a(isssssi)"/>            
             <!--job contents: job-id , title, printer, user, state , submitted at , size -->
         </method>
         <method name="printFile">

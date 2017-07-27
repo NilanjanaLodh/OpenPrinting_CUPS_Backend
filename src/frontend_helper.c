@@ -293,10 +293,8 @@ int get_all_jobs(FrontendObj *f, Job **j, gboolean active_only)
     {
         /** Polling all the backends for their active jobs**/
         PrintBackend *proxy = (PrintBackend *)value;
-        if (active_only)
-            print_backend_call_get_all_active_jobs_sync(proxy, &(num_jobs[i]), &(var[i]), NULL, NULL);
-        else
-            print_backend_call_get_all_jobs_sync(proxy, &(num_jobs[i]), &(var[i]), NULL, NULL);
+
+        print_backend_call_get_all_jobs_sync(proxy, active_only, &(num_jobs[i]), &(var[i]), NULL, NULL);
 
         printf("%d jobs\n", num_jobs[i]);
         total_jobs += num_jobs[i];
@@ -459,12 +457,12 @@ int _print_file(PrinterObj *p, char *file_path)
 }
 void add_setting_to_printer(PrinterObj *p, char *name, char *val)
 {
-    printf("name = %s , value = %s\n" , name , val);
+    printf("name = %s , value = %s\n", name, val);
     add_setting(p->settings, name, val);
 }
 gboolean clear_setting_from_printer(PrinterObj *p, char *name)
 {
-    clear_setting(p->settings,name);
+    clear_setting(p->settings, name);
 }
 
 /**
