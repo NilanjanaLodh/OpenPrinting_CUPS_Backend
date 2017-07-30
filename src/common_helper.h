@@ -14,24 +14,12 @@
 #define PRINTER_ADDED_ARGS "(sssssbss)"
 #define new_cstring_array(x) ((char **)(malloc(sizeof(char *) * x)))
 
-typedef struct _Job
-{ 
-    int job_id;
-    char *title;
-    char *printer;
-    char *user;
-    char *state;
-    char *submitted_at;
-    int size;
-} Job;
-
 /*********Option related functions*****************/
 
 
 gboolean get_boolean(const char *);
 char *get_string_copy(const char *);
 void unpack_string_array(GVariant *variant, int num_val, char ***val);
-void unpack_job_array(GVariant *var, int num_jobs, Job *jobs);
 GVariant *pack_string_array(int num_val, char **val);
 char *get_absolute_path(char *file_path);
 /*********LISTING OF ALL POSSIBLE OPTIONS*****/

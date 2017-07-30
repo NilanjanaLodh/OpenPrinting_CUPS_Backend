@@ -21,6 +21,8 @@ typedef struct _PrinterObj PrinterObj;
 typedef struct _Settings Settings;
 typedef struct _Options Options;
 typedef struct _Option Option;
+typedef struct _Job Job;
+
 /*********************definitions ***************************/
 
 /**
@@ -415,6 +417,22 @@ void print_option(const Option *opt);
 void unpack_option_array(GVariant *var, int num_options, Option **options);
 GVariant *pack_option(const Option *opt);
 
+/************************************************************************************************/
+/**
+______________________________________ Job __________________________________________
+
+**/
+struct _Job
+{ 
+    int job_id;
+    char *title;
+    char *printer;
+    char *user;
+    char *state;
+    char *submitted_at;
+    int size;
+};
+void unpack_job_array(GVariant *var, int num_jobs, Job *jobs);
 /**
  * ________________________________utility functions__________________________
  */
