@@ -59,6 +59,14 @@ typedef struct _Res
     char *string;
 } Res;
 
+typedef struct _Option
+{ 
+    const char *option_name;
+    int num_supported;
+    char **supported_values;
+    char *default_value;
+} Option;
+
 
 typedef char *(*extract_func)(ipp_attribute_t *, int index);
 /********Backend related functions*******************/
@@ -119,6 +127,11 @@ int get_all_options(PrinterCUPS *p, Option **options);
 int print_file(PrinterCUPS *p, char *file_path , int num_settings , GVariant *settings);
 
 int get_active_jobs_count(PrinterCUPS *p);
+
+/*********Option related functions*****************/
+void print_option(const Option *opt);
+void unpack_option_array(GVariant *var, int num_options, Option **options);
+GVariant *pack_option(const Option *opt);
 /**********Mapping related functions*****************/
 Mappings *get_new_Mappings();
 

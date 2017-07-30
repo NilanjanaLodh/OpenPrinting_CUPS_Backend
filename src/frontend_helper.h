@@ -20,7 +20,7 @@ typedef struct _FrontendObj FrontendObj;
 typedef struct _PrinterObj PrinterObj;
 typedef struct _Settings Settings;
 typedef struct _Options Options;
-
+typedef struct _Option Option;
 /*********************definitions ***************************/
 
 /**
@@ -398,6 +398,22 @@ struct _Options
  * Get an empty Options struct with no 'options' in it
  */
 Options *get_new_Options();
+
+/************************************************************************************************/
+/**
+______________________________________ Option __________________________________________
+
+**/
+struct _Option
+{ 
+    const char *option_name;
+    int num_supported;
+    char **supported_values;
+    char *default_value;
+};
+void print_option(const Option *opt);
+void unpack_option_array(GVariant *var, int num_options, Option **options);
+GVariant *pack_option(const Option *opt);
 
 /**
  * ________________________________utility functions__________________________

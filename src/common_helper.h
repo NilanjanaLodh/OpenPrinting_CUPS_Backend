@@ -14,14 +14,6 @@
 #define PRINTER_ADDED_ARGS "(sssssbss)"
 #define new_cstring_array(x) ((char **)(malloc(sizeof(char *) * x)))
 
-typedef struct _Option
-{ 
-    const char *option_name;
-    int num_supported;
-    char **supported_values;
-    char *default_value;
-} Option;
-
 typedef struct _Job
 { 
     int job_id;
@@ -34,16 +26,13 @@ typedef struct _Job
 } Job;
 
 /*********Option related functions*****************/
-void print_option(const Option *opt);
 
 
 gboolean get_boolean(const char *);
 char *get_string_copy(const char *);
 void unpack_string_array(GVariant *variant, int num_val, char ***val);
-void unpack_option_array(GVariant *var, int num_options, Option **options);
 void unpack_job_array(GVariant *var, int num_jobs, Job *jobs);
 GVariant *pack_string_array(int num_val, char **val);
-GVariant *pack_option(const Option *opt);
 char *get_absolute_path(char *file_path);
 /*********LISTING OF ALL POSSIBLE OPTIONS*****/
 //Rename these to something better if needed

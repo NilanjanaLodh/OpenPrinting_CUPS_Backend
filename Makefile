@@ -39,10 +39,16 @@ clean_gen:
 
 clean:
 	rm -f print_backend_cups print_frontend CUPS_src/*.o src/*.o src/*.a SampleFrontend/*.o
+	
+clean_release:
+	rm -f release/libs/* 
+	rm -f release/headers/*
 
 install:
 	./install.sh
 
 release: src/libCPD.a src/libCPDcore.a src/*.h
+	mkdir -p release/libs
+	mkdir -p release/headers
 	cp src/*.a release/libs
 	cp src/*.h release/headers

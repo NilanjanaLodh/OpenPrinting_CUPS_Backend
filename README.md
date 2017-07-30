@@ -5,10 +5,10 @@ This README just contains information on building and running the project. For m
 
 Build and installation
 ----
-- make gen
-- make 
-- sudo chmod u+x install.sh
-- sudo ./install.sh
+- make gen   _(Generates the interface code from the interface definition)_
+- make       
+- sudo make install _(Installs the backends)_
+- make release  _(Generates the headers and libraries in the /release folder)_
 
 
 
@@ -25,6 +25,7 @@ type __help__ to get a list of available commands at the backend.
 
 To run multiple frontends simultaneously, supply an extra argument denoting the instance number. For example:
 -  ./print_frontend 1
+
 In another terminal: 
 -  ./print_frontend 2
 
