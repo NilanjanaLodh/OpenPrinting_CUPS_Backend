@@ -1,44 +1,50 @@
 DIR := ${CURDIR}
-FLAGS=$(shell pkg-config --libs --cflags gio-2.0 gio-unix-2.0 glib-2.0)
-FLAGS+=-I$(DIR)/src
-FLAGS+=-L$(DIR)/src
-FLAGS+=-g
+INCLUDE=-I$(DIR)/src 
+INCLUDE+=$(shell pkg-config --cflags gio-2.0 gio-unix-2.0 glib-2.0)
 
-.PHONY:all gen release
+LIB=$(shell pkg-config --libs gio-2.0 gio-unix-2.0 glib-2.0)
+LIB+=-L$(DIR)/src/
 
-all: print_frontend print_backend_cups
+LIBDIR_FLAG=-Wl,-rpath=$(DIR)/src
 
+
+.PHONY:all gen release libs
+
+all: lib print_frontend print_backend_cups
 
 gen:genback genfront
 
-genfront:
+genfront: interface/org.openprinting.Frontend.xml
 	gdbus-codegen --generate-c-code frontend_interface  --interface-prefix org.openprinting interface/org.openprinting.Frontend.xml 
 	mv frontend_interface.* src/
 
-genback:
+genback: interface/org.openprinting.Backend.xml
 	gdbus-codegen --generate-c-code backend_interface  --interface-prefix org.openprinting interface/org.openprinting.Backend.xml 
 	mv backend_interface.* src/
 
 %.o: %.c
-	gcc -o $@ $^ -c $(FLAGS) 
+	gcc -fPIC $(INCLUDE) -o $@ $^ -c 
 
-src/libCPDcore.a: src/backend_interface.o src/frontend_interface.o src/common_helper.o
-	ar rcs -o $@ $^
+lib: src/libCPDBackend.so src/libCPDFrontend.so
 
-src/libCPD.a: src/backend_interface.o src/frontend_interface.o src/common_helper.o src/frontend_helper.o 
-	ar rcs -o $@ $^
 
-print_backend_cups: CUPS_src/print_backend_cups.o  CUPS_src/backend_helper.o src/libCPDcore.a
-	gcc -o $@ $^ $(FLAGS) -lcups -lCPDcore
+src/libCPDBackend.so: src/backend_interface.o src/frontend_interface.o src/common_helper.o
+	gcc -shared -o $@ $^ $(LIB)
 
-print_frontend: SampleFrontend/print_frontend.o src/libCPD.a
-	gcc -o $@ $^ $(FLAGS) -lCPD
+src/libCPDFrontend.so: src/backend_interface.o src/frontend_interface.o src/common_helper.o src/frontend_helper.o 
+	gcc -shared -o $@ $^ $(LIB)
+
+print_backend_cups: CUPS_src/print_backend_cups.c  CUPS_src/backend_helper.c
+	gcc $(INCLUDE) $(LIBDIR_FLAG) -o $@ $^ -lCPDBackend $(LIB) -lcups 
+
+print_frontend: SampleFrontend/print_frontend.c
+	gcc $(INCLUDE) $(LIBDIR_FLAG) -o $@ $^ -lCPDFrontend $(LIB)
 
 clean_gen:
 	rm -f src/backend_interface.* src/frontend_interface.*
 
 clean:
-	rm -f print_backend_cups print_frontend CUPS_src/*.o src/*.o src/*.a SampleFrontend/*.o
+	rm -f print_backend_cups print_frontend CUPS_src/*.o src/*.o src/*.so SampleFrontend/*.o
 	
 clean_release:
 	rm -f release/libs/* 
@@ -47,8 +53,8 @@ clean_release:
 install:
 	./install.sh
 
-release: src/libCPD.a src/libCPDcore.a src/*.h
+release: src/libCPDBackend.so src/libCPDFrontend.so src/*.h
 	mkdir -p release/libs
 	mkdir -p release/headers
-	cp src/*.a release/libs
+	cp src/*.so release/libs
 	cp src/*.h release/headers

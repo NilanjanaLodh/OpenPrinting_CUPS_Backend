@@ -184,8 +184,7 @@ void remove_printer_from_dialog(BackendObj *b, const char *dialog_name, const ch
 }
 void send_printer_added_signal(BackendObj *b, const char *dialog_name, cups_dest_t *dest)
 {
-    ///see if this works well for remote printers too
-
+    
     if (dest == NULL)
     {
         printf("dest is NULL, can't send signal\n");
