@@ -7,6 +7,7 @@ INSTALL_PATH?=/usr
 ##Libraries
 LIB_INSTALL_PATH=$(INSTALL_PATH)/lib
 HEADER_INSTALL_PATH=$(INSTALL_PATH)/include/cpd-interface-headers
+PKGCONFIG_PATH=$(LIB_INSTALL_PATH)/pkgconfig
 
 ##for the backends
 #Location of the backend executables
@@ -14,6 +15,12 @@ HEADER_INSTALL_PATH=$(INSTALL_PATH)/include/cpd-interface-headers
 BIN_INSTALL_PATH=/usr/bin/print-backends
 CONF_PATH=/usr/share/print-backends
 SERVICE_PATH=/usr/share/dbus-1/services
+
+##The compiler and linker flags for making backends
+CPD_BACK_FLAGS=$(shell pkg-config --cflags --libs CPDBackend)
+
+##The compiler and linker flags for making frontend clients
+CPD_FRONT_FLAGS=$(shell pkg-config --cflags --libs CPDFrontend)
 
 .PHONY : all  \
 clean  clean_gen lib install-lib \
@@ -52,14 +59,17 @@ src/libCPDFrontend.so: src/backend_interface.o src/frontend_interface.o src/comm
 
 #install the compiled libraries and their headers
 install-lib: src/*.so
+	mkdir -p $(LIB_INSTALL_PATH)
 	cp src/*.so $(LIB_INSTALL_PATH)
 	mkdir -p $(HEADER_INSTALL_PATH)
 	cp src/*.h $(HEADER_INSTALL_PATH)
+	mkdir -p $(PKGCONFIG_PATH)
+	cp src/*.pc $(PKGCONFIG_PATH)
 
 #compile the cups print backend
 CUPS_FLAGS=$(shell cups-config --cflags --libs)
 print_backend_cups: CUPS_src/print_backend_cups.c  CUPS_src/backend_helper.c
-	gcc -I$(HEADER_INSTALL_PATH) -o $@ $^ -lCPDBackend $(GLIB_FLAGS) $(CUPS_FLAGS)
+	gcc -o $@ $^ $(CPD_BACK_FLAGS) $(GLIB_FLAGS) $(CUPS_FLAGS)
 
 ##install the cups backend
 install-cups-backend:print_backend_cups
@@ -77,7 +87,7 @@ install-cups-backend:print_backend_cups
 
 ##compile the sample frontend
 print_frontend: SampleFrontend/print_frontend.c 
-	gcc -I$(HEADER_INSTALL_PATH) -o $@ $^ -lCPDFrontend $(GLIB_FLAGS)
+	gcc -o $@ $^ $(CPD_FRONT_FLAGS) $(GLIB_FLAGS)
 
 clean:clean-gen
 	rm -f src/*.so
@@ -87,7 +97,7 @@ clean:clean-gen
 uninstall-lib:
 	rm -f -r $(HEADER_INSTALL_PATH)
 	rm -f $(LIB_INSTALL_PATH)/libCPDBackend.so
-	rm -f $(LIB_INSTALL_PATH)/libCPDBackend.so
+	rm -f $(LIB_INSTALL_PATH)/libCPDFrontend.so
 	
 
 uninstall-cups-backend:

@@ -1,19 +1,20 @@
 # PrintDialog_Backend
 
-Contains the project I'm pursuing as a part of GSOC'17
+Contains the project I'm pursuing as a part of GSOC'17.<br/>
 This project basically has two major components
 - implementation of the CUPS and IPP Backends for the Common Printing Dialog Project(/CUPS_src)
-- the frontend and backend CPD interface libraries (/src)
+- the frontend and backend CPD interface libraries (/src).<br/>
+<br/>
 This README just contains information on building and running the project. For more details see [Project Wiki](https://github.com/NilanjanaLodh/PrintDialog_Backend/wiki  "Project Wiki")
 
 Build and installation
 ----
-You first need to compile and install the CPD Library; This is one of the dependencies of the backends and frotends.<br/>
+You first need to compile and install the CPD Library; This is one of the dependencies of the backends and the frotend client.<br/>
 - make lib   _(Compiles the libraries)_
 - sudo make install-lib _(Installs the libraries)_
 
 Then, you can build the rest of the project:  <br/>
-- make _(Compiles the cups backend and the sample frontend)_
+- make _(Compiles the cups backend and the sample frontend client)_
 - sudo make install _(Installs the backends)_
 
 Also, the __(make release)__ command places all the library files into a separate /release folder.
