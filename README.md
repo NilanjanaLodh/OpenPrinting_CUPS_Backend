@@ -42,4 +42,14 @@ In another terminal:
 - Make sure you exit all the frontends using the __stop__ command only; otherwise the backend doesn't get notified and keeps running in the background, hogging resources.
 - Apart from the autoactivating method, you can also run the backend first in one terminal and then run the frontend in another. Doing this will allow you to see the debug statements at the backend.
 
+Using the frontend and backend libraries
+----
+To develop a frontend client you need to use the CPDFrontend library.
+<br/>It has pkg-config support: `pkg-config --cflags --libs CPDFrontend`
+Include `CPDFrontend.h` in your code.
+
+<br/><br/>
+Similarly,to develop a backend you need to use the CPDBackend library.
+<br/>It has pkg-config support: `pkg-config --cflags --libs CPDBackend`
+Include `CPDBackend.h` in your code.
 
