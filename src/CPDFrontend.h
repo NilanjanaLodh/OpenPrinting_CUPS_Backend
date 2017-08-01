@@ -1,5 +1,5 @@
-#ifndef _CPD_H
-#define _CPD_H
+#ifndef _CPD_FRONT_H
+#define _CPD_FRONT_H
 
 #include "backend_interface.h"
 #include "frontend_interface.h"

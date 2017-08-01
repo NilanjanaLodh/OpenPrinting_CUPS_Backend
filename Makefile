@@ -1,60 +1,109 @@
-DIR := ${CURDIR}
-INCLUDE=-I$(DIR)/src 
-INCLUDE+=$(shell pkg-config --cflags gio-2.0 gio-unix-2.0 glib-2.0)
+DIR=$(shell pwd)
+#these are the glib headers and libraries required by all the files
+GLIB_FLAGS=$(shell pkg-config --cflags --libs gio-2.0 gio-unix-2.0 glib-2.0)
 
-LIB=$(shell pkg-config --libs gio-2.0 gio-unix-2.0 glib-2.0)
-LIB+=-L$(DIR)/src/
+##Installation paths (Where to install the library??)
+INSTALL_PATH?=/usr
+##Libraries
+LIB_INSTALL_PATH=$(INSTALL_PATH)/lib
+HEADER_INSTALL_PATH=$(INSTALL_PATH)/include/cpd-interface-headers
 
-LIBDIR_FLAG=-Wl,-rpath=$(DIR)/src
+##for the backends
+#Location of the backend executables
+##The following paths are fixed(i.e they should not be changed)
+BIN_INSTALL_PATH=/usr/bin/print-backends
+CONF_PATH=/usr/share/print-backends
+SERVICE_PATH=/usr/share/dbus-1/services
 
+.PHONY : all  \
+clean  clean_gen lib install-lib \
+install-cups-backend release install uninstall
 
-.PHONY:all gen release libs
+all: print_backend_cups print_frontend
+install: install-cups-backend 
 
-all: lib print_frontend print_backend_cups
+uninstall: uninstall-lib uninstall-cups-backend
 
-gen:genback genfront
+#autogenerate the interface code from xml definition 
+gen: src/backend_interface.c src/frontend_interface.c
 
-genfront: interface/org.openprinting.Frontend.xml
-	gdbus-codegen --generate-c-code frontend_interface  --interface-prefix org.openprinting interface/org.openprinting.Frontend.xml 
+src/frontend_interface.c:interface/org.openprinting.Frontend.xml
+	gdbus-codegen --generate-c-code frontend_interface --interface-prefix org.openprinting interface/org.openprinting.Frontend.xml 
 	mv frontend_interface.* src/
 
-genback: interface/org.openprinting.Backend.xml
-	gdbus-codegen --generate-c-code backend_interface  --interface-prefix org.openprinting interface/org.openprinting.Backend.xml 
+src/backend_interface.c:interface/org.openprinting.Backend.xml
+	gdbus-codegen --generate-c-code backend_interface --interface-prefix org.openprinting interface/org.openprinting.Backend.xml 
 	mv backend_interface.* src/
 
-%.o: %.c
-	gcc -fPIC $(INCLUDE) -o $@ $^ -c 
+clean-gen:
+	rm -f src/*_interface.*
 
+src/%.o: src/%.c
+	gcc -fPIC -c -o $@ $^ -I$(DIR)/src $(GLIB_FLAGS) 
+
+#compile the libraries
 lib: src/libCPDBackend.so src/libCPDFrontend.so
 
-
 src/libCPDBackend.so: src/backend_interface.o src/frontend_interface.o src/common_helper.o
-	gcc -shared -o $@ $^ $(LIB)
+	gcc -shared -o $@ $^ $(GLIB_FLAGS)
 
 src/libCPDFrontend.so: src/backend_interface.o src/frontend_interface.o src/common_helper.o src/frontend_helper.o 
-	gcc -shared -o $@ $^ $(LIB)
+	gcc -shared -o $@ $^ $(GLIB_FLAGS)
 
+#install the compiled libraries and their headers
+install-lib: src/*.so
+	cp src/*.so $(LIB_INSTALL_PATH)
+	mkdir -p $(HEADER_INSTALL_PATH)
+	cp src/*.h $(HEADER_INSTALL_PATH)
+
+#compile the cups print backend
+CUPS_FLAGS=$(shell cups-config --cflags --libs)
 print_backend_cups: CUPS_src/print_backend_cups.c  CUPS_src/backend_helper.c
-	gcc $(INCLUDE) $(LIBDIR_FLAG) -o $@ $^ -lCPDBackend $(LIB) -lcups 
+	gcc -I$(HEADER_INSTALL_PATH) -o $@ $^ -lCPDBackend $(GLIB_FLAGS) $(CUPS_FLAGS)
 
-print_frontend: SampleFrontend/print_frontend.c
-	gcc $(INCLUDE) $(LIBDIR_FLAG) -o $@ $^ -lCPDFrontend $(LIB)
+##install the cups backend
+install-cups-backend:print_backend_cups
+	$(info Installing cups backend executable $(BIN_INSTALL_PATH)/cups ..)
+	@mkdir -p $(BIN_INSTALL_PATH)	
+	@cp print_backend_cups $(BIN_INSTALL_PATH)/cups
 
-clean_gen:
-	rm -f src/backend_interface.* src/frontend_interface.*
+	$(info Installing dbus service file in $(SERVICE_PATH) ..)
+	@cp aux/org.openprinting.Backend.CUPS.service $(SERVICE_PATH)
 
-clean:
-	rm -f print_backend_cups print_frontend CUPS_src/*.o src/*.o src/*.so SampleFrontend/*.o
+	$(info Installing configuration file to be read by frontend in $(CONF_PATH) ..)	
+	@mkdir -p $(CONF_PATH)
+	@cp aux/org.openprinting.Backend.CUPS $(CONF_PATH)
+	$(info Done.)
+
+##compile the sample frontend
+print_frontend: SampleFrontend/print_frontend.c 
+	gcc -I$(HEADER_INSTALL_PATH) -o $@ $^ -lCPDFrontend $(GLIB_FLAGS)
+
+clean:clean-gen
+	rm -f src/*.so
+	rm -f src/*.o 
+	rm -f print_backend_cups print_frontend
+
+uninstall-lib:
+	rm -f -r $(HEADER_INSTALL_PATH)
+	rm -f $(LIB_INSTALL_PATH)/libCPDBackend.so
+	rm -f $(LIB_INSTALL_PATH)/libCPDBackend.so
 	
-clean_release:
-	rm -f release/libs/* 
-	rm -f release/headers/*
 
-install:
-	./install.sh
+uninstall-cups-backend:
+	$(info uninstalling cups backend..)
+	$(info uninstalling cups backend executable from $(BIN_INSTALL_PATH)..)	
+	@rm -f $(BIN_INSTALL_PATH)/cups
 
-release: src/libCPDBackend.so src/libCPDFrontend.so src/*.h
-	mkdir -p release/libs
-	mkdir -p release/headers
-	cp src/*.so release/libs
+	$(info uninstalling dbus service file from $(SERVICE_PATH)..)
+	@rm -f $(SERVICE_PATH)/org.openprinting.Backend.CUPS.service
+
+	$(info uninstalling configuration file from $(CONF_PATH) ..)	
+	@rm -f  $(CONF_PATH)/org.openprinting.Backend.CUPS
+	$(info Done.)
+
+release:
+	@mkdir -p release/headers
+	@mkdir -p release/libs
 	cp src/*.h release/headers
+	cp src/*.so release/libs

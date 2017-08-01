@@ -2,7 +2,7 @@
 print_backend_cups
 print_frontend
 .vscode/
-src/*.a
+src/*.so
 src/backend_interface.*
 src/frontend_interface.*
 release/headers/*

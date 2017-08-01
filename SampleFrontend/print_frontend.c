@@ -3,7 +3,7 @@
 #include <glib.h>
 #include <string.h>
 
-#include "CPD.h"
+#include "CPDFrontend.h"
 
 void display_help();
 gpointer parse_commands(gpointer user_data);
