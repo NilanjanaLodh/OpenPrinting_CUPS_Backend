@@ -47,9 +47,8 @@ Using the frontend and backend libraries
 To develop a frontend client you need to use the CPDFrontend library.
 <br/>It has pkg-config support: `pkg-config --cflags --libs CPDFrontend`
 Include `CPDFrontend.h` in your code.
-
 <br/><br/>
-Similarly,to develop a backend you need to use the CPDBackend library.
+Similarly, to develop a backend you need to use the CPDBackend library.
 <br/>It has pkg-config support: `pkg-config --cflags --libs CPDBackend`
 Include `CPDBackend.h` in your code.
 

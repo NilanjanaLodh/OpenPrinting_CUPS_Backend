@@ -58,7 +58,7 @@ src/libCPDFrontend.so: src/backend_interface.o src/frontend_interface.o src/comm
 	gcc -shared -o $@ $^ $(GLIB_FLAGS)
 
 #install the compiled libraries and their headers
-install-lib: src/*.so
+install-lib: src/libCPDBackend.so src/libCPDFrontend.so
 	mkdir -p $(LIB_INSTALL_PATH)
 	cp src/*.so $(LIB_INSTALL_PATH)
 	mkdir -p $(HEADER_INSTALL_PATH)
