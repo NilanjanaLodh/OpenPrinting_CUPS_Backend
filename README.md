@@ -7,6 +7,13 @@ This project basically has two major components
 <br/>
 This README just contains information on building and running the project. For more details see [Project Wiki](https://github.com/NilanjanaLodh/PrintDialog_Backend/wiki  "Project Wiki")
 
+##Note on cloning this repo:
+First time:<br/>
+use `git clone --recursive` to clone this repository. <br/>
+For pulling changes, use `git pull --recurse-submodules` instead of a regular `pull`.
+Otherwise, the interface/ folder would not get updated.
+
+
 Build and installation
 ----
 You first need to compile and install the CPD Library; This is one of the dependencies of the backends and the frotend client.<br/>
