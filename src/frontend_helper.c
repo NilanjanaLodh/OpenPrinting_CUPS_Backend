@@ -168,7 +168,7 @@ gboolean add_printer(FrontendObj *f, PrinterObj *p)
      */
     p->backend_proxy = g_hash_table_lookup(f->backend, p->backend_name);
 
-    g_hash_table_insert(f->printer, concat(p->name, p->backend_name), p);
+    g_hash_table_insert(f->printer, concat(p->id, p->backend_name), p);
     f->num_printers++;
     return TRUE;
 }
@@ -331,11 +331,11 @@ PrinterObj *get_new_PrinterObj()
 void fill_basic_options(PrinterObj *p, GVariant *gv)
 {
     g_variant_get(gv, PRINTER_ADDED_ARGS,
+                  &(p->id),
                   &(p->name),
                   &(p->info),
                   &(p->location),
                   &(p->make_and_model),
-                  &(p->uri),
                   &(p->is_accepting_jobs),
                   &(p->state),
                   &(p->backend_name));
@@ -344,18 +344,18 @@ void fill_basic_options(PrinterObj *p, GVariant *gv)
 void print_basic_options(PrinterObj *p)
 {
     g_message(" Printer %s\n\
+                name : %s\n\
                 location : %s\n\
                 info : %s\n\
                 make and model : %s\n\
-                uri : %s\n\
                 accepting_jobs : %d\n\
                 state : %s\n\
                 backend: %s\n ",
+              p->id,
               p->name,
               p->location,
               p->info,
               p->make_and_model,
-              p->uri,
               p->is_accepting_jobs,
               p->state,
               p->backend_name);

@@ -226,9 +226,10 @@ struct _PrinterObj
     PrintBackend *backend_proxy; /** The proxy object of the backend the printer is associated with **/
     char *backend_name;          /** Backend name ,("CUPS"/ "GCP") also used as suffix */
 
-    /**The basic options first**/
+    /**The basic attributes first**/
+        
+    char *id; 
     char *name;
-    char *uri;
     char *location;
     char *info;
     char *make_and_model;

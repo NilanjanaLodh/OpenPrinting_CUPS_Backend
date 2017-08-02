@@ -3,8 +3,7 @@
 #include <glib.h>
 #include <string.h>
 #include <cups/cups.h>
-#include "backend_interface.h"
-#include "common_helper.h"
+#include <CPDBackend.h>
 #include "backend_helper.h"
 
 #define _CUPS_NO_DEPRECATED 1

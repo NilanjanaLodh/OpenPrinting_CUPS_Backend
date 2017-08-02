@@ -1,16 +1,15 @@
 <node>
     <interface name="org.openprinting.PrintBackend">
         <signal name="PrinterAdded">
-            <!--id -->
+            <!-- sssssbss -->
+            <arg name="printer_id" direction="out" type="s"/>
             <arg name="printer_name" direction="out" type="s" />
             <arg name="printer_info" direction="out" type="s" />
             <arg name="printer_location" direction="out" type="s" />
             <arg name="printer_make_and_model" direction="out" type="s" />
-            <arg name="printer_uri" direction="out" type="s" /><!--omit-->
             <arg name="printer_is_accepting_jobs" direction="out" type="b" />
             <arg name="printer_state" direction="out" type="s" />
             <arg name="backend_name" direction="out" type="s"/>
-            <!--<arg name="auth_info_reqd" direction="out" type="s"/> -->
         </signal>
         <signal name="PrinterRemoved">
             <arg name="printer_name" type="s" />

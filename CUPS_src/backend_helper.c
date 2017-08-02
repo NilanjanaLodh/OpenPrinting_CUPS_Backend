@@ -184,7 +184,7 @@ void remove_printer_from_dialog(BackendObj *b, const char *dialog_name, const ch
 }
 void send_printer_added_signal(BackendObj *b, const char *dialog_name, cups_dest_t *dest)
 {
-    
+
     if (dest == NULL)
     {
         printf("dest is NULL, can't send signal\n");
@@ -192,11 +192,11 @@ void send_printer_added_signal(BackendObj *b, const char *dialog_name, cups_dest
     }
     char *printer_name = get_string_copy(dest->name);
     GVariant *gv = g_variant_new(PRINTER_ADDED_ARGS,
-                                 printer_name,
-                                 cups_retrieve_string(dest, "printer-info"),
-                                 cups_retrieve_string(dest, "printer-location"),
+                                 printer_name,                                   //id
+                                 printer_name,                                   //name
+                                 cups_retrieve_string(dest, "printer-info"),     //info
+                                 cups_retrieve_string(dest, "printer-location"), //location
                                  cups_retrieve_string(dest, "printer-make-and-model"),
-                                 cups_retrieve_string(dest, "device-uri"),
                                  cups_is_accepting_jobs(dest),
                                  cups_printer_state(dest),
                                  "CUPS");
@@ -576,7 +576,7 @@ int get_print_quality_supported(PrinterCUPS *p, char ***supported_values)
 
 int get_job_creation_attributes(PrinterCUPS *p, char ***values)
 {
-    
+
     int count = get_supported(p, values, "job-creation-attributes");
 }
 
