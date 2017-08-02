@@ -327,33 +327,7 @@ static gboolean on_handle_get_all_jobs(PrintBackend *interface,
     print_backend_complete_get_all_jobs(interface, invocation, n, variant);
     return TRUE;
 }
-static gboolean on_handle_get_default_media(PrintBackend *interface,
-                                            GDBusMethodInvocation *invocation,
-                                            const gchar *printer_name,
-                                            gpointer user_data)
-{
-    const char *dialog_name = g_dbus_method_invocation_get_sender(invocation); /// potential risk
-    PrinterCUPS *p = get_printer_by_name(b, dialog_name, printer_name);
-    const char *media = get_media_default(p);
-    g_message("Default media for %s is %s\n", printer_name, media);
-    print_backend_complete_get_default_media(interface, invocation, media);
-    return TRUE;
-}
 
-static gboolean on_handle_get_supported_media(PrintBackend *interface,
-                                              GDBusMethodInvocation *invocation,
-                                              const gchar *printer_name,
-                                              gpointer user_data)
-{
-    const char *dialog_name = g_dbus_method_invocation_get_sender(invocation); /// potential risk
-    PrinterCUPS *p = get_printer_by_name(b, dialog_name, printer_name);
-    char **supported_media = NULL;
-    int count = get_media_supported(p, &supported_media);
-    GVariant *values = pack_string_array(count, supported_media);
-    print_backend_complete_get_supported_media(interface, invocation, count, values);
-
-    return TRUE;
-}
 static gboolean on_handle_get_default_printer(PrintBackend *interface,
                                               GDBusMethodInvocation *invocation,
                                               gpointer user_data)
@@ -363,85 +337,7 @@ static gboolean on_handle_get_default_printer(PrintBackend *interface,
     print_backend_complete_get_default_printer(interface, invocation, def);
     return TRUE;
 }
-static gboolean on_handle_get_default_orientation(PrintBackend *interface,
-                                                  GDBusMethodInvocation *invocation,
-                                                  const gchar *printer_name,
-                                                  gpointer user_data)
-{
-    const char *dialog_name = g_dbus_method_invocation_get_sender(invocation); /// potential risk
-    PrinterCUPS *p = get_printer_by_name(b, dialog_name, printer_name);
-    const char *orientation = get_orientation_default(p);
-    printf("The default orientation is %s\n", orientation);
-    print_backend_complete_get_default_orientation(interface, invocation, orientation);
-    return TRUE;
-}
-static gboolean on_handle_get_supported_orientation(PrintBackend *interface,
-                                                    GDBusMethodInvocation *invocation,
-                                                    const gchar *printer_name,
-                                                    gpointer user_data)
-{
-    const char *dialog_name = g_dbus_method_invocation_get_sender(invocation); /// potential risk
-    PrinterCUPS *p = get_printer_by_name(b, dialog_name, printer_name);
-    char **supported_values = NULL;
-    int count = get_orientation_supported(p, &supported_values);
-    GVariant *values = pack_string_array(count, supported_values);
-    ///try freeing the array, just for fun
-    print_backend_complete_get_supported_orientation(interface, invocation, count, values);
 
-    return TRUE;
-}
-static gboolean on_handle_get_default_resolution(PrintBackend *interface,
-                                                 GDBusMethodInvocation *invocation,
-                                                 const gchar *printer_name,
-                                                 gpointer user_data)
-{
-    const char *dialog_name = g_dbus_method_invocation_get_sender(invocation); /// potential risk
-    PrinterCUPS *p = get_printer_by_name(b, dialog_name, printer_name);
-    char *res = get_resolution_default(p);
-    printf("The default resolution is %s\n", res);
-    print_backend_complete_get_default_resolution(interface, invocation, res);
-    return TRUE;
-}
-static gboolean on_handle_get_supported_resolution(PrintBackend *interface,
-                                                   GDBusMethodInvocation *invocation,
-                                                   const gchar *printer_name,
-                                                   gpointer user_data)
-{
-    const char *dialog_name = g_dbus_method_invocation_get_sender(invocation); /// potential risk
-    PrinterCUPS *p = get_printer_by_name(b, dialog_name, printer_name);
-    char **supported_values = NULL;
-    int count = get_resolution_supported(p, &supported_values);
-    GVariant *values = pack_string_array(count, supported_values);
-    print_backend_complete_get_supported_resolution(interface, invocation, count, values);
-
-    return TRUE;
-}
-static gboolean on_handle_get_default_color(PrintBackend *interface,
-                                            GDBusMethodInvocation *invocation,
-                                            const gchar *printer_name,
-                                            gpointer user_data)
-{
-    const char *dialog_name = g_dbus_method_invocation_get_sender(invocation); /// potential risk
-    PrinterCUPS *p = get_printer_by_name(b, dialog_name, printer_name);
-    const char *col = get_color_default(p);
-    printf("The default color is %s\n", col);
-    print_backend_complete_get_default_color(interface, invocation, col);
-    return TRUE;
-}
-static gboolean on_handle_get_supported_color(PrintBackend *interface,
-                                              GDBusMethodInvocation *invocation,
-                                              const gchar *printer_name,
-                                              gpointer user_data)
-{
-    const char *dialog_name = g_dbus_method_invocation_get_sender(invocation); /// potential risk
-    PrinterCUPS *p = get_printer_by_name(b, dialog_name, printer_name);
-    char **supported_values = NULL;
-    int count = get_color_supported(p, &supported_values);
-    GVariant *values = pack_string_array(count, supported_values);
-    print_backend_complete_get_supported_color(interface, invocation, count, values);
-
-    return TRUE;
-}
 void connect_to_signals()
 {
     PrintBackend *skeleton = b->skeleton;
@@ -464,38 +360,6 @@ void connect_to_signals()
     g_signal_connect(skeleton,                         //instance
                      "handle-print-file",              //signal name
                      G_CALLBACK(on_handle_print_file), //callback
-                     NULL);
-    g_signal_connect(skeleton,                                //instance
-                     "handle-get-default-media",              //signal name
-                     G_CALLBACK(on_handle_get_default_media), //callback
-                     NULL);
-    g_signal_connect(skeleton,                                  //instance
-                     "handle-get-supported-media",              //signal name
-                     G_CALLBACK(on_handle_get_supported_media), //callback
-                     NULL);
-    g_signal_connect(skeleton,                                      //instance
-                     "handle-get-default-orientation",              //signal name
-                     G_CALLBACK(on_handle_get_default_orientation), //callback
-                     NULL);
-    g_signal_connect(skeleton,                                        //instance
-                     "handle-get-supported-orientation",              //signal name
-                     G_CALLBACK(on_handle_get_supported_orientation), //callback
-                     NULL);
-    g_signal_connect(skeleton,                                     //instance
-                     "handle-get-default-resolution",              //signal name
-                     G_CALLBACK(on_handle_get_default_resolution), //callback
-                     NULL);
-    g_signal_connect(skeleton,                                       //instance
-                     "handle-get-supported-resolution",              //signal name
-                     G_CALLBACK(on_handle_get_supported_resolution), //callback
-                     NULL);
-    g_signal_connect(skeleton,                                //instance
-                     "handle-get-default-color",              //signal name
-                     G_CALLBACK(on_handle_get_default_color), //callback
-                     NULL);
-    g_signal_connect(skeleton,                                  //instance
-                     "handle-get-supported-color",              //signal name
-                     G_CALLBACK(on_handle_get_supported_color), //callback
                      NULL);
     g_signal_connect(skeleton,                                //instance
                      "handle-get-printer-state",              //signal name

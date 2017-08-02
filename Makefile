@@ -117,3 +117,8 @@ release:
 	@mkdir -p release/libs
 	cp src/*.h release/headers
 	cp src/*.so release/libs
+
+##The following target has been defined just to be useful while developing.
+##So that I dont need to install the libraries and the backend separately again and again
+##this will be removed later
+super: lib install-lib clean all install
