@@ -12,6 +12,8 @@
 #include "frontend_interface.h"
 
 #define PRINTER_ADDED_ARGS "(sssssbss)"
+#define JOB_ARGS "(ssssssi)"
+#define JOB_ARRAY_ARGS "a(ssssssi)"
 #define new_cstring_array(x) ((char **)(malloc(sizeof(char *) * x)))
 
 /*********Option related functions*****************/

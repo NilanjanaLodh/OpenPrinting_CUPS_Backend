@@ -334,7 +334,7 @@ GVariant *get_all_jobs(BackendObj *b, char *dialog_name, int *num_jobs, gboolean
 
     GVariantBuilder *builder;
     GVariant *variant;
-    builder = g_variant_builder_new(G_VARIANT_TYPE("a(isssssi)"));
+    builder = g_variant_builder_new(G_VARIANT_TYPE(JOB_ARRAY_ARGS));
 
     GHashTableIter iter;
     gpointer key, value;
@@ -370,7 +370,7 @@ GVariant *get_all_jobs(BackendObj *b, char *dialog_name, int *num_jobs, gboolean
     free(jobs);
 
     *num_jobs = n;
-    variant = g_variant_new("a(isssssi)", builder);
+    variant = g_variant_new(JOB_ARRAY_ARGS, builder);
     return variant;
 }
 /***************************PrinterObj********************************/
@@ -1057,8 +1057,10 @@ char *translate_job_state(ipp_jstate_t state)
 GVariant *pack_cups_job(cups_job_t job)
 {
     printf("%s\n", job.dest);
-    GVariant **t = g_new(GVariant *, 7);
-    t[0] = g_variant_new_int32(job.id);
+    GVariant **t = g_new0(GVariant *, 7);
+    char jobid[20];
+    sprintf(jobid, "%d" , job.id);
+    t[0] = g_variant_new_string(jobid);
     t[1] = g_variant_new_string(job.title);
     t[2] = g_variant_new_string(job.dest);
     t[3] = g_variant_new_string(job.user);

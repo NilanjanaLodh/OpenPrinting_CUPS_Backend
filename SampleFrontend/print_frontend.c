@@ -191,7 +191,7 @@ gpointer parse_commands(gpointer user_data)
             int i;
             for (i = 0; i < x; i++)
             {
-                printf("%d .. %s  .. %s  .. %s  .. %s\n", j[i].job_id, j[i].title, j[i].printer, j[i].state, j[i].submitted_at);
+                printf("%s .. %s  .. %s  .. %s  .. %s\n", j[i].job_id, j[i].title, j[i].printer, j[i].state, j[i].submitted_at);
             }
         }
     }

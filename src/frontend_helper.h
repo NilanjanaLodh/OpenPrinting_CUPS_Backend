@@ -433,7 +433,7 @@ ______________________________________ Job _____________________________________
 **/
 struct _Job
 { 
-    int job_id;
+    char* job_id;
     char *title;
     char *printer;
     char *user;

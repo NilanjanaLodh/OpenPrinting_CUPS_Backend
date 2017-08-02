@@ -7,10 +7,11 @@ This project basically has two major components
 <br/>
 This README just contains information on building and running the project. For more details see [Project Wiki](https://github.com/NilanjanaLodh/PrintDialog_Backend/wiki  "Project Wiki")
 
-##Note on cloning this repo:
+### Note on cloning this repo:
+
 First time:<br/>
 use `git clone --recursive` to clone this repository. <br/>
-For pulling changes, use `git pull --recurse-submodules` instead of a regular `pull`.
+For pulling changes, use `git pull --recurse-submodules && git submodule update --recursive`.
 Otherwise, the interface/ folder would not get updated.
 
 
