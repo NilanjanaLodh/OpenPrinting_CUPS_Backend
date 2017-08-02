@@ -120,9 +120,9 @@ void unhide_temporary_cups_printers(FrontendObj *f);
 PrintBackend *create_backend_from_file(const char *);
 
 /**
- * Find the PrinterObj instance with a particular name ans backend name.
+ * Find the PrinterObj instance with a particular id ans backend name.
  */
-PrinterObj *find_PrinterObj(FrontendObj *, char *printer_name, char *backend_name);
+PrinterObj *find_PrinterObj(FrontendObj *, char *printer_id, char *backend_name);
 
 /**
  * Get the default printer for a particular backend
@@ -154,13 +154,13 @@ char *get_default_printer(FrontendObj *, char *backend_name);
  * to avoid repeated hash table lookup everytime.
  */
 
-gboolean printer_is_accepting_jobs(FrontendObj *, char *printer_name, char *backend_name);
-char *get_printer_state(FrontendObj *, char *printer_name, char *backend_name);
+gboolean printer_is_accepting_jobs(FrontendObj *, char *printer_id, char *backend_name);
+char *get_printer_state(FrontendObj *, char *printer_id, char *backend_name);
 
 /**
  * Wrapper to get_all_options(PrinterObj *)
  */
-Options *get_all_printer_options(FrontendObj *, char *printer_name, char *backend_name);
+Options *get_all_printer_options(FrontendObj *, char *printer_id, char *backend_name);
 
 /**
  * Wrapper to get_default(PrinterObj * , char *name)
@@ -173,7 +173,7 @@ Options *get_all_printer_options(FrontendObj *, char *printer_name, char *backen
  * "NA" if the option is present , but default value isn't set
  * NULL if the option with the particular name doesn't exist.
  */
-char *get_default_value(FrontendObj *, char *option_name, char *printer_name, char *backend_name);
+char *get_default_value(FrontendObj *, char *option_name, char *printer_id, char *backend_name);
 
 /**
  * Wrapper to get_setting(PrinterObj * ,..)
@@ -185,7 +185,7 @@ char *get_default_value(FrontendObj *, char *option_name, char *printer_name, ch
  * the value of the setting(if it exists)
  * NULL if it doesn't exists
  */
-char *get_setting_value(FrontendObj *, char *option_name, char *printer_name, char *backend_name);
+char *get_setting_value(FrontendObj *, char *option_name, char *printer_id, char *backend_name);
 
 /**
  * Wrapper to get_current(PrinterObj * ,..)
@@ -197,9 +197,9 @@ char *get_setting_value(FrontendObj *, char *option_name, char *printer_name, ch
  * the current value of the option(if it exists)
  * NULL if it doesn't exists
  */
-char *get_current_value(FrontendObj *, char *option_name, char *printer_name, char *backend_name);
+char *get_current_value(FrontendObj *, char *option_name, char *printer_id, char *backend_name);
 
- int get_active_jobs_count(FrontendObj *, char *printer_name, char *backend_name);
+ int get_active_jobs_count(FrontendObj *, char *printer_id, char *backend_name);
 
 /**
  * Get the list of (all/active) jobs
@@ -221,7 +221,7 @@ int get_all_jobs(FrontendObj *, Job **j, gboolean active_only);
  * 
  * returns: job id
  */
-int print_file(FrontendObj *, char *file_path, char *printer_name, char *backend_name);
+int print_file(FrontendObj *, char *file_path, char *printer_id, char *backend_name);
 
 /*******************************************************************************************/
 

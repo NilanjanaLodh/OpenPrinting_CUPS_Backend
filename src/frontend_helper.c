@@ -212,13 +212,12 @@ void unhide_temporary_cups_printers(FrontendObj *f)
     print_frontend_emit_unhide_temporary_printers_cups(f->skeleton);
 }
 
-PrinterObj *find_PrinterObj(FrontendObj *f, char *printer_name, char *backend_name)
+PrinterObj *find_PrinterObj(FrontendObj *f, char *printer_id, char *backend_name)
 {
     char hashtable_key[512];
-    sprintf(hashtable_key, "%s#%s", printer_name, backend_name);
+    sprintf(hashtable_key, "%s#%s", printer_id, backend_name);
 
     PrinterObj *p = g_hash_table_lookup(f->printer, hashtable_key);
-    g_assert_nonnull(p);
     return p;
 }
 
@@ -239,45 +238,45 @@ char *get_default_printer(FrontendObj *f, char *backend_name)
  * The following functions are wrappers to the corresponding PrinterObj functions
 */
 
-gboolean printer_is_accepting_jobs(FrontendObj *f, char *printer_name, char *backend_name)
+gboolean printer_is_accepting_jobs(FrontendObj *f, char *printer_id, char *backend_name)
 {
-    PrinterObj *p = find_PrinterObj(f, printer_name, backend_name);
+    PrinterObj *p = find_PrinterObj(f, printer_id, backend_name);
     return is_accepting_jobs(p);
 }
 
-char *get_printer_state(FrontendObj *f, char *printer_name, char *backend_name)
+char *get_printer_state(FrontendObj *f, char *printer_id, char *backend_name)
 {
-    PrinterObj *p = find_PrinterObj(f, printer_name, backend_name);
+    PrinterObj *p = find_PrinterObj(f, printer_id, backend_name);
     return get_state(p);
 }
 
-Options *get_all_printer_options(FrontendObj *f, char *printer_name, char *backend_name)
+Options *get_all_printer_options(FrontendObj *f, char *printer_id, char *backend_name)
 {
-    PrinterObj *p = find_PrinterObj(f, printer_name, backend_name);
+    PrinterObj *p = find_PrinterObj(f, printer_id, backend_name);
     return get_all_options(p);
 }
 
-char *get_default_value(FrontendObj *f, char *option_name, char *printer_name, char *backend_name)
+char *get_default_value(FrontendObj *f, char *option_name, char *printer_id, char *backend_name)
 {
-    PrinterObj *p = find_PrinterObj(f, printer_name, backend_name);
+    PrinterObj *p = find_PrinterObj(f, printer_id, backend_name);
     return get_default(p, option_name);
 }
 
-char *get_setting_value(FrontendObj *f, char *option_name, char *printer_name, char *backend_name)
+char *get_setting_value(FrontendObj *f, char *option_name, char *printer_id, char *backend_name)
 {
-    PrinterObj *p = find_PrinterObj(f, printer_name, backend_name);
+    PrinterObj *p = find_PrinterObj(f, printer_id, backend_name);
     return get_setting(p, option_name);
 }
 
-char *get_current_value(FrontendObj *f, char *option_name, char *printer_name, char *backend_name)
+char *get_current_value(FrontendObj *f, char *option_name, char *printer_id, char *backend_name)
 {
-    PrinterObj *p = find_PrinterObj(f, printer_name, backend_name);
+    PrinterObj *p = find_PrinterObj(f, printer_id, backend_name);
     return get_current(p, option_name);
 }
 
-int get_active_jobs_count(FrontendObj *f, char *printer_name, char *backend_name)
+int get_active_jobs_count(FrontendObj *f, char *printer_id, char *backend_name)
 {
-    PrinterObj *p = find_PrinterObj(f, printer_name, backend_name);
+    PrinterObj *p = find_PrinterObj(f, printer_id, backend_name);
     return _get_active_jobs_count(p);
 }
 
@@ -314,9 +313,9 @@ int get_all_jobs(FrontendObj *f, Job **j, gboolean active_only)
     return total_jobs;
 }
 
-int print_file(FrontendObj *f, char *file_path, char *printer_name, char *backend_name)
+int print_file(FrontendObj *f, char *file_path, char *printer_id, char *backend_name)
 {
-    PrinterObj *p = find_PrinterObj(f, printer_name, backend_name);
+    PrinterObj *p = find_PrinterObj(f, printer_id, backend_name);
     return _print_file(p, file_path);
 }
 /**
