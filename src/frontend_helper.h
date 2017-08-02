@@ -15,7 +15,7 @@
 #define DBUS_DIR "/usr/share/print-backends"
 #define BACKEND_PREFIX "org.openprinting.Backend."
 
-typedef int (*event_callback)(void *);
+
 typedef struct _FrontendObj FrontendObj;
 typedef struct _PrinterObj PrinterObj;
 typedef struct _Settings Settings;
@@ -23,6 +23,7 @@ typedef struct _Options Options;
 typedef struct _Option Option;
 typedef struct _Job Job;
 
+typedef int (*event_callback)(PrinterObj *);
 /*********************definitions ***************************/
 
 /**
@@ -88,8 +89,15 @@ gboolean add_printer(FrontendObj *f, PrinterObj *p);
 
 /**
  * Remove the printer from FrontendObj
+ * 
+ * @returns
+ * The PrinterObj* struct corresponding to the printer just removed,
+ * or NULL if the removal was unsuccesful 
+ * 
+ * The PrinterObj removed is not deallocated. 
+ * The caller is responsible for deallocation
  */
-gboolean remove_printer(FrontendObj *f, char *printer_name);
+PrinterObj* remove_printer(FrontendObj *f, char *printer_id, char* backend_name);
 void refresh_printer_list(FrontendObj *f);
 
 /**
@@ -438,7 +446,7 @@ void unpack_job_array(GVariant *var, int num_jobs, Job *jobs);
  * ________________________________utility functions__________________________
  */
 
-char *concat(char *printer_name, char *backend_name);
+char *concat(char *printer_id, char *backend_name);
 
 /**
  * 'Unpack' (Deserialize) the GVariant returned in get_all_options

@@ -32,11 +32,12 @@ static void on_printer_removed(GDBusConnection *connection,
                                gpointer user_data)
 {
     FrontendObj *f = (FrontendObj *)user_data;
-    char *printer_name;
-    g_variant_get(parameters, "(s)", &printer_name);
-    remove_printer(f, printer_name);
-    g_message("Removed Printer %s!\n", printer_name);
-    f->rem_cb(printer_name);
+    char *printer_id;
+    char *backend_name;
+    g_variant_get(parameters, "(ss)", &printer_id, &backend_name);
+    PrinterObj *p = remove_printer(f, printer_id, backend_name);
+    g_message("Removed Printer %s : %s!\n", p->name, backend_name);
+    f->rem_cb(p);
 }
 
 static void
@@ -173,15 +174,17 @@ gboolean add_printer(FrontendObj *f, PrinterObj *p)
     return TRUE;
 }
 
-gboolean remove_printer(FrontendObj *f, char *printer_name)
+PrinterObj *remove_printer(FrontendObj *f, char *printer_id, char *backend_name)
 {
-    if (g_hash_table_contains(f->printer, printer_name))
+    char *key = concat(printer_id, backend_name);
+    if (g_hash_table_contains(f->printer, key))
     {
-        g_hash_table_remove(f->printer, printer_name);
+        PrinterObj *p = find_PrinterObj(f, printer_id, backend_name);
+        g_hash_table_remove(f->printer, key);
         f->num_printers--;
-        return TRUE;
+        return p;
     }
-    return FALSE;
+    return NULL;
 }
 
 void refresh_printer_list(FrontendObj *f)
@@ -606,9 +609,9 @@ void unpack_job_array(GVariant *var, int num_jobs, Job *jobs)
     g_variant_get(var, "a(isssssi)", &iter);
     int jobid, size;
     char *title, *printer, *user, *state, *submit_time;
-    for (i = 0; i < num_jobs ; i++)
+    for (i = 0; i < num_jobs; i++)
     {
-        g_variant_iter_loop(iter, "(isssssi)", &jobid, &title, &printer , &user, &state, &submit_time , &size);
+        g_variant_iter_loop(iter, "(isssssi)", &jobid, &title, &printer, &user, &state, &submit_time, &size);
         jobs[i].job_id = jobid;
         jobs[i].title = get_string_copy(title);
         jobs[i].printer = get_string_copy(printer);
@@ -623,10 +626,10 @@ void unpack_job_array(GVariant *var, int num_jobs, Job *jobs)
 /**
  * ________________________________utility functions__________________________
  */
-char *concat(char *a, char *b)
+char *concat(char *printer_id, char *backend_name)
 {
     char str[512];
-    sprintf(str, "%s#%s", a, b);
+    sprintf(str, "%s#%s", printer_id, backend_name);
     return get_string_copy(str);
 }
 

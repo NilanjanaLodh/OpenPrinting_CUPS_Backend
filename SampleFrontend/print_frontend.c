@@ -14,9 +14,9 @@ static int add_printer_callback(PrinterObj *p)
     printf("print_frontend.c : Printer %s added!\n", p->name);
 }
 
-static int remove_printer_callback(char *printer_name)
+static int remove_printer_callback(PrinterObj *p)
 {
-    printf("print_frontend.c : Printer %s removed!\n", printer_name);
+    printf("print_frontend.c : Printer %s removed!\n", p->name);
 }
 
 int main(int argc, char **argv)

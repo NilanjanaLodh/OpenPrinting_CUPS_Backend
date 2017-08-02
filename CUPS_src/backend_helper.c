@@ -220,7 +220,7 @@ void send_printer_removed_signal(BackendObj *b, const char *dialog_name, const c
                                   b->obj_path,
                                   "org.openprinting.PrintBackend",
                                   PRINTER_REMOVED_SIGNAL,
-                                  g_variant_new("(s)", printer_name),
+                                  g_variant_new("(ss)", printer_name , "CUPS"),
                                   &error);
     g_assert_no_error(error);
 }
