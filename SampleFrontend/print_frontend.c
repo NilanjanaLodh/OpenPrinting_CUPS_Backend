@@ -191,8 +191,20 @@ gpointer parse_commands(gpointer user_data)
             int i;
             for (i = 0; i < x; i++)
             {
-                printf("%s .. %s  .. %s  .. %s  .. %s\n", j[i].job_id, j[i].title, j[i].printer, j[i].state, j[i].submitted_at);
+                printf("%s .. %s  .. %s  .. %s  .. %s\n", j[i].job_id, j[i].title, j[i].printer_id, j[i].state, j[i].submitted_at);
             }
+        }
+         else if (strcmp(buf, "cancel-job") == 0)
+        {
+            char printer_id[100];
+            char backend_name[100];
+            char job_id[100];
+            scanf("%s%s%s",job_id, printer_id, backend_name);
+            PrinterObj *p = find_PrinterObj(f,printer_id, backend_name);
+            if(cancel_job(p, job_id))
+                printf("Job %s has been cancelled.\n", job_id);
+            else
+                printf("Unable to cancel job %s\n", job_id);
         }
     }
 }
@@ -206,18 +218,20 @@ void display_help()
     printf("%s\n", "unhide-remote-cups");
     printf("%s\n", "hide-temporary-cups");
     printf("%s\n", "unhide-temporary-cups");
-    //printf("%s\n", "ping <printer name> ");
+    //printf("%s\n", "ping <printer id> ");
     printf("%s\n", "get-default-printer <backend name>");
     printf("print-file <file path> <printer_name> <backend_name>\n");
     printf("get-active-jobs-count <printer-name> <backend-name>\n");
     printf("get-all-jobs <0 for all jobs; 1 for only active>\n");
-    printf("%s\n", "get-state <printer name> <backend name>");
-    printf("%s\n", "is-accepting-jobs <printer name> <backend name(like \"CUPS\")>");
-
+    printf("%s\n", "get-state <printer id> <backend name>");
+    printf("%s\n", "is-accepting-jobs <printer id> <backend name(like \"CUPS\")>");
+    printf("%s\n", "cancel-job <job-id> <printer id> <backend name>");
+    
     printf("get-all-options <printer-name> <backend-name>\n");
-    printf("%s\n", "get-default <option name> <printer name> <backend name>");
-    printf("%s\n", "get-setting <option name> <printer name> <backend name>");
-    printf("%s\n", "get-current <option name> <printer name> <backend name>");
-    printf("%s\n", "add-setting <option name> <option value> <printer name> <backend name>");
-    printf("%s\n", "clear-setting <option name> <printer name> <backend name>");
+    printf("%s\n", "get-default <option name> <printer id> <backend name>");
+    printf("%s\n", "get-setting <option name> <printer id> <backend name>");
+    printf("%s\n", "get-current <option name> <printer id> <backend name>");
+    printf("%s\n", "add-setting <option name> <option value> <printer id> <backend name>");
+    printf("%s\n", "clear-setting <option name> <printer id> <backend name>");
+
 }

@@ -15,7 +15,6 @@
 #define DBUS_DIR "/usr/share/print-backends"
 #define BACKEND_PREFIX "org.openprinting.Backend."
 
-
 typedef struct _FrontendObj FrontendObj;
 typedef struct _PrinterObj PrinterObj;
 typedef struct _Settings Settings;
@@ -97,7 +96,7 @@ gboolean add_printer(FrontendObj *f, PrinterObj *p);
  * The PrinterObj removed is not deallocated. 
  * The caller is responsible for deallocation
  */
-PrinterObj* remove_printer(FrontendObj *f, char *printer_id, char* backend_name);
+PrinterObj *remove_printer(FrontendObj *f, char *printer_id, char *backend_name);
 void refresh_printer_list(FrontendObj *f);
 
 /**
@@ -199,7 +198,7 @@ char *get_setting_value(FrontendObj *, char *option_name, char *printer_id, char
  */
 char *get_current_value(FrontendObj *, char *option_name, char *printer_id, char *backend_name);
 
- int get_active_jobs_count(FrontendObj *, char *printer_id, char *backend_name);
+int get_active_jobs_count(FrontendObj *, char *printer_id, char *backend_name);
 
 /**
  * Get the list of (all/active) jobs
@@ -223,20 +222,25 @@ int get_all_jobs(FrontendObj *, Job **j, gboolean active_only);
  */
 int print_file(FrontendObj *, char *file_path, char *printer_id, char *backend_name);
 
-/*******************************************************************************************/
-
 /**
+ * Wrapper to cancel_job(PrinterObj * , char*)
+ */
+gboolean cancel_job_on_printer(FrontendObj *, char *job_id, char *printer_id, char *backend_name);
+
+    /*******************************************************************************************/
+
+    /**
 ______________________________________ PrinterObj __________________________________________
 
 **/
-struct _PrinterObj
+    struct _PrinterObj
 {
     PrintBackend *backend_proxy; /** The proxy object of the backend the printer is associated with **/
     char *backend_name;          /** Backend name ,("CUPS"/ "GCP") also used as suffix */
 
     /**The basic attributes first**/
-        
-    char *id; 
+
+    char *id;
     char *name;
     char *location;
     char *info;
@@ -348,6 +352,15 @@ void add_setting_to_printer(PrinterObj *p, char *name, char *val);
  * @param name : name of the setting
  */
 gboolean clear_setting_from_printer(PrinterObj *p, char *name);
+
+/**
+ * Cancel a job on the printer
+ * 
+ * @returns 
+ * TRUE if job cancellation was successful
+ * FALSE otherwise
+ */
+gboolean cancel_job(PrinterObj *p, char *job_id);
 /************************************************************************************************/
 /**
 ______________________________________ Settings __________________________________________
@@ -416,7 +429,7 @@ ______________________________________ Option __________________________________
 
 **/
 struct _Option
-{ 
+{
     const char *option_name;
     int num_supported;
     char **supported_values;
@@ -432,16 +445,17 @@ ______________________________________ Job _____________________________________
 
 **/
 struct _Job
-{ 
-    char* job_id;
+{
+    char *job_id;
     char *title;
-    char *printer;
+    char *printer_id;
+    char *backend_name;
     char *user;
     char *state;
     char *submitted_at;
     int size;
 };
-void unpack_job_array(GVariant *var, int num_jobs, Job *jobs);
+void unpack_job_array(GVariant *var, int num_jobs, Job *jobs, char*backend_name);
 /**
  * ________________________________utility functions__________________________
  */

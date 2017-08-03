@@ -291,21 +291,24 @@ int get_all_jobs(FrontendObj *f, Job **j, gboolean active_only)
 
     int i = 0;
     int total_jobs = 0;
+    char **backend_names = g_new0(char *, f->num_backends);
     while (g_hash_table_iter_next(&iter, &key, &value))
     {
         /** Polling all the backends for their active jobs**/
         PrintBackend *proxy = (PrintBackend *)value;
 
+        /**to do: change this to asynchronous call for better performance */
         print_backend_call_get_all_jobs_sync(proxy, active_only, &(num_jobs[i]), &(var[i]), NULL, NULL);
-
+        backend_names[i] = (char *)key;
         printf("%d jobs\n", num_jobs[i]);
         total_jobs += num_jobs[i];
     }
     Job *jobs = g_new(Job, total_jobs);
     int n = 0;
+
     for (i = 0; i < f->num_backends; i++)
     {
-        unpack_job_array(var[i], num_jobs[i], jobs + n);
+        unpack_job_array(var[i], num_jobs[i], jobs + n, backend_names[i]);
         n += num_jobs[i];
     }
 
@@ -317,6 +320,11 @@ int print_file(FrontendObj *f, char *file_path, char *printer_id, char *backend_
 {
     PrinterObj *p = find_PrinterObj(f, printer_id, backend_name);
     return _print_file(p, file_path);
+}
+gboolean cancel_job_on_printer(FrontendObj *f, char *job_id, char *printer_id, char *backend_name)
+{
+    PrinterObj *p = find_PrinterObj(f, printer_id, backend_name);
+    return cancel_job(p, job_id);
 }
 /**
 ________________________________________________ PrinterObj __________________________________________
@@ -466,6 +474,13 @@ gboolean clear_setting_from_printer(PrinterObj *p, char *name)
 {
     clear_setting(p->settings, name);
 }
+gboolean cancel_job(PrinterObj *p, char *job_id)
+{
+    gboolean status;
+    print_backend_call_cancel_job_sync(p->backend_proxy, job_id, p->id,
+                                       &status, NULL, NULL);
+    return status;
+}
 
 /**
 ________________________________________________ Settings __________________________________________
@@ -600,7 +615,7 @@ GVariant *pack_option(const Option *opt)
 /**
  * ________________________________ Job __________________________
  */
-void unpack_job_array(GVariant *var, int num_jobs, Job *jobs)
+void unpack_job_array(GVariant *var, int num_jobs, Job *jobs, char *backend_name)
 {
     int i;
     char *str;
@@ -613,7 +628,8 @@ void unpack_job_array(GVariant *var, int num_jobs, Job *jobs)
         g_variant_iter_loop(iter, JOB_ARGS, &jobid, &title, &printer, &user, &state, &submit_time, &size);
         jobs[i].job_id = get_string_copy(jobid);
         jobs[i].title = get_string_copy(title);
-        jobs[i].printer = get_string_copy(printer);
+        jobs[i].printer_id = get_string_copy(printer);
+        jobs[i].backend_name = backend_name;
         jobs[i].user = get_string_copy(user);
         jobs[i].state = get_string_copy(state);
         jobs[i].submitted_at = get_string_copy(submit_time);

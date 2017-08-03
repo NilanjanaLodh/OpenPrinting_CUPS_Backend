@@ -8,7 +8,6 @@
 #include <cups/cups.h>
 #include <CPDBackend.h>
 
-
 #define CAPABILITY_COPIES (1)
 #define CAPABILITY_MEDIA (1 << 1)
 #define CAPABILITY_NUMBER_UP (1 << 2)
@@ -59,13 +58,12 @@ typedef struct _Res
 } Res;
 
 typedef struct _Option
-{ 
+{
     const char *option_name;
     int num_supported;
     char **supported_values;
     char *default_value;
 } Option;
-
 
 typedef char *(*extract_func)(ipp_attribute_t *, int index);
 /********Backend related functions*******************/
@@ -109,32 +107,29 @@ int get_media_supported(PrinterCUPS *p, char ***supported_values);
 const char *get_orientation_default(PrinterCUPS *p);
 int get_orientation_supported(PrinterCUPS *p, char ***supported_values);
 
-char* get_resolution_default(PrinterCUPS *p);
+char *get_resolution_default(PrinterCUPS *p);
 int get_resolution_supported(PrinterCUPS *p, char ***supported_values);
 
-const char* get_color_default(PrinterCUPS *p);
+const char *get_color_default(PrinterCUPS *p);
 int get_color_supported(PrinterCUPS *p, char ***supported_values);
 
 int get_print_quality_supported(PrinterCUPS *p, char ***supported_values);
-
 
 const char *get_default(PrinterCUPS *p, char *option_name);
 int get_supported(PrinterCUPS *p, char ***supported_values, const char *option_name);
 
 int get_all_options(PrinterCUPS *p, Option **options);
 
-int print_file(PrinterCUPS *p, char *file_path , int num_settings , GVariant *settings);
+int print_file(PrinterCUPS *p, char *file_path, int num_settings, GVariant *settings);
 
 int get_active_jobs_count(PrinterCUPS *p);
-
+gboolean cancel_job(PrinterCUPS *p, int jobid);
 /*********Option related functions*****************/
 void print_option(const Option *opt);
 void unpack_option_array(GVariant *var, int num_options, Option **options);
 GVariant *pack_option(const Option *opt);
 /**********Mapping related functions*****************/
 Mappings *get_new_Mappings();
-
-
 
 /*************CUPS/IPP RELATED FUNCTIONS******************/
 const char *cups_printer_state(cups_dest_t *dest);
@@ -145,13 +140,13 @@ GHashTable *cups_get_local_printers();
 char *cups_retrieve_string(cups_dest_t *dest, const char *option_name);
 gboolean cups_is_temporary(cups_dest_t *dest);
 GHashTable *cups_get_printers(gboolean notemp, gboolean noremote);
-char* extract_ipp_attribute(ipp_attribute_t *, int index , const char * option_name , PrinterCUPS *p);
-char* extract_res_from_ipp(ipp_attribute_t *, int index);
+char *extract_ipp_attribute(ipp_attribute_t *, int index, const char *option_name, PrinterCUPS *p);
+char *extract_res_from_ipp(ipp_attribute_t *, int index);
 char *extract_string_from_ipp(ipp_attribute_t *attr, int index);
 char *extract_orientation_from_ipp(ipp_attribute_t *attr, int index);
 char *extract_quality_from_ipp(ipp_attribute_t *attr, int index);
-char *extract_media_from_ipp(ipp_attribute_t *attr, int index , PrinterCUPS *p);
+char *extract_media_from_ipp(ipp_attribute_t *attr, int index, PrinterCUPS *p);
 void print_job(cups_job_t *j);
 GVariant *pack_cups_job(cups_job_t job);
-char* translate_job_state(ipp_jstate_t );
+char *translate_job_state(ipp_jstate_t);
 #endif

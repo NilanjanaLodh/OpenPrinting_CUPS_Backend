@@ -327,6 +327,19 @@ static gboolean on_handle_get_all_jobs(PrintBackend *interface,
     print_backend_complete_get_all_jobs(interface, invocation, n, variant);
     return TRUE;
 }
+static gboolean on_handle_cancel_job(PrintBackend *interface,
+                                     GDBusMethodInvocation *invocation,
+                                     const gchar *job_id,
+                                     const gchar *printer_name,
+                                     gpointer user_data)
+{
+    const char *dialog_name = g_dbus_method_invocation_get_sender(invocation);
+    int jobid = atoi(job_id); /**to do. check if given job id is integer */
+    PrinterCUPS *p = get_printer_by_name(b, dialog_name, printer_name);
+    gboolean status = cancel_job(p, jobid);
+    print_backend_complete_cancel_job(interface, invocation, status);
+    return TRUE;
+}
 
 static gboolean on_handle_get_default_printer(PrintBackend *interface,
                                               GDBusMethodInvocation *invocation,
@@ -345,9 +358,9 @@ void connect_to_signals()
                      "handle-activate-backend",              //signal name
                      G_CALLBACK(on_handle_activate_backend), //callback
                      NULL);
-    g_signal_connect(skeleton,                                 //instance
-                     "handle-get-all-options",                 //signal name
-                     G_CALLBACK(on_handle_get_all_options),    //callback
+    g_signal_connect(skeleton,                              //instance
+                     "handle-get-all-options",              //signal name
+                     G_CALLBACK(on_handle_get_all_options), //callback
                      NULL);
     g_signal_connect(skeleton,                   //instance
                      "handle-ping",              //signal name
@@ -377,7 +390,10 @@ void connect_to_signals()
                      "handle-get-all-jobs",              //signal name
                      G_CALLBACK(on_handle_get_all_jobs), //callback
                      NULL);
-
+    g_signal_connect(skeleton,                         //instance
+                     "handle-cancel-job",              //signal name
+                     G_CALLBACK(on_handle_cancel_job), //callback
+                     NULL);
     /**
      * To do: comment which signals are compulsory and which aren't
      */

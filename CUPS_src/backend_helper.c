@@ -220,7 +220,7 @@ void send_printer_removed_signal(BackendObj *b, const char *dialog_name, const c
                                   b->obj_path,
                                   "org.openprinting.PrintBackend",
                                   PRINTER_REMOVED_SIGNAL,
-                                  g_variant_new("(ss)", printer_name , "CUPS"),
+                                  g_variant_new("(ss)", printer_name, "CUPS"),
                                   &error);
     g_assert_no_error(error);
 }
@@ -783,6 +783,14 @@ int get_active_jobs_count(PrinterCUPS *p)
     cupsFreeJobs(num_jobs, jobs);
     return num_jobs;
 }
+gboolean cancel_job(PrinterCUPS *p, int jobid)
+{
+    ensure_printer_connection(p);
+    ipp_status_t status = cupsCancelDestJob(p->http, p->dest, jobid);
+    if (status == IPP_STATUS_OK)
+        return TRUE;
+    return FALSE;
+}
 void printAllJobs(PrinterCUPS *p)
 {
     ensure_printer_connection(p);
@@ -1059,7 +1067,7 @@ GVariant *pack_cups_job(cups_job_t job)
     printf("%s\n", job.dest);
     GVariant **t = g_new0(GVariant *, 7);
     char jobid[20];
-    sprintf(jobid, "%d" , job.id);
+    sprintf(jobid, "%d", job.id);
     t[0] = g_variant_new_string(jobid);
     t[1] = g_variant_new_string(job.title);
     t[2] = g_variant_new_string(job.dest);
