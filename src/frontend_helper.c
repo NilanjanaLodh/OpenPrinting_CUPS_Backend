@@ -374,7 +374,7 @@ void print_basic_options(PrinterObj *p)
 gboolean is_accepting_jobs(PrinterObj *p)
 {
     GError *error = NULL;
-    print_backend_call_is_accepting_jobs_sync(p->backend_proxy, p->name,
+    print_backend_call_is_accepting_jobs_sync(p->backend_proxy, p->id,
                                               &p->is_accepting_jobs, NULL, &error);
     g_assert_no_error(error);
 
@@ -385,7 +385,7 @@ gboolean is_accepting_jobs(PrinterObj *p)
 char *get_state(PrinterObj *p)
 {
     GError *error = NULL;
-    print_backend_call_get_printer_state_sync(p->backend_proxy, p->name, &p->state, NULL, &error);
+    print_backend_call_get_printer_state_sync(p->backend_proxy, p->id, &p->state, NULL, &error);
     g_assert_no_error(error);
 
     g_message("%s", p->state);
@@ -405,7 +405,7 @@ Options *get_all_options(PrinterObj *p)
     GError *error = NULL;
     int num_options;
     GVariant *var;
-    print_backend_call_get_all_options_sync(p->backend_proxy, p->name,
+    print_backend_call_get_all_options_sync(p->backend_proxy, p->id,
                                             &num_options, &var, NULL, &error);
     printf("Num_options is %d\n", num_options);
     unpack_options(var, num_options, p->options);
@@ -448,14 +448,14 @@ char *get_current(PrinterObj *p, char *name)
 int _get_active_jobs_count(PrinterObj *p)
 {
     int count;
-    print_backend_call_get_active_jobs_count_sync(p->backend_proxy, p->name, &count, NULL, NULL);
+    print_backend_call_get_active_jobs_count_sync(p->backend_proxy, p->id, &count, NULL, NULL);
     printf("%d jobs currently active.\n", count);
     return count;
 }
 int _print_file(PrinterObj *p, char *file_path)
 {
     int jobid;
-    print_backend_call_print_file_sync(p->backend_proxy, p->name, file_path,
+    print_backend_call_print_file_sync(p->backend_proxy, p->id, file_path,
                                        p->settings->count,
                                        serialize_Settings(p->settings),
                                        &jobid, NULL, NULL);
