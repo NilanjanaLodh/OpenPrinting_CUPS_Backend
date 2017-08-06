@@ -46,7 +46,7 @@ clean-gen:
 	rm -f src/*_interface.*
 
 src/%.o: src/%.c
-	gcc -fPIC -c -o $@ $^ -I$(DIR)/src $(GLIB_FLAGS) 
+	gcc -g -pg -fPIC -c -o $@ $^ -I$(DIR)/src $(GLIB_FLAGS) 
 
 #compile the libraries
 lib: src/libCPDBackend.so src/libCPDFrontend.so
@@ -69,7 +69,7 @@ install-lib: src/libCPDBackend.so src/libCPDFrontend.so
 #compile the cups print backend
 CUPS_FLAGS=$(shell cups-config --cflags --libs)
 print_backend_cups: CUPS_src/print_backend_cups.c  CUPS_src/backend_helper.c
-	gcc -g -o $@ $^ $(CPD_BACK_FLAGS) $(GLIB_FLAGS) $(CUPS_FLAGS)
+	gcc -g -pg -o $@ $^ $(CPD_BACK_FLAGS) $(GLIB_FLAGS) $(CUPS_FLAGS)
 
 ##install the cups backend
 install-cups-backend:print_backend_cups
@@ -87,7 +87,7 @@ install-cups-backend:print_backend_cups
 
 ##compile the sample frontend
 print_frontend: SampleFrontend/print_frontend.c 
-	gcc -o $@ $^ $(CPD_FRONT_FLAGS) $(GLIB_FLAGS)
+	gcc -g -pg -o $@ $^ $(CPD_FRONT_FLAGS) $(GLIB_FLAGS)
 
 clean:clean-gen
 	rm -f src/*.so

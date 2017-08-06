@@ -83,13 +83,15 @@ gpointer parse_commands(gpointer user_data)
             char backend_name[100];
             scanf("%s%s", printer_name, backend_name);
             g_message("Getting all attributes ..\n");
-            get_all_printer_options(f, printer_name, backend_name);
+            PrinterObj *p = find_PrinterObj(f, printer_name, backend_name);
+            get_all_options(p);
         }
         else if (strcmp(buf, "get-default") == 0)
         {
             char printer_name[100], backend_name[100], option_name[100];
             scanf("%s%s%s", option_name, printer_name, backend_name);
-            char *ans = get_default_value(f, option_name, printer_name, backend_name);
+            PrinterObj *p = find_PrinterObj(f, printer_name, backend_name);
+            char *ans = get_default(p, option_name);
             if (!ans)
                 printf("Option %s doesn't exist.", option_name);
             else
@@ -99,7 +101,8 @@ gpointer parse_commands(gpointer user_data)
         {
             char printer_name[100], backend_name[100], setting_name[100];
             scanf("%s%s%s", setting_name, printer_name, backend_name);
-            char *ans = get_setting_value(f, setting_name, printer_name, backend_name);
+            PrinterObj *p = find_PrinterObj(f, printer_name, backend_name);
+            char *ans = get_setting(p, setting_name);
             if (!ans)
                 printf("Setting %s doesn't exist.\n", setting_name);
             else
@@ -109,7 +112,8 @@ gpointer parse_commands(gpointer user_data)
         {
             char printer_name[100], backend_name[100], option_name[100];
             scanf("%s%s%s", option_name, printer_name, backend_name);
-            char *ans = get_current_value(f, option_name, printer_name, backend_name);
+            PrinterObj *p = find_PrinterObj(f, printer_name, backend_name);
+            char *ans = get_current(p, option_name);
             if (!ans)
                 printf("Option %s doesn't exist.", option_name);
             else
@@ -135,14 +139,16 @@ gpointer parse_commands(gpointer user_data)
             char printer_name[100];
             char backend_name[100];
             scanf("%s%s", printer_name, backend_name);
-            get_printer_state(f, printer_name, backend_name);
+            PrinterObj *p = find_PrinterObj(f, printer_name, backend_name);
+            get_state(p);
         }
         else if (strcmp(buf, "is-accepting-jobs") == 0)
         {
             char printer_name[100];
             char backend_name[100];
             scanf("%s%s", printer_name, backend_name);
-            printer_is_accepting_jobs(f, printer_name, backend_name);
+            PrinterObj *p = find_PrinterObj(f, printer_name, backend_name);
+            is_accepting_jobs(p);
         }
         else if (strcmp(buf, "help") == 0)
         {
@@ -173,14 +179,15 @@ gpointer parse_commands(gpointer user_data)
              */
             PrinterObj *p = find_PrinterObj(f, printer_name, backend_name);
             add_setting_to_printer(p, "copies", "3");
-            print_file(f, file_path, printer_name, backend_name);
+            print_file(p,file_path);
         }
         else if (strcmp(buf, "get-active-jobs-count") == 0)
         {
             char printer_name[100];
             char backend_name[100];
             scanf("%s%s", printer_name, backend_name);
-            get_active_jobs_count(f, printer_name, backend_name);
+            PrinterObj *p = find_PrinterObj(f, printer_name, backend_name);
+            get_active_jobs_count(p);
         }
         else if (strcmp(buf, "get-all-jobs") == 0)
         {
@@ -194,14 +201,14 @@ gpointer parse_commands(gpointer user_data)
                 printf("%s .. %s  .. %s  .. %s  .. %s\n", j[i].job_id, j[i].title, j[i].printer_id, j[i].state, j[i].submitted_at);
             }
         }
-         else if (strcmp(buf, "cancel-job") == 0)
+        else if (strcmp(buf, "cancel-job") == 0)
         {
             char printer_id[100];
             char backend_name[100];
             char job_id[100];
-            scanf("%s%s%s",job_id, printer_id, backend_name);
-            PrinterObj *p = find_PrinterObj(f,printer_id, backend_name);
-            if(cancel_job(p, job_id))
+            scanf("%s%s%s", job_id, printer_id, backend_name);
+            PrinterObj *p = find_PrinterObj(f, printer_id, backend_name);
+            if (cancel_job(p, job_id))
                 printf("Job %s has been cancelled.\n", job_id);
             else
                 printf("Unable to cancel job %s\n", job_id);
@@ -226,12 +233,11 @@ void display_help()
     printf("%s\n", "get-state <printer id> <backend name>");
     printf("%s\n", "is-accepting-jobs <printer id> <backend name(like \"CUPS\")>");
     printf("%s\n", "cancel-job <job-id> <printer id> <backend name>");
-    
+
     printf("get-all-options <printer-name> <backend-name>\n");
     printf("%s\n", "get-default <option name> <printer id> <backend name>");
     printf("%s\n", "get-setting <option name> <printer id> <backend name>");
     printf("%s\n", "get-current <option name> <printer id> <backend name>");
     printf("%s\n", "add-setting <option name> <option value> <printer id> <backend name>");
     printf("%s\n", "clear-setting <option name> <printer id> <backend name>");
-
 }

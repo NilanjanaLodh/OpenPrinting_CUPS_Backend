@@ -1,3 +1,7 @@
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #ifndef _FRONTEND_HELPER_H_
 #define _FRONTEND_HELPER_H_
 
@@ -72,7 +76,6 @@ void disconnect_from_dbus(FrontendObj *);
  * Discover the currently installed backends and activate them
  * 
  * 
- * 
  * Reads the DBUS_DIR folder to find the files installed by 
  * the respective backends , 
  * For eg:  org.openprinting.Backend.XYZ
@@ -132,73 +135,6 @@ PrinterObj *find_PrinterObj(FrontendObj *, char *printer_id, char *backend_name)
  *                          the complete name ("org.openprinting.Backend.CUPS")
  */
 char *get_default_printer(FrontendObj *, char *backend_name);
-/** 
- * The following functions are just wrappers for the respective functions of PrinterObj
- * 
- * You could use these,
- * or call the PrinterObj functions directly instead.
- * 
- * For instance,
- * 
- * Approach 1
- * gboolean b = printer_is_accepting_jobs(f,"HP-Printer", "CUPS");
- * 
- * Approach 2
- * PrinterObj *p= find_PrinterObj(f,"HP-Printer","CUPS");
- * gboolean b = is_accepting_jobs(p);
- * 
- * Note
- * If you have are going to repeatedly going to call functions for the same printer,
- * it may be more efficient to use approach 2 ,
- * to avoid repeated hash table lookup everytime.
- */
-
-gboolean printer_is_accepting_jobs(FrontendObj *, char *printer_id, char *backend_name);
-char *get_printer_state(FrontendObj *, char *printer_id, char *backend_name);
-
-/**
- * Wrapper to get_all_options(PrinterObj *)
- */
-Options *get_all_printer_options(FrontendObj *, char *printer_id, char *backend_name);
-
-/**
- * Wrapper to get_default(PrinterObj * , char *name)
- * 
- * N.B : it is preferable to use the get_default() function instead of this 
- * if you already have the PrinterObj*
- *  
- * @returns
- * default value(char*) if the option with the desired name exists
- * "NA" if the option is present , but default value isn't set
- * NULL if the option with the particular name doesn't exist.
- */
-char *get_default_value(FrontendObj *, char *option_name, char *printer_id, char *backend_name);
-
-/**
- * Wrapper to get_setting(PrinterObj * ,..)
- * 
- * N.B : it is preferable to use the get_setting() function instead of this 
- * if you already have the PrinterObj*
- * 
- * @returns
- * the value of the setting(if it exists)
- * NULL if it doesn't exists
- */
-char *get_setting_value(FrontendObj *, char *option_name, char *printer_id, char *backend_name);
-
-/**
- * Wrapper to get_current(PrinterObj * ,..)
- * 
- * N.B : it is preferable to use the get_current() function instead of this 
- * if you already have the PrinterObj*
- * 
- * @returns
- * the current value of the option(if it exists)
- * NULL if it doesn't exists
- */
-char *get_current_value(FrontendObj *, char *option_name, char *printer_id, char *backend_name);
-
-int get_active_jobs_count(FrontendObj *, char *printer_id, char *backend_name);
 
 /**
  * Get the list of (all/active) jobs
@@ -213,27 +149,13 @@ int get_active_jobs_count(FrontendObj *, char *printer_id, char *backend_name);
  */
 int get_all_jobs(FrontendObj *, Job **j, gboolean active_only);
 
-/**
- * Wrapper to _print_file(PrinterObj* , char *file_path)
- * Submits a single file for printing,
- * using the settings stored in the corresponding PrinterObj
- * 
- * returns: job id
- */
-int print_file(FrontendObj *, char *file_path, char *printer_id, char *backend_name);
+/*******************************************************************************************/
 
 /**
- * Wrapper to cancel_job(PrinterObj * , char*)
- */
-gboolean cancel_job_on_printer(FrontendObj *, char *job_id, char *printer_id, char *backend_name);
-
-    /*******************************************************************************************/
-
-    /**
 ______________________________________ PrinterObj __________________________________________
 
 **/
-    struct _PrinterObj
+struct _PrinterObj
 {
     PrintBackend *backend_proxy; /** The proxy object of the backend the printer is associated with **/
     char *backend_name;          /** Backend name ,("CUPS"/ "GCP") also used as suffix */
@@ -327,13 +249,13 @@ char *get_current(PrinterObj *p, char *name);
  * Get number of active jobs(pending + paused + printing)
  * for the printer
  */
-int _get_active_jobs_count(PrinterObj *);
+int get_active_jobs_count(PrinterObj *);
 
 /**
  * Submits a single file for printing, using the settings stored in 
  * p->settings
  */
-int _print_file(PrinterObj *p, char *file_path);
+int print_file(PrinterObj *p, char *file_path);
 
 /**
  * Wrapper for the add_setting(Settings* , ..) function.
@@ -455,7 +377,7 @@ struct _Job
     char *submitted_at;
     int size;
 };
-void unpack_job_array(GVariant *var, int num_jobs, Job *jobs, char*backend_name);
+void unpack_job_array(GVariant *var, int num_jobs, Job *jobs, char *backend_name);
 /**
  * ________________________________utility functions__________________________
  */
@@ -467,4 +389,8 @@ char *concat(char *printer_id, char *backend_name);
  * and fill the Options structure approriately
  */
 void unpack_options(GVariant *var, int num_options, Options *options);
+#endif
+
+#ifdef __cplusplus
+}
 #endif

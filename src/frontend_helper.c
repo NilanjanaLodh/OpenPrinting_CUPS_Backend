@@ -234,51 +234,6 @@ char *get_default_printer(FrontendObj *f, char *backend_name)
     printf("%s\n", def);
     return def;
 }
-/** 
- * The following functions are wrappers to the corresponding PrinterObj functions
-*/
-
-gboolean printer_is_accepting_jobs(FrontendObj *f, char *printer_id, char *backend_name)
-{
-    PrinterObj *p = find_PrinterObj(f, printer_id, backend_name);
-    return is_accepting_jobs(p);
-}
-
-char *get_printer_state(FrontendObj *f, char *printer_id, char *backend_name)
-{
-    PrinterObj *p = find_PrinterObj(f, printer_id, backend_name);
-    return get_state(p);
-}
-
-Options *get_all_printer_options(FrontendObj *f, char *printer_id, char *backend_name)
-{
-    PrinterObj *p = find_PrinterObj(f, printer_id, backend_name);
-    return get_all_options(p);
-}
-
-char *get_default_value(FrontendObj *f, char *option_name, char *printer_id, char *backend_name)
-{
-    PrinterObj *p = find_PrinterObj(f, printer_id, backend_name);
-    return get_default(p, option_name);
-}
-
-char *get_setting_value(FrontendObj *f, char *option_name, char *printer_id, char *backend_name)
-{
-    PrinterObj *p = find_PrinterObj(f, printer_id, backend_name);
-    return get_setting(p, option_name);
-}
-
-char *get_current_value(FrontendObj *f, char *option_name, char *printer_id, char *backend_name)
-{
-    PrinterObj *p = find_PrinterObj(f, printer_id, backend_name);
-    return get_current(p, option_name);
-}
-
-int get_active_jobs_count(FrontendObj *f, char *printer_id, char *backend_name)
-{
-    PrinterObj *p = find_PrinterObj(f, printer_id, backend_name);
-    return _get_active_jobs_count(p);
-}
 
 int get_all_jobs(FrontendObj *f, Job **j, gboolean active_only)
 {
@@ -316,16 +271,7 @@ int get_all_jobs(FrontendObj *f, Job **j, gboolean active_only)
     return total_jobs;
 }
 
-int print_file(FrontendObj *f, char *file_path, char *printer_id, char *backend_name)
-{
-    PrinterObj *p = find_PrinterObj(f, printer_id, backend_name);
-    return _print_file(p, file_path);
-}
-gboolean cancel_job_on_printer(FrontendObj *f, char *job_id, char *printer_id, char *backend_name)
-{
-    PrinterObj *p = find_PrinterObj(f, printer_id, backend_name);
-    return cancel_job(p, job_id);
-}
+
 /**
 ________________________________________________ PrinterObj __________________________________________
 **/
@@ -445,14 +391,14 @@ char *get_current(PrinterObj *p, char *name)
     return get_default(p, name);
 }
 
-int _get_active_jobs_count(PrinterObj *p)
+int get_active_jobs_count(PrinterObj *p)
 {
     int count;
     print_backend_call_get_active_jobs_count_sync(p->backend_proxy, p->id, &count, NULL, NULL);
     printf("%d jobs currently active.\n", count);
     return count;
 }
-int _print_file(PrinterObj *p, char *file_path)
+int print_file(PrinterObj *p, char *file_path)
 {
     int jobid;
     print_backend_call_print_file_sync(p->backend_proxy, p->id, file_path,
