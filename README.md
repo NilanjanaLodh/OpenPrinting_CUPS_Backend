@@ -17,13 +17,18 @@ Otherwise, the interface/ folder would not get updated.
 
 Build and installation
 ----
+The following command will compile and install libraries, followed by the cups backend.<br/>
+`sudo make super`<br/>
+That's it! It will set up everything for you.<br/>
+
+However, if you wish to compile and install each component separately, please follow these steps:<br/>
 You first need to compile and install the CPD Library; This is one of the dependencies of the backends and the frotend client.<br/>
-- make lib   _(Compiles the libraries)_
-- sudo make install-lib _(Installs the libraries)_
+- `make lib`   _(Compiles the libraries)_
+- `sudo make install-lib` _(Installs the libraries)_
 
 Then, you can build the rest of the project:  <br/>
-- make _(Compiles the cups backend and the sample frontend client)_
-- sudo make install _(Installs the backends)_
+- `make` _(Compiles the cups backend and the sample frontend client)_
+- `sudo make install` _(Installs the backends)_
 
 Also, the __(make release)__ command places all the library files into a separate /release folder.
 
