@@ -8,3 +8,4 @@ src/frontend_interface.*
 release/headers/*
 release/libs/*
 .gdb_history
+gmon.out

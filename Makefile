@@ -46,7 +46,7 @@ clean-gen:
 	rm -f src/*_interface.*
 
 src/%.o: src/%.c
-	gcc -g -pg -fPIC -c -o $@ $^ -I$(DIR)/src $(GLIB_FLAGS) 
+	gcc -g -fPIC -c -o $@ $^ -I$(DIR)/src $(GLIB_FLAGS) 
 
 #compile the libraries
 lib: src/libCPDBackend.so src/libCPDFrontend.so
