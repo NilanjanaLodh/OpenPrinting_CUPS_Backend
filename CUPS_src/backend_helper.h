@@ -6,6 +6,7 @@
 #include <glib.h>
 #include <string.h>
 #include <cups/cups.h>
+#include <cups/ppd.h>
 #include <CPDBackend.h>
 
 #define CAPABILITY_COPIES (1)
@@ -124,6 +125,8 @@ int print_file(PrinterCUPS *p, char *file_path, int num_settings, GVariant *sett
 
 int get_active_jobs_count(PrinterCUPS *p);
 gboolean cancel_job(PrinterCUPS *p, int jobid);
+
+void tryPPD(PrinterCUPS *p);
 /*********Option related functions*****************/
 void print_option(const Option *opt);
 void unpack_option_array(GVariant *var, int num_options, Option **options);

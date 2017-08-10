@@ -1,0 +1,105 @@
+!SESSION 2017-08-08 15:24:53.999 -----------------------------------------------
+eclipse.buildId=M20100909-0800
+java.version=1.8.0_131
+java.vendor=Oracle Corporation
+BootLoader constants: OS=linux, ARCH=x86_64, WS=gtk, NL=en_US
+Framework arguments:  -product org.eclipse.epp.package.cpp.product
+Command-line arguments:  -data /media/hermoinil/DATA/PrintDialog_Backend -os linux -ws gtk -arch x86_64 -product org.eclipse.epp.package.cpp.product
+
+!ENTRY org.eclipse.cdt.core 4 0 2017-08-08 15:27:11.654
+!MESSAGE Error: Invalid project description.
+!STACK 1
+org.eclipse.core.internal.resources.ResourceException: Invalid project description.
+	at org.eclipse.core.internal.resources.Project.checkDescription(Project.java:162)
+	at org.eclipse.core.internal.resources.Project.setDescription(Project.java:1194)
+	at org.eclipse.core.internal.resources.Project.setDescription(Project.java:1238)
+	at org.eclipse.cdt.core.CProjectNature.addNature(CProjectNature.java:78)
+	at org.eclipse.cdt.core.CCProjectNature.addCCNature(CCProjectNature.java:29)
+	at org.eclipse.cdt.managedbuilder.ui.wizards.NewMakeProjFromExisting$1.execute(NewMakeProjFromExisting.java:87)
+	at org.eclipse.ui.actions.WorkspaceModifyOperation$1.run(WorkspaceModifyOperation.java:106)
+	at org.eclipse.core.internal.resources.Workspace.run(Workspace.java:1975)
+	at org.eclipse.ui.actions.WorkspaceModifyOperation.run(WorkspaceModifyOperation.java:118)
+	at org.eclipse.jface.operation.ModalContext$ModalContextThread.run(ModalContext.java:121)
+Contains: OK
+Contains: /media/hermoinil/DATA/PrintDialog_Backend overlaps the workspace location: /media/hermoinil/DATA/PrintDialog_Backend
+!SUBENTRY 1 org.eclipse.core.resources 4 77 2017-08-08 15:27:11.656
+!MESSAGE Invalid project description.
+!SUBENTRY 2 unknown 0 0 2017-08-08 15:27:11.656
+!MESSAGE OK
+!SUBENTRY 2 org.eclipse.core.resources 4 77 2017-08-08 15:27:11.656
+!MESSAGE /media/hermoinil/DATA/PrintDialog_Backend overlaps the workspace location: /media/hermoinil/DATA/PrintDialog_Backend
+
+!ENTRY org.eclipse.cdt.core 1 0 2017-08-08 15:27:15.758
+!MESSAGE Indexed 'PrintDialog_Backend' (7 sources, 98 headers) in 2.74 sec: 6,582 declarations; 7,698 references; 16 unresolved inclusions; 7 syntax errors; 447 unresolved names (3.04%)
+
+!ENTRY org.eclipse.core.jobs 4 2 2017-08-08 15:43:34.523
+!MESSAGE An internal error occurred during: "Reading Debug Symbol Information: print_backend_cups".
+!STACK 0
+java.lang.NullPointerException
+	at org.eclipse.cdt.utils.debug.dwarf.DwarfReader.processCompileUnit(DwarfReader.java:470)
+	at org.eclipse.cdt.utils.debug.dwarf.DwarfReader.processDebugInfoEntry(DwarfReader.java:440)
+	at org.eclipse.cdt.utils.debug.dwarf.Dwarf.parseDebugInfoEntry(Dwarf.java:454)
+	at org.eclipse.cdt.utils.debug.dwarf.Dwarf.parseDebugInfo(Dwarf.java:386)
+	at org.eclipse.cdt.utils.debug.dwarf.Dwarf.parse(Dwarf.java:362)
+	at org.eclipse.cdt.utils.debug.dwarf.DwarfReader.getSourceFilesFromDebugInfoSection(DwarfReader.java:385)
+	at org.eclipse.cdt.utils.debug.dwarf.DwarfReader.getSourceFiles(DwarfReader.java:363)
+	at org.eclipse.cdt.utils.debug.dwarf.DwarfReader.getSourceFiles(DwarfReader.java:488)
+	at org.eclipse.cdt.debug.internal.core.executables.StandardSourceFilesProvider.getSourceFiles(StandardSourceFilesProvider.java:121)
+	at org.eclipse.cdt.debug.core.executables.ExecutablesManager.getSourceFiles(ExecutablesManager.java:351)
+	at org.eclipse.cdt.debug.core.executables.Executable.getSourceFiles(Executable.java:176)
+	at org.eclipse.cdt.debug.internal.ui.views.executables.SourceFilesContentProvider$QuickParseJob.run(SourceFilesContentProvider.java:48)
+	at org.eclipse.core.internal.jobs.Worker.run(Worker.java:54)
+
+!ENTRY org.eclipse.core.jobs 4 2 2017-08-08 15:43:41.156
+!MESSAGE An internal error occurred during: "Reading Debug Symbol Information: print_frontend".
+!STACK 0
+java.lang.NullPointerException
+	at org.eclipse.cdt.utils.debug.dwarf.DwarfReader.processCompileUnit(DwarfReader.java:470)
+	at org.eclipse.cdt.utils.debug.dwarf.DwarfReader.processDebugInfoEntry(DwarfReader.java:440)
+	at org.eclipse.cdt.utils.debug.dwarf.Dwarf.parseDebugInfoEntry(Dwarf.java:454)
+	at org.eclipse.cdt.utils.debug.dwarf.Dwarf.parseDebugInfo(Dwarf.java:386)
+	at org.eclipse.cdt.utils.debug.dwarf.Dwarf.parse(Dwarf.java:362)
+	at org.eclipse.cdt.utils.debug.dwarf.DwarfReader.getSourceFilesFromDebugInfoSection(DwarfReader.java:385)
+	at org.eclipse.cdt.utils.debug.dwarf.DwarfReader.getSourceFiles(DwarfReader.java:363)
+	at org.eclipse.cdt.utils.debug.dwarf.DwarfReader.getSourceFiles(DwarfReader.java:488)
+	at org.eclipse.cdt.debug.internal.core.executables.StandardSourceFilesProvider.getSourceFiles(StandardSourceFilesProvider.java:121)
+	at org.eclipse.cdt.debug.core.executables.ExecutablesManager.getSourceFiles(ExecutablesManager.java:351)
+	at org.eclipse.cdt.debug.core.executables.Executable.getSourceFiles(Executable.java:176)
+	at org.eclipse.cdt.debug.internal.ui.views.executables.SourceFilesContentProvider$QuickParseJob.run(SourceFilesContentProvider.java:48)
+	at org.eclipse.core.internal.jobs.Worker.run(Worker.java:54)
+
+!ENTRY org.eclipse.core.jobs 4 2 2017-08-08 15:44:20.352
+!MESSAGE An internal error occurred during: "Reading Debug Symbol Information: print_frontend".
+!STACK 0
+java.lang.NullPointerException
+	at org.eclipse.cdt.utils.debug.dwarf.DwarfReader.processCompileUnit(DwarfReader.java:470)
+	at org.eclipse.cdt.utils.debug.dwarf.DwarfReader.processDebugInfoEntry(DwarfReader.java:440)
+	at org.eclipse.cdt.utils.debug.dwarf.Dwarf.parseDebugInfoEntry(Dwarf.java:454)
+	at org.eclipse.cdt.utils.debug.dwarf.Dwarf.parseDebugInfo(Dwarf.java:386)
+	at org.eclipse.cdt.utils.debug.dwarf.Dwarf.parse(Dwarf.java:362)
+	at org.eclipse.cdt.utils.debug.dwarf.DwarfReader.getSourceFilesFromDebugInfoSection(DwarfReader.java:385)
+	at org.eclipse.cdt.utils.debug.dwarf.DwarfReader.getSourceFiles(DwarfReader.java:363)
+	at org.eclipse.cdt.utils.debug.dwarf.DwarfReader.getSourceFiles(DwarfReader.java:488)
+	at org.eclipse.cdt.debug.internal.core.executables.StandardSourceFilesProvider.getSourceFiles(StandardSourceFilesProvider.java:121)
+	at org.eclipse.cdt.debug.core.executables.ExecutablesManager.getSourceFiles(ExecutablesManager.java:351)
+	at org.eclipse.cdt.debug.core.executables.Executable.getSourceFiles(Executable.java:176)
+	at org.eclipse.cdt.debug.internal.ui.views.executables.SourceFilesContentProvider$QuickParseJob.run(SourceFilesContentProvider.java:48)
+	at org.eclipse.core.internal.jobs.Worker.run(Worker.java:54)
+
+!ENTRY org.eclipse.core.jobs 4 2 2017-08-08 15:44:43.066
+!MESSAGE An internal error occurred during: "Reading Debug Symbol Information: print_frontend".
+!STACK 0
+java.lang.NullPointerException
+	at org.eclipse.cdt.utils.debug.dwarf.DwarfReader.processCompileUnit(DwarfReader.java:470)
+	at org.eclipse.cdt.utils.debug.dwarf.DwarfReader.processDebugInfoEntry(DwarfReader.java:440)
+	at org.eclipse.cdt.utils.debug.dwarf.Dwarf.parseDebugInfoEntry(Dwarf.java:454)
+	at org.eclipse.cdt.utils.debug.dwarf.Dwarf.parseDebugInfo(Dwarf.java:386)
+	at org.eclipse.cdt.utils.debug.dwarf.Dwarf.parse(Dwarf.java:362)
+	at org.eclipse.cdt.utils.debug.dwarf.DwarfReader.getSourceFilesFromDebugInfoSection(DwarfReader.java:385)
+	at org.eclipse.cdt.utils.debug.dwarf.DwarfReader.getSourceFiles(DwarfReader.java:363)
+	at org.eclipse.cdt.utils.debug.dwarf.DwarfReader.getSourceFiles(DwarfReader.java:488)
+	at org.eclipse.cdt.debug.internal.core.executables.StandardSourceFilesProvider.getSourceFiles(StandardSourceFilesProvider.java:121)
+	at org.eclipse.cdt.debug.core.executables.ExecutablesManager.getSourceFiles(ExecutablesManager.java:351)
+	at org.eclipse.cdt.debug.core.executables.Executable.getSourceFiles(Executable.java:176)
+	at org.eclipse.cdt.debug.internal.ui.views.executables.SourceFilesContentProvider$QuickParseJob.run(SourceFilesContentProvider.java:48)
+	at org.eclipse.core.internal.jobs.Worker.run(Worker.java:54)

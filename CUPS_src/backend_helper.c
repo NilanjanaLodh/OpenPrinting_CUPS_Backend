@@ -801,6 +801,22 @@ void printAllJobs(PrinterCUPS *p)
         print_job(&jobs[i]);
     }
 }
+void tryPPD(PrinterCUPS *p)
+{
+    const char *filename; /* PPD filename */
+    ppd_file_t *ppd;    /* PPD data */
+    if ((filename = cupsGetPPD(p->dest->name)) == NULL) 
+    {
+        printf("Error getting ppd file.\n");
+        return;
+    }
+    g_message("Got ppd file %s\n", filename);
+    if ((ppd = ppdOpenFile(filename)) == NULL)
+    {
+        printf("Error opening ppd file.\n");
+        return;
+    }
+}
 /*********Mappings********/
 Mappings *get_new_Mappings()
 {

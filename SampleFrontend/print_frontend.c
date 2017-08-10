@@ -79,18 +79,18 @@ gpointer parse_commands(gpointer user_data)
         }
         else if (strcmp(buf, "get-all-options") == 0)
         {
-            char printer_name[100];
+            char printer_id[100];
             char backend_name[100];
-            scanf("%s%s", printer_name, backend_name);
+            scanf("%s%s", printer_id, backend_name);
             g_message("Getting all attributes ..\n");
-            PrinterObj *p = find_PrinterObj(f, printer_name, backend_name);
+            PrinterObj *p = find_PrinterObj(f, printer_id, backend_name);
             get_all_options(p);
         }
         else if (strcmp(buf, "get-default") == 0)
         {
-            char printer_name[100], backend_name[100], option_name[100];
-            scanf("%s%s%s", option_name, printer_name, backend_name);
-            PrinterObj *p = find_PrinterObj(f, printer_name, backend_name);
+            char printer_id[100], backend_name[100], option_name[100];
+            scanf("%s%s%s", option_name, printer_id, backend_name);
+            PrinterObj *p = find_PrinterObj(f, printer_id, backend_name);
             char *ans = get_default(p, option_name);
             if (!ans)
                 printf("Option %s doesn't exist.", option_name);
@@ -99,9 +99,9 @@ gpointer parse_commands(gpointer user_data)
         }
         else if (strcmp(buf, "get-setting") == 0)
         {
-            char printer_name[100], backend_name[100], setting_name[100];
-            scanf("%s%s%s", setting_name, printer_name, backend_name);
-            PrinterObj *p = find_PrinterObj(f, printer_name, backend_name);
+            char printer_id[100], backend_name[100], setting_name[100];
+            scanf("%s%s%s", setting_name, printer_id, backend_name);
+            PrinterObj *p = find_PrinterObj(f, printer_id, backend_name);
             char *ans = get_setting(p, setting_name);
             if (!ans)
                 printf("Setting %s doesn't exist.\n", setting_name);
@@ -110,9 +110,9 @@ gpointer parse_commands(gpointer user_data)
         }
         else if (strcmp(buf, "get-current") == 0)
         {
-            char printer_name[100], backend_name[100], option_name[100];
-            scanf("%s%s%s", option_name, printer_name, backend_name);
-            PrinterObj *p = find_PrinterObj(f, printer_name, backend_name);
+            char printer_id[100], backend_name[100], option_name[100];
+            scanf("%s%s%s", option_name, printer_id, backend_name);
+            PrinterObj *p = find_PrinterObj(f, printer_id, backend_name);
             char *ans = get_current(p, option_name);
             if (!ans)
                 printf("Option %s doesn't exist.", option_name);
@@ -121,45 +121,46 @@ gpointer parse_commands(gpointer user_data)
         }
         else if (strcmp(buf, "add-setting") == 0)
         {
-            char printer_name[100], backend_name[100], option_name[100], option_val[100];
-            scanf("%s %s %s %s", option_name, option_val, printer_name, backend_name);
-            PrinterObj *p = find_PrinterObj(f, printer_name, backend_name);
+            char printer_id[100], backend_name[100], option_name[100], option_val[100];
+            scanf("%s %s %s %s", option_name, option_val, printer_id, backend_name);
+            PrinterObj *p = find_PrinterObj(f, printer_id, backend_name);
             printf("%s : %s\n", option_name, option_val);
             add_setting_to_printer(p, get_string_copy(option_name), get_string_copy(option_val));
         }
         else if (strcmp(buf, "clear-setting") == 0)
         {
-            char printer_name[100], backend_name[100], option_name[100];
-            scanf("%s%s%s", option_name, printer_name, backend_name);
-            PrinterObj *p = find_PrinterObj(f, printer_name, backend_name);
+            char printer_id[100], backend_name[100], option_name[100];
+            scanf("%s%s%s", option_name, printer_id, backend_name);
+            PrinterObj *p = find_PrinterObj(f, printer_id, backend_name);
             clear_setting_from_printer(p, option_name);
         }
         else if (strcmp(buf, "get-state") == 0)
         {
-            char printer_name[100];
+            char printer_id[100];
             char backend_name[100];
-            scanf("%s%s", printer_name, backend_name);
-            PrinterObj *p = find_PrinterObj(f, printer_name, backend_name);
+            scanf("%s%s", printer_id, backend_name);
+            PrinterObj *p = find_PrinterObj(f, printer_id, backend_name);
             get_state(p);
         }
         else if (strcmp(buf, "is-accepting-jobs") == 0)
         {
-            char printer_name[100];
+            char printer_id[100];
             char backend_name[100];
-            scanf("%s%s", printer_name, backend_name);
-            PrinterObj *p = find_PrinterObj(f, printer_name, backend_name);
+            scanf("%s%s", printer_id, backend_name);
+            PrinterObj *p = find_PrinterObj(f, printer_id, backend_name);
             is_accepting_jobs(p);
         }
         else if (strcmp(buf, "help") == 0)
         {
             display_help();
         }
-        // else if (strcmp(buf, "ping") == 0)
-        // {
-        //     char printer_name[100];
-        //     scanf("%s", printer_name);
-        //     pingtest(f, printer_name);
-        // }
+        else if (strcmp(buf, "ping") == 0)
+        {
+            char printer_id[100] , backend_name[100];
+            scanf("%s%s", printer_id, backend_name);
+            PrinterObj *p = find_PrinterObj(f,printer_id, backend_name);
+            print_backend_call_ping_sync(p->backend_proxy,p->id,NULL, NULL);
+        }
         else if (strcmp(buf, "get-default-printer") == 0)
         {
             char backend_name[100];
@@ -172,21 +173,21 @@ gpointer parse_commands(gpointer user_data)
         }
         else if (strcmp(buf, "print-file") == 0)
         {
-            char printer_name[100], backend_name[100], file_path[200];
-            scanf("%s%s%s", file_path, printer_name, backend_name);
+            char printer_id[100], backend_name[100], file_path[200];
+            scanf("%s%s%s", file_path, printer_id, backend_name);
             /**
              * Try adding some settings here .. change them and experiment
              */
-            PrinterObj *p = find_PrinterObj(f, printer_name, backend_name);
+            PrinterObj *p = find_PrinterObj(f, printer_id, backend_name);
             add_setting_to_printer(p, "copies", "3");
             print_file(p,file_path);
         }
         else if (strcmp(buf, "get-active-jobs-count") == 0)
         {
-            char printer_name[100];
+            char printer_id[100];
             char backend_name[100];
-            scanf("%s%s", printer_name, backend_name);
-            PrinterObj *p = find_PrinterObj(f, printer_name, backend_name);
+            scanf("%s%s", printer_id, backend_name);
+            PrinterObj *p = find_PrinterObj(f, printer_id, backend_name);
             get_active_jobs_count(p);
         }
         else if (strcmp(buf, "get-all-jobs") == 0)
@@ -227,7 +228,7 @@ void display_help()
     printf("%s\n", "unhide-temporary-cups");
     //printf("%s\n", "ping <printer id> ");
     printf("%s\n", "get-default-printer <backend name>");
-    printf("print-file <file path> <printer_name> <backend_name>\n");
+    printf("print-file <file path> <printer_id> <backend_name>\n");
     printf("get-active-jobs-count <printer-name> <backend-name>\n");
     printf("get-all-jobs <0 for all jobs; 1 for only active>\n");
     printf("%s\n", "get-state <printer id> <backend name>");
