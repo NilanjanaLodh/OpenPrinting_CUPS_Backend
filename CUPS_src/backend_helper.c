@@ -801,11 +801,25 @@ void printAllJobs(PrinterCUPS *p)
         print_job(&jobs[i]);
     }
 }
+static void list_group(ppd_file_t *ppd,    /* I - PPD file */
+                       ppd_group_t *group) /* I - Group to show */
+{
+    printf("List group %s\n", group->name);
+    /** Now iterate through the options in the particular group*/
+    printf("It has %d options.\n", group->num_options);
+    printf("Listing all of them ..\n");
+    int i;
+    for(i=0;i<group->num_options;i++)
+    {
+        printf("    Option %d : %s\n",i, group->options[i].keyword);
+    }
+}
 void tryPPD(PrinterCUPS *p)
 {
     const char *filename; /* PPD filename */
-    ppd_file_t *ppd;    /* PPD data */
-    if ((filename = cupsGetPPD(p->dest->name)) == NULL) 
+    ppd_file_t *ppd;      /* PPD data */
+    ppd_group_t *group;   /* Current group */
+    if ((filename = cupsGetPPD(p->dest->name)) == NULL)
     {
         printf("Error getting ppd file.\n");
         return;
@@ -815,6 +829,18 @@ void tryPPD(PrinterCUPS *p)
     {
         printf("Error opening ppd file.\n");
         return;
+    }
+    printf("Opened ppd file.\n");
+    ppdMarkDefaults(ppd);
+
+    cupsMarkOptions(ppd, p->dest->num_options, p->dest->options);
+
+    group = ppd->groups;
+    for (int i = ppd->num_groups; i > 0; i--)
+    {
+        /**iterate through all the groups in the ppd file */
+        list_group(ppd, group);
+        group++;
     }
 }
 /*********Mappings********/
