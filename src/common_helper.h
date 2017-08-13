@@ -23,7 +23,8 @@ gboolean get_boolean(const char *);
 char *get_string_copy(const char *);
 void unpack_string_array(GVariant *variant, int num_val, char ***val);
 GVariant *pack_string_array(int num_val, char **val);
-char *get_absolute_path(char *file_path);
+char *get_absolute_path(const char *file_path);
+char *extract_file_name(const char* file_path);
 /*********LISTING OF ALL POSSIBLE OPTIONS*****/
 //Rename these to something better if needed
 /**

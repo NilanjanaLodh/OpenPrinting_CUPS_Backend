@@ -63,13 +63,13 @@ GVariant *pack_string_array(int num_val, char **val)
     return values;
 }
 
-char *get_absolute_path(char *file_path)
+char *get_absolute_path(const char *file_path)
 {
     if (!file_path)
         return NULL;
 
     if (file_path[0] == '/')
-        return file_path;
+        return (char *)file_path;
 
     if (file_path[0] == '~')
     {
@@ -85,4 +85,23 @@ char *get_absolute_path(char *file_path)
     sprintf(fp, "%s/%s", cwd, file_path);
     printf("%s\n", fp);
     return get_string_copy(fp);
+}
+char *extract_file_name(const char *file_path)
+{
+    if (!file_path)
+        return NULL;
+
+    char *file_name_ptr = (char *)file_path;
+
+    char *x = (char *)file_path;
+    char c = *x;
+    while (c)
+    {
+        if (c == '/')
+            file_name_ptr = x;
+
+        x++;
+        c = *x;
+    }
+    return file_name_ptr;
 }

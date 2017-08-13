@@ -9,15 +9,6 @@
 #include <cups/ppd.h>
 #include <CPDBackend.h>
 
-#define CAPABILITY_COPIES (1)
-#define CAPABILITY_MEDIA (1 << 1)
-#define CAPABILITY_NUMBER_UP (1 << 2)
-#define CAPABILITY_ORIENTATION (1 << 3)
-#define CAPABILITY_COLOR_MODE (1 << 4)
-#define CAPABILITY_QUALITY (1 << 5)
-#define CAPABILITY_SIDES (1 << 6)
-#define CAPABILITY_RESOLUTION (1 << 7)
-
 typedef struct _PrinterCUPS
 {
     gchar *name;
@@ -63,7 +54,7 @@ typedef struct _Option
     const char *option_name;
     int num_supported;
     char **supported_values;
-    char *default_value;
+    const char *default_value;
 } Option;
 
 typedef char *(*extract_func)(ipp_attribute_t *, int index);
@@ -95,7 +86,7 @@ void refresh_printer_list(BackendObj *b, char *dialog_name);
 GHashTable *get_dialog_printers(BackendObj *b, const char *dialog_name);
 cups_dest_t *get_dest_by_name(BackendObj *b, const char *dialog_name, const char *printer_name);
 PrinterCUPS *get_printer_by_name(BackendObj *b, const char *dialog_name, const char *printer_name);
-GVariant *get_all_jobs(BackendObj *b, char *dialog_name, int *num_jobs, gboolean active_only);
+GVariant *get_all_jobs(BackendObj *b, const char *dialog_name, int *num_jobs, gboolean active_only);
 /*********Printer related functions******************/
 PrinterCUPS *get_new_PrinterCUPS(cups_dest_t *dest);
 gboolean ensure_printer_connection(PrinterCUPS *p);
@@ -103,25 +94,15 @@ int get_printer_capabilities(PrinterCUPS *);
 const char *get_printer_state(PrinterCUPS *p);
 
 const char *get_media_default(PrinterCUPS *p);
-int get_media_supported(PrinterCUPS *p, char ***supported_values);
-
-const char *get_orientation_default(PrinterCUPS *p);
-int get_orientation_supported(PrinterCUPS *p, char ***supported_values);
-
-char *get_resolution_default(PrinterCUPS *p);
-int get_resolution_supported(PrinterCUPS *p, char ***supported_values);
-
+char *get_orientation_default(PrinterCUPS *p);
 const char *get_color_default(PrinterCUPS *p);
-int get_color_supported(PrinterCUPS *p, char ***supported_values);
-
-int get_print_quality_supported(PrinterCUPS *p, char ***supported_values);
 
 const char *get_default(PrinterCUPS *p, char *option_name);
 int get_supported(PrinterCUPS *p, char ***supported_values, const char *option_name);
 
 int get_all_options(PrinterCUPS *p, Option **options);
 
-int print_file(PrinterCUPS *p, char *file_path, int num_settings, GVariant *settings);
+int print_file(PrinterCUPS *p, const char *file_path, int num_settings, GVariant *settings);
 
 int get_active_jobs_count(PrinterCUPS *p);
 gboolean cancel_job(PrinterCUPS *p, int jobid);

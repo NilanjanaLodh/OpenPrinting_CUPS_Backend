@@ -322,7 +322,7 @@ cups_dest_t *get_dest_by_name(BackendObj *b, const char *dialog_name, const char
     }
     return p->dest;
 }
-GVariant *get_all_jobs(BackendObj *b, char *dialog_name, int *num_jobs, gboolean active_only)
+GVariant *get_all_jobs(BackendObj *b, const char *dialog_name, int *num_jobs, gboolean active_only)
 {
     int CUPS_JOB_FLAG;
     if (active_only)
@@ -397,52 +397,6 @@ gboolean ensure_printer_connection(PrinterCUPS *p)
 
     return TRUE;
 }
-int get_printer_capabilities(PrinterCUPS *p)
-{
-    ensure_printer_connection(p);
-    int capabilities = 0;
-    ipp_attribute_t *attrs = cupsFindDestSupported(p->http, p->dest, p->dinfo,
-                                                   "job-creation-attributes");
-    int num_options = ippGetCount(attrs);
-    char *str;
-    for (int i = 0; i < num_options; i++)
-    {
-        str = (char *)ippGetString(attrs, i, NULL);
-        if (strcmp(str, CUPS_COPIES) == 0)
-        {
-            capabilities |= CAPABILITY_COPIES;
-        }
-        else if (strcmp(str, CUPS_MEDIA) == 0)
-        {
-            capabilities |= CAPABILITY_MEDIA;
-        }
-        else if (strcmp(str, CUPS_NUMBER_UP) == 0)
-        {
-            capabilities |= CAPABILITY_NUMBER_UP;
-        }
-        else if (strcmp(str, CUPS_ORIENTATION) == 0)
-        {
-            capabilities |= CAPABILITY_ORIENTATION;
-        }
-        else if (strcmp(str, CUPS_PRINT_COLOR_MODE) == 0)
-        {
-            capabilities |= CAPABILITY_COLOR_MODE;
-        }
-        else if (strcmp(str, CUPS_PRINT_QUALITY) == 0)
-        {
-            capabilities |= CAPABILITY_QUALITY;
-        }
-        else if (strcmp(str, CUPS_SIDES) == 0)
-        {
-            capabilities |= CAPABILITY_SIDES;
-        }
-        else if (strcmp(str, "printer-resolution") == 0)
-        {
-            capabilities |= CAPABILITY_RESOLUTION;
-        }
-    }
-    return capabilities;
-}
 
 int get_supported(PrinterCUPS *p, char ***supported_values, const char *option_name)
 {
@@ -483,11 +437,7 @@ const char *get_media_default(PrinterCUPS *p)
     //Later : consult media mappings and return the equivalent media , other wise retun the localized version
     return media;
 }
-int get_media_supported(PrinterCUPS *p, char ***supported_values)
-{
-    return get_supported(p, supported_values, CUPS_MEDIA);
-}
-const char *get_orientation_default(PrinterCUPS *p)
+char *get_orientation_default(PrinterCUPS *p)
 {
     const char *def_value = cupsGetOption(CUPS_ORIENTATION, p->dest->num_options, p->dest->options);
     if (def_value)
@@ -514,32 +464,7 @@ const char *get_orientation_default(PrinterCUPS *p)
     // to do(later) consult the orientation mapping and do the necessary translation
     return str;
 }
-int get_orientation_supported(PrinterCUPS *p, char ***supported_values)
-{
-    return get_supported(p, supported_values, CUPS_ORIENTATION);
-}
-char *get_resolution_default(PrinterCUPS *p)
-{
-    const char *def_value = cupsGetOption("printer-resolution", p->dest->num_options, p->dest->options);
-    if (def_value)
-    {
-        return def_value;
-    }
-    ensure_printer_connection(p);
-    ipp_attribute_t *attr = NULL;
 
-    attr = cupsFindDestDefault(p->http, p->dest, p->dinfo, "printer-resolution");
-    if (!attr)
-    {
-        return "NA";
-    }
-
-    return extract_res_from_ipp(attr, 0);
-}
-int get_resolution_supported(PrinterCUPS *p, char ***supported_values)
-{
-    return get_supported(p, supported_values, "printer-resolution");
-}
 const char *get_color_default(PrinterCUPS *p)
 {
     /**first query user defaults**/
@@ -559,19 +484,10 @@ const char *get_color_default(PrinterCUPS *p)
     }
     return "NA";
 }
-int get_color_supported(PrinterCUPS *p, char ***supported_values)
-{
-    return get_supported(p, supported_values, CUPS_PRINT_COLOR_MODE);
-}
 
 int get_job_hold_until_supported(PrinterCUPS *p, char ***supported_values)
 {
     return get_supported(p, supported_values, "job-hold-until");
-}
-
-int get_print_quality_supported(PrinterCUPS *p, char ***supported_values)
-{
-    return get_supported(p, supported_values, CUPS_PRINT_QUALITY);
 }
 
 int get_job_creation_attributes(PrinterCUPS *p, char ***values)
@@ -725,7 +641,7 @@ const char *get_printer_state(PrinterCUPS *p)
     {
         /* request failed */
         printf("Request failed: %s\n", cupsLastErrorString());
-        return get_string_copy("NA");
+        return "NA";
     }
 
     ipp_attribute_t *attr;
@@ -738,7 +654,7 @@ const char *get_printer_state(PrinterCUPS *p)
     }
     return str;
 }
-int print_file(PrinterCUPS *p, char *file_path, int num_settings, GVariant *settings)
+int print_file(PrinterCUPS *p, const char *file_path, int num_settings, GVariant *settings)
 {
     ensure_printer_connection(p);
     int num_options = 0;
@@ -758,22 +674,60 @@ int print_file(PrinterCUPS *p, char *file_path, int num_settings, GVariant *sett
          * to do:
          * instead of directly adding the option,convert it from the frontend's lingo 
          * to the specific lingo of the backend
+         * 
+         * use PWG names instead
          */
         num_options = cupsAddOption(option_name, option_value, num_options, &options);
     }
-    /* Print a single file */
+    char *file_name = extract_file_name(file_path);
+    ipp_status_t job_status;
     int job_id = 0;
-    job_id = cupsPrintFile2(p->http, p->name, file_path, "Testing", num_options, options);
+    job_status = cupsCreateDestJob(p->http, p->dest, p->dinfo,
+                                   &job_id, file_name, num_options, options);
     if (job_id)
     {
-        g_message("File printed!\n");
+        /** job creation was successful , 
+         * Now let's submit a document 
+         * and start writing data onto it **/
+        printf("Created job %d\n", job_id);
+        http_status_t http_status; /**document creation status **/
+        http_status = cupsStartDestDocument(p->http, p->dest, p->dinfo, job_id,
+                                            file_name, CUPS_FORMAT_TEXT,
+                                            num_options, options, 1);
+        if (http_status == HTTP_STATUS_CONTINUE)
+        {
+            /**Document submitted successfully;
+             * Now write the data onto it**/
+            FILE *fp = fopen(file_path, "rb");
+            size_t bytes;
+            char buffer[65536];
+            /** Read and write the data chunk by chunk **/
+            while ((bytes = fread(buffer, 1, sizeof(buffer), fp)) > 0)
+            {
+                http_status = cupsWriteRequestData(p->http, buffer, bytes);
+                if (http_status != HTTP_STATUS_CONTINUE)
+                {
+                    printf("Error writing print data to server.\n");
+                    break;
+                }
+            }
+
+            if (cupsFinishDestDocument(p->http, p->dest, p->dinfo) == IPP_STATUS_OK)
+                printf("Document send succeeded.\n");
+            else
+                printf("Document send failed: %s\n",
+                       cupsLastErrorString());
+
+            fclose(fp);
+
+            return job_id; /**some correction needed here **/
+        }
     }
     else
     {
-        g_message("Error printing file :(\n");
+        printf("Unable to create job %s\n", cupsLastErrorString());
+        return 0;
     }
-
-    return job_id;
 }
 int get_active_jobs_count(PrinterCUPS *p)
 {
@@ -809,9 +763,9 @@ static void list_group(ppd_file_t *ppd,    /* I - PPD file */
     printf("It has %d options.\n", group->num_options);
     printf("Listing all of them ..\n");
     int i;
-    for(i=0;i<group->num_options;i++)
+    for (i = 0; i < group->num_options; i++)
     {
-        printf("    Option %d : %s\n",i, group->options[i].keyword);
+        printf("    Option %d : %s\n", i, group->options[i].keyword);
     }
 }
 void tryPPD(PrinterCUPS *p)
@@ -864,7 +818,7 @@ const char *cups_printer_state(cups_dest_t *dest)
     const char *state = cupsGetOption("printer-state", dest->num_options,
                                       dest->options);
     if (state == NULL)
-        return get_string_copy("NA");
+        return "NA";
     return map->state[state[0] - '0'];
 }
 
@@ -1069,9 +1023,9 @@ char *extract_media_from_ipp(ipp_attribute_t *attr, int index, PrinterCUPS *p)
     int x = cupsGetDestMediaByName(p->http, p->dest, p->dinfo, media_name, 0, &size);
     if (x == 0)
         return media_name;
-    char *str = cupsLocalizeDestMedia(p->http, p->dest,
-                                      p->dinfo, 0,
-                                      &size);
+    char *str = (char *)cupsLocalizeDestMedia(p->http, p->dest,
+                                              p->dinfo, 0,
+                                              &size);
     return str;
 }
 void print_job(cups_job_t *j)
