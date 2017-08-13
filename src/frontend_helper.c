@@ -257,7 +257,7 @@ int get_all_jobs(FrontendObj *f, Job **j, gboolean active_only)
         backend_names[i] = (char *)key;
         printf("%d jobs\n", num_jobs[i]);
         total_jobs += num_jobs[i];
-        i++;/** off to the next backend **/
+        i++; /** off to the next backend **/
     }
     Job *jobs = g_new(Job, total_jobs);
     int n = 0;
@@ -271,7 +271,6 @@ int get_all_jobs(FrontendObj *f, Job **j, gboolean active_only)
     *j = jobs;
     return total_jobs;
 }
-
 
 /**
 ________________________________________________ PrinterObj __________________________________________
@@ -399,14 +398,14 @@ int get_active_jobs_count(PrinterObj *p)
     printf("%d jobs currently active.\n", count);
     return count;
 }
-int print_file(PrinterObj *p, char *file_path)
+char *print_file(PrinterObj *p, char *file_path)
 {
-    int jobid;
-    print_backend_call_print_file_sync(p->backend_proxy, p->id, get_absolute_path(file_path),//memleak here
+    char *jobid;
+    print_backend_call_print_file_sync(p->backend_proxy, p->id, get_absolute_path(file_path), //memleak here
                                        p->settings->count,
                                        serialize_Settings(p->settings),
                                        &jobid, NULL, NULL);
-    if (jobid)
+    if (jobid && jobid[0]!='0')
         printf("File printed successfully.\n");
     else
         printf("Error printing file.\n");

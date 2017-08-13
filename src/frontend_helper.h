@@ -255,7 +255,7 @@ int get_active_jobs_count(PrinterObj *);
  * Submits a single file for printing, using the settings stored in 
  * p->settings
  */
-int print_file(PrinterObj *p, char *file_path);
+char* print_file(PrinterObj *p, char *file_path);
 
 /**
  * Wrapper for the add_setting(Settings* , ..) function.
