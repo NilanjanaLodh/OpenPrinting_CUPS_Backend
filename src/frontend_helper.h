@@ -37,6 +37,8 @@ ______________________________________ FrontendObj _____________________________
 struct _FrontendObj
 {
     PrintFrontend *skeleton;
+    GDBusConnection *connection;
+    
     char *bus_name;
     event_callback add_cb;
     event_callback rem_cb;

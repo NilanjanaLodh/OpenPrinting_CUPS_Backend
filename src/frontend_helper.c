@@ -48,6 +48,7 @@ on_name_acquired(GDBusConnection *connection,
     printf("on name acquired.\n");
     fflush(stdout);
     FrontendObj *f = (FrontendObj *)user_data;
+    f->connection = connection;
     GError *error = NULL;
 
     g_dbus_connection_signal_subscribe(connection,
@@ -81,6 +82,7 @@ FrontendObj *get_new_FrontendObj(char *instance_name, event_callback add_cb, eve
 {
     FrontendObj *f = malloc(sizeof(FrontendObj));
     f->skeleton = print_frontend_skeleton_new();
+    f->connection = NULL;
     if (!instance_name)
         f->bus_name = DIALOG_BUS_NAME;
     else
@@ -113,6 +115,8 @@ void connect_to_dbus(FrontendObj *f)
 void disconnect_from_dbus(FrontendObj *f)
 {
     print_frontend_emit_stop_listing(f->skeleton);
+    g_dbus_connection_flush_sync(f->connection, NULL, NULL);
+    g_dbus_connection_close_sync(f->connection, NULL, NULL);
 }
 
 void activate_backends(FrontendObj *f)
@@ -405,7 +409,7 @@ char *print_file(PrinterObj *p, char *file_path)
                                        p->settings->count,
                                        serialize_Settings(p->settings),
                                        &jobid, NULL, NULL);
-    if (jobid && jobid[0]!='0')
+    if (jobid && jobid[0] != '0')
         printf("File printed successfully.\n");
     else
         printf("Error printing file.\n");

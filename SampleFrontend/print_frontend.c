@@ -156,10 +156,10 @@ gpointer parse_commands(gpointer user_data)
         }
         else if (strcmp(buf, "ping") == 0)
         {
-            char printer_id[100] , backend_name[100];
+            char printer_id[100], backend_name[100];
             scanf("%s%s", printer_id, backend_name);
-            PrinterObj *p = find_PrinterObj(f,printer_id, backend_name);
-            print_backend_call_ping_sync(p->backend_proxy,p->id,NULL, NULL);
+            PrinterObj *p = find_PrinterObj(f, printer_id, backend_name);
+            print_backend_call_ping_sync(p->backend_proxy, p->id, NULL, NULL);
         }
         else if (strcmp(buf, "get-default-printer") == 0)
         {
@@ -180,7 +180,7 @@ gpointer parse_commands(gpointer user_data)
              */
             PrinterObj *p = find_PrinterObj(f, printer_id, backend_name);
             add_setting_to_printer(p, "copies", "3");
-            print_file(p,file_path);
+            print_file(p, file_path);
         }
         else if (strcmp(buf, "get-active-jobs-count") == 0)
         {
