@@ -353,7 +353,8 @@ GVariant *get_all_jobs(BackendObj *b, const char *dialog_name, int *num_jobs, gb
         PrinterCUPS *p = (PrinterCUPS *)value;
         ensure_printer_connection(p);
         printf(" .. %s ..", p->name);
-        ncurr = cupsGetJobs2(p->http, &(jobs[i_printer]), p->name, 0, CUPS_JOB_FLAG); //change later
+        /**This is NOT reporting jobs for ipp printers : Probably a bug in cupsGetJobs2:(( **/
+        ncurr = cupsGetJobs2(p->http, &(jobs[i_printer]), p->name, 0, CUPS_JOB_FLAG);
         printf("%d\n", ncurr);
         n += ncurr;
 
@@ -587,38 +588,43 @@ GVariant *pack_option(const Option *opt)
 int get_all_options(PrinterCUPS *p, Option **options)
 {
     ensure_printer_connection(p);
-    char **attribute_names;
-    int num_attributes = get_job_creation_attributes(p, &attribute_names);
-    int i, j;
-    Option *opts = (Option *)(malloc(sizeof(Option) * num_attributes));
-    ipp_attribute_t *vals;
-    int num_values;
-    for (i = 0; i < num_attributes; i++)
+
+    char **option_names;
+    int num_options = get_job_creation_attributes(p, &option_names); /** number of options to be returned**/
+    int i, j;                                                        /**Looping variables **/
+    Option *opts = (Option *)(malloc(sizeof(Option) * num_options)); /**Option array, which will be filled **/
+    ipp_attribute_t *vals;                                           /** Variable to store the values of the options **/
+
+    for (i = 0; i < num_options; i++)
     {
-        opts[i].option_name = attribute_names[i];
-        vals = cupsFindDestSupported(p->http, p->dest, p->dinfo, attribute_names[i]);
+        opts[i].option_name = option_names[i];
+        vals = cupsFindDestSupported(p->http, p->dest, p->dinfo, option_names[i]);
         if (vals)
             opts[i].num_supported = ippGetCount(vals);
         else
             opts[i].num_supported = 0;
 
+        /** Retreive all the supported values for that option **/
         opts[i].supported_values = new_cstring_array(opts[i].num_supported);
         for (j = 0; j < opts[i].num_supported; j++)
         {
-            opts[i].supported_values[j] = extract_ipp_attribute(vals, j, attribute_names[i], p);
-            if (!opts[i].supported_values[j])
+            opts[i].supported_values[j] = extract_ipp_attribute(vals, j, option_names[i], p);
+            if (opts[i].supported_values[j] == NULL)
             {
                 opts[i].supported_values[j] = get_string_copy("NA");
             }
         }
-        opts[i].default_value = get_default(p, attribute_names[i]);
-        if (!opts[i].default_value)
+
+        /** Retrieve the default value for that option **/
+        opts[i].default_value = get_default(p, option_names[i]);
+        if (opts[i].default_value == NULL)
         {
             opts[i].default_value = get_string_copy("NA");
         }
     }
+
     *options = opts;
-    return num_attributes;
+    return num_options;
 }
 
 const char *get_printer_state(PrinterCUPS *p)
@@ -692,7 +698,7 @@ int print_file(PrinterCUPS *p, const char *file_path, int num_settings, GVariant
         printf("Created job %d\n", job_id);
         http_status_t http_status; /**document creation status **/
         http_status = cupsStartDestDocument(p->http, p->dest, p->dinfo, job_id,
-                                            file_name, CUPS_FORMAT_TEXT,
+                                            file_name, CUPS_FORMAT_AUTO,
                                             num_options, options, 1);
         if (http_status == HTTP_STATUS_CONTINUE)
         {
@@ -946,14 +952,14 @@ gboolean cups_is_temporary(cups_dest_t *dest)
 
 char *extract_ipp_attribute(ipp_attribute_t *attr, int index, const char *option_name, PrinterCUPS *p)
 {
-    //printf("%s   ", option_name);
-    //first deal with the totally unique cases
+    /** first deal with the totally unique cases **/
     if (strcmp(option_name, CUPS_ORIENTATION) == 0)
         return extract_orientation_from_ipp(attr, index);
 
-    if (strcmp(option_name, CUPS_MEDIA) == 0)
-        return extract_media_from_ipp(attr, index, p);
+    // if (strcmp(option_name, CUPS_MEDIA) == 0)
+    //     return extract_media_from_ipp(attr, index, p);
 
+    /** Then deal with the generic cases **/
     char *str;
     switch (ippGetValueTag(attr))
     {
@@ -978,6 +984,7 @@ char *extract_ipp_attribute(ipp_attribute_t *attr, int index, const char *option
     default:
         return extract_string_from_ipp(attr, index);
     }
+
     char *ans = get_string_copy(str);
     free(str);
     return ans;

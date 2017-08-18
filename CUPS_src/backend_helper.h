@@ -15,9 +15,6 @@ typedef struct _PrinterCUPS
     cups_dest_t *dest;
     http_t *http;
     cups_dinfo_t *dinfo;
-    // add rest of the members soon .. like http connection , dinfo , ipp_attributes etc
-    // Infact, you can use these members to store the aettings the frontend supplies to you
-    // and later use these to send print jobs
 } PrinterCUPS;
 
 typedef struct _Mappings
@@ -34,10 +31,17 @@ typedef struct _BackendObj
     GDBusConnection *dbus_connection;
     PrintBackend *skeleton;
     char *obj_path;
-    GHashTable *dialog_printers; /**the hash table to map from dialog name (char*) to the set of printer names(char *) **/
-    GHashTable *dialog_cancel;   /**hash table to map from dialog name (char*) to the variable controlling when the enumeration is cancelled**/
+
+    /**the hash table to map from dialog name (char*) to the set of printers (PrinterObj*) **/
+    GHashTable *dialog_printers;
+
+    /**hash table to map from dialog name (char*) to the variable controlling
+     *  when the enumeration is cancelled**/
+    GHashTable *dialog_cancel;
+
     GHashTable *dialog_hide_remote;
     GHashTable *dialog_hide_temp;
+
     int num_frontends;
     char *default_printer;
 } BackendObj;
@@ -59,15 +63,35 @@ typedef struct _Option
 
 typedef char *(*extract_func)(ipp_attribute_t *, int index);
 /********Backend related functions*******************/
+
+/** Get a new BackendObj **/
 BackendObj *get_new_BackendObj();
+
+/** Get the printer-id of the default printer of the CUPS Backend**/
 char *get_default_printer(BackendObj *b);
+
+/** Connect the BackendObj to the dbus **/
 void connect_to_dbus(BackendObj *, char *obj_path);
+
+/** Add the dialog to the list of dialogs of the particular backend**/
 void add_frontend(BackendObj *, const char *dialog_name);
+
+/** Remove the dialog from the list of frontends that this backend is 
+ * associated with. 
+ */
 void remove_frontend(BackendObj *, const char *dialog_name);
+
+/** Checks if the backend isn't associated with any frontend **/
 gboolean no_frontends(BackendObj *);
+
+/** Get the variable which controls the cancellation of the enumeration thread for
+ * that particular dialog 
+ */
 int *get_dialog_cancel(BackendObj *, const char *dialog_name);
+
 void set_dialog_cancel(BackendObj *, const char *dialog_name);   //make cancel = 0
 void reset_dialog_cancel(BackendObj *, const char *dialog_name); //make cancel = 1
+
 gboolean get_hide_remote(BackendObj *b, char *dialog_name);
 void set_hide_remote_printers(BackendObj *, const char *dialog_name);
 void unset_hide_remote_printers(BackendObj *, const char *dialog_name);
@@ -87,10 +111,19 @@ GHashTable *get_dialog_printers(BackendObj *b, const char *dialog_name);
 cups_dest_t *get_dest_by_name(BackendObj *b, const char *dialog_name, const char *printer_name);
 PrinterCUPS *get_printer_by_name(BackendObj *b, const char *dialog_name, const char *printer_name);
 GVariant *get_all_jobs(BackendObj *b, const char *dialog_name, int *num_jobs, gboolean active_only);
+
 /*********Printer related functions******************/
+
+/** Get a new PrinterCUPS struct associated with the cups destination**/
 PrinterCUPS *get_new_PrinterCUPS(cups_dest_t *dest);
+
+/** Ensure that we have a connection the server**/
 gboolean ensure_printer_connection(PrinterCUPS *p);
-int get_printer_capabilities(PrinterCUPS *);
+
+/**
+ * Get state of the printer
+ * state is one of the following {"idle" , "processing" , "stopped"}
+ */
 const char *get_printer_state(PrinterCUPS *p);
 
 const char *get_media_default(PrinterCUPS *p);

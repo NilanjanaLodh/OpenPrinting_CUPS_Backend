@@ -239,6 +239,10 @@ PrinterObj *find_PrinterObj(FrontendObj *f, char *printer_id, char *backend_name
     sprintf(hashtable_key, "%s#%s", printer_id, backend_name);
 
     PrinterObj *p = g_hash_table_lookup(f->printer, hashtable_key);
+    if (p == NULL)
+    {
+        DBG_LOG("Printer doesn't exist.\n", ERR);
+    }
     return p;
 }
 
