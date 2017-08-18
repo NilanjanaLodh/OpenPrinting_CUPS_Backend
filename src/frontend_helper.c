@@ -19,7 +19,6 @@ static void on_printer_added(GDBusConnection *connection,
     PrinterObj *p = get_new_PrinterObj();
     fill_basic_options(p, parameters);
     add_printer(f, p);
-    print_basic_options(p);
     f->add_cb(p);
 }
 
@@ -36,7 +35,6 @@ static void on_printer_removed(GDBusConnection *connection,
     char *backend_name;
     g_variant_get(parameters, "(ss)", &printer_id, &backend_name);
     PrinterObj *p = remove_printer(f, printer_id, backend_name);
-    g_message("Removed Printer %s : %s!\n", p->name, backend_name);
     f->rem_cb(p);
 }
 
@@ -45,8 +43,7 @@ on_name_acquired(GDBusConnection *connection,
                  const gchar *name,
                  gpointer user_data)
 {
-    printf("on name acquired.\n");
-    fflush(stdout);
+    DBG_LOG("Acquired bus name", INFO);
     FrontendObj *f = (FrontendObj *)user_data;
     f->connection = connection;
     GError *error = NULL;
@@ -74,7 +71,11 @@ on_name_acquired(GDBusConnection *connection,
                                        NULL);
 
     g_dbus_interface_skeleton_export(G_DBUS_INTERFACE_SKELETON(f->skeleton), connection, DIALOG_OBJ_PATH, &error);
-    g_assert_no_error(error);
+    if (error)
+    {
+        DBG_LOG("Error connecting to D-Bus.", ERR);
+        return;
+    }
     activate_backends(f);
 }
 
@@ -135,7 +136,11 @@ void activate_backends(FrontendObj *f)
             if (strncmp(BACKEND_PREFIX, dir->d_name, len) == 0)
             {
                 backend_suffix = get_string_copy((dir->d_name) + len);
-                printf("Found backend %s\n", backend_suffix);
+
+                char msg[100];
+                sprintf(msg, "Found backend %s", backend_suffix);
+                DBG_LOG(msg, INFO);
+
                 proxy = create_backend_from_file(dir->d_name);
 
                 g_hash_table_insert(f->backend, backend_suffix, proxy);
@@ -153,8 +158,10 @@ PrintBackend *create_backend_from_file(const char *backend_file_name)
 {
     PrintBackend *proxy;
     char *backend_name = get_string_copy(backend_file_name);
+
     char path[1024];
     sprintf(path, "%s/%s", DBUS_DIR, backend_file_name);
+
     FILE *file = fopen(path, "r");
     char obj_path[200];
     fscanf(file, "%s", obj_path);
@@ -162,16 +169,26 @@ PrintBackend *create_backend_from_file(const char *backend_file_name)
     GError *error = NULL;
     proxy = print_backend_proxy_new_for_bus_sync(G_BUS_TYPE_SESSION, 0,
                                                  backend_name, obj_path, NULL, &error);
-    g_assert_no_error(error);
+
+    if (error)
+    {
+        char msg[512];
+        sprintf(msg, "Error creating backend proxy for %s", backend_name);
+        DBG_LOG(msg, ERR);
+    }
     return proxy;
 }
 
 gboolean add_printer(FrontendObj *f, PrinterObj *p)
 {
-    /**
-     * todo : add error checking when p->backend_name is not there in the backend hash table 
-     */
     p->backend_proxy = g_hash_table_lookup(f->backend, p->backend_name);
+
+    if (p->backend_proxy == NULL)
+    {
+        char msg[512];
+        sprintf(msg, "Can't add printer. Backend %s doesn't exist", p->backend_name);
+        DBG_LOG(msg, ERR);
+    }
 
     g_hash_table_insert(f->printer, concat(p->id, p->backend_name), p);
     f->num_printers++;
@@ -235,7 +252,6 @@ char *get_default_printer(FrontendObj *f, char *backend_name)
     g_assert_nonnull(proxy);
     char *def;
     print_backend_call_get_default_printer_sync(proxy, &def, NULL, NULL);
-    printf("%s\n", def);
     return def;
 }
 
@@ -259,7 +275,6 @@ int get_all_jobs(FrontendObj *f, Job **j, gboolean active_only)
         /**to do: change this to asynchronous call for better performance */
         print_backend_call_get_all_jobs_sync(proxy, active_only, &(num_jobs[i]), &(var[i]), NULL, NULL);
         backend_names[i] = (char *)key;
-        printf("%d jobs\n", num_jobs[i]);
         total_jobs += num_jobs[i];
         i++; /** off to the next backend **/
     }
@@ -326,9 +341,9 @@ gboolean is_accepting_jobs(PrinterObj *p)
     GError *error = NULL;
     print_backend_call_is_accepting_jobs_sync(p->backend_proxy, p->id,
                                               &p->is_accepting_jobs, NULL, &error);
-    g_assert_no_error(error);
+    if (error)
+        DBG_LOG("Error retrieving accepting_jobs.", ERR);
 
-    g_message("%d", p->is_accepting_jobs);
     return p->is_accepting_jobs;
 }
 
@@ -336,9 +351,10 @@ char *get_state(PrinterObj *p)
 {
     GError *error = NULL;
     print_backend_call_get_printer_state_sync(p->backend_proxy, p->id, &p->state, NULL, &error);
-    g_assert_no_error(error);
 
-    g_message("%s", p->state);
+    if (error)
+        DBG_LOG("Error retrieving printer state.", ERR);
+
     return p->state;
 }
 
@@ -357,9 +373,7 @@ Options *get_all_options(PrinterObj *p)
     GVariant *var;
     print_backend_call_get_all_options_sync(p->backend_proxy, p->id,
                                             &num_options, &var, NULL, &error);
-    printf("Num_options is %d\n", num_options);
     unpack_options(var, num_options, p->options);
-
     return p->options;
 }
 
@@ -399,25 +413,25 @@ int get_active_jobs_count(PrinterObj *p)
 {
     int count;
     print_backend_call_get_active_jobs_count_sync(p->backend_proxy, p->id, &count, NULL, NULL);
-    printf("%d jobs currently active.\n", count);
     return count;
 }
 char *print_file(PrinterObj *p, char *file_path)
 {
     char *jobid;
-    print_backend_call_print_file_sync(p->backend_proxy, p->id, get_absolute_path(file_path), //memleak here
+    char *absolute_file_path = get_absolute_path(file_path);
+    print_backend_call_print_file_sync(p->backend_proxy, p->id, absolute_file_path,
                                        p->settings->count,
                                        serialize_Settings(p->settings),
                                        &jobid, NULL, NULL);
+    free(absolute_file_path);
     if (jobid && jobid[0] != '0')
-        printf("File printed successfully.\n");
+        DBG_LOG("File printed successfully.\n", INFO);
     else
-        printf("Error printing file.\n");
+        DBG_LOG("Error printing file.\n", ERR);
     return jobid;
 }
 void add_setting_to_printer(PrinterObj *p, char *name, char *val)
 {
-    printf("name = %s , value = %s\n", name, val);
     add_setting(p->settings, name, val);
 }
 gboolean clear_setting_from_printer(PrinterObj *p, char *name)
@@ -488,7 +502,6 @@ GVariant *serialize_Settings(Settings *s)
     for (int i = 0; i < s->count; i++)
     {
         g_hash_table_iter_next(&iter, &key, &value);
-        g_message("%s : %s", (char *)key, (char *)value);
         g_variant_builder_add(builder, "(ss)", key, value);
     }
 
@@ -520,47 +533,6 @@ void print_option(const Option *opt)
     }
     printf("****DEFAULT: %s\n", opt->default_value);
 }
-void unpack_option_array(GVariant *var, int num_options, Option **options)
-{
-    Option *opt = (Option *)(malloc(sizeof(Option) * num_options));
-    int i, j;
-    char *str;
-    GVariantIter *iter;
-    GVariantIter *array_iter;
-    char *name, *default_val;
-    int num_sup;
-    g_variant_get(var, "a(ssia(s))", &iter);
-    for (i = 0; i < num_options; i++)
-    {
-        //printf("i = %d\n", i);
-
-        g_variant_iter_loop(iter, "(ssia(s))", &name, &default_val,
-                            &num_sup, &array_iter);
-        opt[i].option_name = get_string_copy(name);
-        opt[i].default_value = get_string_copy(default_val);
-        opt[i].num_supported = num_sup;
-        opt[i].supported_values = new_cstring_array(num_sup);
-        for (j = 0; j < num_sup; j++)
-        {
-            g_variant_iter_loop(array_iter, "(s)", &str);
-            opt[i].supported_values[j] = get_string_copy(str); //mem
-        }
-        print_option(&opt[i]);
-    }
-
-    *options = opt;
-}
-GVariant *pack_option(const Option *opt)
-{
-    GVariant **t = g_new(GVariant *, 4);
-    t[0] = g_variant_new_string(opt->option_name);
-    t[1] = g_variant_new_string(opt->default_value); //("s", get_string_copy(opt->default_value));
-    t[2] = g_variant_new_int32(opt->num_supported);
-    t[3] = pack_string_array(opt->num_supported, opt->supported_values);
-    GVariant *tuple_variant = g_variant_new_tuple(t, 4);
-    g_free(t);
-    return tuple_variant;
-}
 
 /**
  * ________________________________ Job __________________________
@@ -591,6 +563,15 @@ void unpack_job_array(GVariant *var, int num_jobs, Job *jobs, char *backend_name
 /**
  * ________________________________utility functions__________________________
  */
+
+void DBG_LOG(const char *msg, int msg_level)
+{
+    if (DEBUG_LEVEL >= msg_level)
+    {
+        printf("%s\n", msg);
+        fflush(stdout);
+    }
+}
 char *concat(char *printer_id, char *backend_name)
 {
     char str[512];
@@ -611,7 +592,6 @@ void unpack_options(GVariant *var, int num_options, Options *options)
     Option *opt;
     for (i = 0; i < num_options; i++)
     {
-        //printf("i = %d\n", i);
         opt = g_new0(Option, 1);
         g_variant_iter_loop(iter, "(ssia(s))", &name, &default_val,
                             &num_sup, &array_iter);
@@ -625,7 +605,6 @@ void unpack_options(GVariant *var, int num_options, Options *options)
             opt->supported_values[j] = get_string_copy(str);
         }
         g_hash_table_insert(options->table, (gpointer)opt->option_name, (gpointer)opt);
-        print_option(opt);
     }
 }
 /************************************************************************************************/

@@ -11,12 +11,13 @@ FrontendObj *f;
 
 static int add_printer_callback(PrinterObj *p)
 {
-    printf("print_frontend.c : Printer %s added!\n", p->name);
+    // printf("print_frontend.c : Printer %s added!\n", p->name);
+    print_basic_options(p);
 }
 
 static int remove_printer_callback(PrinterObj *p)
 {
-    printf("print_frontend.c : Printer %s removed!\n", p->name);
+    g_message("Removed Printer %s : %s!\n", p->name, p->backend_name);
 }
 
 int main(int argc, char **argv)
@@ -84,7 +85,17 @@ gpointer parse_commands(gpointer user_data)
             scanf("%s%s", printer_id, backend_name);
             g_message("Getting all attributes ..\n");
             PrinterObj *p = find_PrinterObj(f, printer_id, backend_name);
-            get_all_options(p);
+            Options *opts = get_all_options(p);
+
+            printf("Retreived %d\n options.", opts->count);
+            GHashTableIter iter;
+            gpointer value;
+
+            g_hash_table_iter_init(&iter, opts->table);
+            while (g_hash_table_iter_next(&iter, NULL, &value))
+            {
+                print_option(value);
+            }
         }
         else if (strcmp(buf, "get-default") == 0)
         {
@@ -140,7 +151,7 @@ gpointer parse_commands(gpointer user_data)
             char backend_name[100];
             scanf("%s%s", printer_id, backend_name);
             PrinterObj *p = find_PrinterObj(f, printer_id, backend_name);
-            get_state(p);
+            printf("%s\n", get_state(p));
         }
         else if (strcmp(buf, "is-accepting-jobs") == 0)
         {
@@ -148,7 +159,7 @@ gpointer parse_commands(gpointer user_data)
             char backend_name[100];
             scanf("%s%s", printer_id, backend_name);
             PrinterObj *p = find_PrinterObj(f, printer_id, backend_name);
-            is_accepting_jobs(p);
+            printf("Accepting jobs ? : %d ", is_accepting_jobs(p));
         }
         else if (strcmp(buf, "help") == 0)
         {
@@ -169,7 +180,7 @@ gpointer parse_commands(gpointer user_data)
              * Backend name = The last part of the backend dbus service
              * Eg. "CUPS" or "GCP"
              */
-            get_default_printer(f, backend_name);
+            printf("%s\n", get_default_printer(f, backend_name));
         }
         else if (strcmp(buf, "print-file") == 0)
         {
@@ -188,7 +199,7 @@ gpointer parse_commands(gpointer user_data)
             char backend_name[100];
             scanf("%s%s", printer_id, backend_name);
             PrinterObj *p = find_PrinterObj(f, printer_id, backend_name);
-            get_active_jobs_count(p);
+            printf("%d jobs currently active.\n", get_active_jobs_count(p));
         }
         else if (strcmp(buf, "get-all-jobs") == 0)
         {
@@ -196,6 +207,7 @@ gpointer parse_commands(gpointer user_data)
             scanf("%d", &active_only);
             Job *j;
             int x = get_all_jobs(f, &j, active_only);
+            printf("Total %d jobs\n", x);
             int i;
             for (i = 0; i < x; i++)
             {

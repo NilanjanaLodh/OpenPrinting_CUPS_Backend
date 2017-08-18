@@ -5,6 +5,13 @@ extern "C" {
 #ifndef _FRONTEND_HELPER_H_
 #define _FRONTEND_HELPER_H_
 
+#define INFO 3
+#define WARN 2
+#define ERR  1
+
+#define DEBUG_LEVEL INFO 
+
+
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -38,7 +45,7 @@ struct _FrontendObj
 {
     PrintFrontend *skeleton;
     GDBusConnection *connection;
-    
+
     char *bus_name;
     event_callback add_cb;
     event_callback rem_cb;
@@ -257,7 +264,7 @@ int get_active_jobs_count(PrinterObj *);
  * Submits a single file for printing, using the settings stored in 
  * p->settings
  */
-char* print_file(PrinterObj *p, char *file_path);
+char *print_file(PrinterObj *p, char *file_path);
 
 /**
  * Wrapper for the add_setting(Settings* , ..) function.
@@ -360,8 +367,6 @@ struct _Option
     char *default_value;
 };
 void print_option(const Option *opt);
-void unpack_option_array(GVariant *var, int num_options, Option **options);
-GVariant *pack_option(const Option *opt);
 
 /************************************************************************************************/
 /**
@@ -384,6 +389,7 @@ void unpack_job_array(GVariant *var, int num_jobs, Job *jobs, char *backend_name
  * ________________________________utility functions__________________________
  */
 
+void DBG_LOG(const char *msg , int msg_level);
 char *concat(char *printer_id, char *backend_name);
 
 /**
