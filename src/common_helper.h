@@ -1,6 +1,7 @@
 #ifndef _COMMON_HELPER_H_
 #define _COMMON_HELPER_H_
 
+
 #include <stdio.h>
 #include <unistd.h>
 #include <string.h>
@@ -43,16 +44,6 @@ char *extract_file_name(const char* file_path);
 #define CPD_OPTION_COLOR_MODE "print-color-mode"
 #define CPD_OPTION_SIDES "sides"
 
-
-#define MEDIA_A4 "A4"
-#define MEDIA_A3 "A3"
-#define MEDIA_A5 "A5"
-#define MEDIA_A6 "A6"
-#define MEDIA_LEGAL "LEGAL"
-#define MEDIA_LETTER "LETTER"
-#define MEDIA_PHOTO "PHOTO"
-#define MEDIA_TABLOID "TABLOID"
-#define MEDIA_ENV "ENV10"
 
 #define COLOR_MODE_COLOR "color"
 #define COLOR_MODE_BW "monochrome"

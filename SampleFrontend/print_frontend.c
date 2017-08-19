@@ -87,7 +87,7 @@ gpointer parse_commands(gpointer user_data)
             PrinterObj *p = find_PrinterObj(f, printer_id, backend_name);
             Options *opts = get_all_options(p);
 
-            printf("Retreived %d\n options.", opts->count);
+            printf("Retrieved %d options.\n", opts->count);
             GHashTableIter iter;
             gpointer value;
 

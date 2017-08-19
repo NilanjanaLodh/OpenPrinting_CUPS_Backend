@@ -9,6 +9,12 @@
 #include <cups/ppd.h>
 #include <CPDBackend.h>
 
+#define INFO 3
+#define WARN 2
+#define ERR 1
+
+#define MSG_LOG_LEVEL INFO
+
 typedef struct _PrinterCUPS
 {
     gchar *name;
@@ -166,4 +172,10 @@ char *extract_media_from_ipp(ipp_attribute_t *attr, int index, PrinterCUPS *p);
 void print_job(cups_job_t *j);
 GVariant *pack_cups_job(cups_job_t job);
 char *translate_job_state(ipp_jstate_t);
+
+/***************Misc.** **********************/
+
+/**error logging */
+void MSG_LOG(const char *msg, int msg_level);
+
 #endif

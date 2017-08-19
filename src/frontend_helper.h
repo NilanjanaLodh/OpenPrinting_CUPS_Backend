@@ -338,6 +338,8 @@ gboolean clear_setting(Settings *, char *name);
  */
 GVariant *serialize_Settings(Settings *s);
 
+void save_to_disk(Settings *s);
+
 /************************************************************************************************/
 /**
 ______________________________________ Options __________________________________________

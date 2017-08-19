@@ -119,7 +119,9 @@ int send_printer_added(void *_dialog_name, unsigned flags, cups_dest_t *dest)
     send_printer_added_signal(b, dialog_name, dest);
     g_message("     Sent notification for printer %s\n", printer_name);
 
-    ///fix memory leaks
+    /** dest will be automatically freed later. 
+     * If you want the details later, make a copy of dest , as add_printer_to_dialog() does
+     */
     return 1; //continue enumeration
 }
 static void on_stop_backend(GDBusConnection *connection,
