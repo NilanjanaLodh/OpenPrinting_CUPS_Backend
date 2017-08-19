@@ -5,13 +5,6 @@ extern "C" {
 #ifndef _FRONTEND_HELPER_H_
 #define _FRONTEND_HELPER_H_
 
-#define INFO 3
-#define WARN 2
-#define ERR  1
-
-#define DEBUG_LEVEL INFO 
-
-
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -21,10 +14,17 @@ extern "C" {
 #include "backend_interface.h"
 #include "frontend_interface.h"
 
+#define INFO 3
+#define WARN 2
+#define ERR 1
+
+#define DEBUG_LEVEL INFO
+
 #define DIALOG_BUS_NAME "org.openprinting.PrintFrontend"
 #define DIALOG_OBJ_PATH "/"
 #define DBUS_DIR "/usr/share/print-backends"
 #define BACKEND_PREFIX "org.openprinting.Backend."
+#define SETTINGS_FILE "~/.CPD-print-settings"
 
 typedef struct _FrontendObj FrontendObj;
 typedef struct _PrinterObj PrinterObj;
@@ -55,6 +55,8 @@ struct _FrontendObj
 
     int num_printers;
     GHashTable *printer; /**[printer name] --> [PrinterObj] **/
+
+    Settings *last_saved; /** The last saved settings to disk */
 };
 
 /**
@@ -92,6 +94,15 @@ void disconnect_from_dbus(FrontendObj *);
  * XYZ = Backend suffix, using which it will be identified henceforth 
  */
 void activate_backends(FrontendObj *);
+
+/**
+ * The default behaviour of FrontendObj is to use the
+ * settings previously saved to disk the last time any print dialog ran.
+ * 
+ * To ignore the last saved settings, you need to explicitly call this function
+ * after get_new_FrontendObj
+ */
+void ignore_last_saved_settings(FrontendObj *);
 
 /**
  * Add the printer to the FrontendObj instance
@@ -315,13 +326,15 @@ struct _Settings
  */
 Settings *get_new_Settings();
 
+Settings *get_copy(const Settings *);
+
 /**
  * Add the particular 'setting' to the Settings struct
  * If the setting already exists, its value is updated instead.
  * 
  * Eg. add_setting(s,"copies","1") 
  */
-void add_setting(Settings *, char *name, char *val);
+void add_setting(Settings *, const char *name, const char *val);
 
 /**
  * Clear the setting specified by @name
@@ -338,7 +351,19 @@ gboolean clear_setting(Settings *, char *name);
  */
 GVariant *serialize_Settings(Settings *s);
 
+/**
+ * Save the settings to disk ,
+ * i.e write them to SETTINGS_FILE
+ */
 void save_to_disk(Settings *s);
+
+/**
+ * Reads the serialized settings stored in
+ *  SETTINGS_FILE and creates a Settings* struct from it
+ * 
+ * The caller is responsible for freeing the returned Settings*
+ */
+Settings *read_settings_from_disk();
 
 /************************************************************************************************/
 /**
@@ -391,7 +416,7 @@ void unpack_job_array(GVariant *var, int num_jobs, Job *jobs, char *backend_name
  * ________________________________utility functions__________________________
  */
 
-void DBG_LOG(const char *msg , int msg_level);
+void DBG_LOG(const char *msg, int msg_level);
 char *concat(char *printer_id, char *backend_name);
 
 /**

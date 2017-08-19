@@ -98,6 +98,7 @@ FrontendObj *get_new_FrontendObj(char *instance_name, event_callback add_cb, eve
     f->backend = g_hash_table_new(g_str_hash, g_str_equal);
     f->num_printers = 0;
     f->printer = g_hash_table_new(g_str_hash, g_str_equal);
+    f->last_saved = read_settings_from_disk();
     return f;
 }
 
@@ -303,6 +304,7 @@ PrinterObj *get_new_PrinterObj()
 {
     PrinterObj *p = malloc(sizeof(PrinterObj));
     p->options = NULL;
+    /**change here */
     p->settings = get_new_Settings();
     return p;
 }
@@ -432,6 +434,8 @@ char *print_file(PrinterObj *p, char *file_path)
         DBG_LOG("File printed successfully.\n", INFO);
     else
         DBG_LOG("Error printing file.\n", ERR);
+
+    save_to_disk(p->settings);
     return jobid;
 }
 void add_setting_to_printer(PrinterObj *p, char *name, char *val)
@@ -461,7 +465,7 @@ Settings *get_new_Settings()
     return s;
 }
 
-void add_setting(Settings *s, char *name, char *val)
+void add_setting(Settings *s, const char *name, const char *val)
 {
     char *prev = g_hash_table_lookup(s->table, name);
     if (prev)
@@ -469,12 +473,12 @@ void add_setting(Settings *s, char *name, char *val)
         /**
          * The value is already there, so replace it instead
          */
-        g_hash_table_replace(s->table, name, val);
+        g_hash_table_replace(s->table, get_string_copy(name), get_string_copy(val));
         free(prev);
     }
     else
     {
-        g_hash_table_insert(s->table, name, val);
+        g_hash_table_insert(s->table, get_string_copy(name), get_string_copy(val));
         s->count++;
     }
 }
@@ -514,6 +518,53 @@ GVariant *serialize_Settings(Settings *s)
 
     variant = g_variant_new("a(ss)", builder);
     return variant;
+}
+
+void save_to_disk(Settings *s)
+{
+    char *path = get_absolute_path(SETTINGS_FILE);
+    FILE *fp = fopen(path, "w");
+
+    fprintf(fp, "%d\n", s->count);
+
+    GHashTableIter iter;
+    gpointer key, value;
+    g_hash_table_iter_init(&iter, s->table);
+    while (g_hash_table_iter_next(&iter, &key, &value))
+    {
+        fprintf(fp, "%s#%s#\n", (char *)key, (char *)value);
+    }
+    fclose(fp);
+    free(path);
+}
+
+Settings *read_settings_from_disk()
+{
+    char *path = get_absolute_path(SETTINGS_FILE);
+    FILE *fp = fopen(path, "r");
+    if (fp == NULL)
+    {
+        DBG_LOG("No previous settings found.", WARN);
+        return NULL;
+    }
+    Settings *s = get_new_Settings();
+    int count;
+    fscanf(fp, "%d\n", &count);
+    s->count = count;
+    char line[1024];
+
+    char *name, *value;
+    while (count--)
+    {
+        fgets(line, 1024, fp);
+        name = strtok(line, "#");
+        value = strtok(NULL, "#");
+        printf("%s  : %s \n", name, value);
+        add_setting(s, name, value);
+    }
+    fclose(fp);
+    free(path);
+    return s;
 }
 /**
 ________________________________________________ Options __________________________________________
