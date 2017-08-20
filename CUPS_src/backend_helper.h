@@ -15,13 +15,27 @@
 
 #define MSG_LOG_LEVEL INFO
 
+/**
+ * Represents a CUPS Printer
+ */
 typedef struct _PrinterCUPS
 {
-    gchar *name;
+    char *name;
     cups_dest_t *dest;
     http_t *http;
     cups_dinfo_t *dinfo;
 } PrinterCUPS;
+
+/**
+ * Represents a frontend instance that the backend is associated with
+ */
+typedef struct _Dialog
+{
+    int cancel;
+    gboolean hide_remote;
+    gboolean hide_temp;
+    GHashTable *printers;
+} Dialog;
 
 typedef struct _Mappings
 {
@@ -32,33 +46,25 @@ typedef struct _Mappings
     const char *state[6];
 } Mappings;
 
+/**
+ * Represents the CUPS Backend
+ */
 typedef struct _BackendObj
 {
     GDBusConnection *dbus_connection;
     PrintBackend *skeleton;
     char *obj_path;
 
-    /**the hash table to map from dialog name (char*) to the set of printers (PrinterObj*) **/
-    GHashTable *dialog_printers;
-
-    /**hash table to map from dialog name (char*) to the variable controlling
-     *  when the enumeration is cancelled**/
-    GHashTable *dialog_cancel;
-
-    GHashTable *dialog_hide_remote;
-    GHashTable *dialog_hide_temp;
+    /** the hash table to map from dialog name(char*) to the Dialog struct(Dialog*) **/
+    GHashTable *dialogs;
 
     int num_frontends;
     char *default_printer;
 } BackendObj;
 
-typedef struct _Res
-{
-    int x, y;
-    const char *unit;
-    char *string;
-} Res;
-
+/**
+ * Represents a single 'option' for a printer
+ */
 typedef struct _Option
 {
     const char *option_name;
@@ -67,7 +73,6 @@ typedef struct _Option
     const char *default_value;
 } Option;
 
-typedef char *(*extract_func)(ipp_attribute_t *, int index);
 /********Backend related functions*******************/
 
 /** Get a new BackendObj **/
@@ -98,15 +103,45 @@ int *get_dialog_cancel(BackendObj *, const char *dialog_name);
 void set_dialog_cancel(BackendObj *, const char *dialog_name);   //make cancel = 0
 void reset_dialog_cancel(BackendObj *, const char *dialog_name); //make cancel = 1
 
+/** Returns whether remote CUPS printers are hidden for this dialog **/
 gboolean get_hide_remote(BackendObj *b, char *dialog_name);
+
+/** Hides remote CUPS printers for the dialog **/
 void set_hide_remote_printers(BackendObj *, const char *dialog_name);
+
+/** Unhides remote CUPS Printers for the dialog **/
 void unset_hide_remote_printers(BackendObj *, const char *dialog_name);
+
+/** Returns whether temporary CUPS Queues(discovered, but not set up) are hidden for this dialog **/
 gboolean get_hide_temp(BackendObj *b, char *dialog_name);
+
+/** Hides temporary CUPS queues for the dialog **/
 void set_hide_temp_printers(BackendObj *, const char *dialog_name);
+
+/** Unhides temporary CUPS queues for the dialog **/
 void unset_hide_temp_printers(BackendObj *, const char *dialog_name);
+
+/**
+ * Returns
+ * TRUE if the printer with specified name is found for the dialog
+ * FALSE otherwise
+ */
 gboolean dialog_contains_printer(BackendObj *, const char *dialog_name, const char *printer_name);
+
+/**
+ * Adds the corresponding CUPS printer to the dialog's printer list
+ * 
+ * Returns 
+ * the PrinterCUPS* struct added to the dialog
+ * NULL if the operation was unsuccesful
+ */
 PrinterCUPS *add_printer_to_dialog(BackendObj *, const char *dialog_name, const cups_dest_t *dest);
+
+/**
+ * Removes the printer with the specified name from the dialog's list of printers
+ */
 void remove_printer_from_dialog(BackendObj *, const char *dialog_name, const char *printer_name);
+
 void send_printer_added_signal(BackendObj *b, const char *dialog_name, cups_dest_t *dest);
 void send_printer_removed_signal(BackendObj *b, const char *dialog_name, const char *printer_name);
 void notify_removed_printers(BackendObj *b, const char *dialog_name, GHashTable *new_table);
@@ -121,7 +156,10 @@ GVariant *get_all_jobs(BackendObj *b, const char *dialog_name, int *num_jobs, gb
 /*********Printer related functions******************/
 
 /** Get a new PrinterCUPS struct associated with the cups destination**/
-PrinterCUPS *get_new_PrinterCUPS(cups_dest_t *dest);
+PrinterCUPS *get_new_PrinterCUPS(const cups_dest_t *dest);
+
+/** Free up the memory used by the struct **/
+void free_PrinterCUPS(PrinterCUPS *);
 
 /** Ensure that we have a connection the server**/
 gboolean ensure_printer_connection(PrinterCUPS *p);
@@ -131,11 +169,7 @@ gboolean ensure_printer_connection(PrinterCUPS *p);
  * state is one of the following {"idle" , "processing" , "stopped"}
  */
 const char *get_printer_state(PrinterCUPS *p);
-
-const char *get_media_default(PrinterCUPS *p);
 char *get_orientation_default(PrinterCUPS *p);
-const char *get_color_default(PrinterCUPS *p);
-
 const char *get_default(PrinterCUPS *p, char *option_name);
 int get_supported(PrinterCUPS *p, char ***supported_values, const char *option_name);
 
@@ -147,6 +181,10 @@ int get_active_jobs_count(PrinterCUPS *p);
 gboolean cancel_job(PrinterCUPS *p, int jobid);
 
 void tryPPD(PrinterCUPS *p);
+/**********Dialog related funtions ****************/
+Dialog* get_new_Dialog();
+void free_Dialog(Dialog *);
+
 /*********Option related functions*****************/
 void print_option(const Option *opt);
 void unpack_option_array(GVariant *var, int num_options, Option **options);
@@ -163,12 +201,10 @@ GHashTable *cups_get_local_printers();
 char *cups_retrieve_string(cups_dest_t *dest, const char *option_name);
 gboolean cups_is_temporary(cups_dest_t *dest);
 GHashTable *cups_get_printers(gboolean notemp, gboolean noremote);
-char *extract_ipp_attribute(ipp_attribute_t *, int index, const char *option_name, PrinterCUPS *p);
+char *extract_ipp_attribute(ipp_attribute_t *, int index, const char *option_name);
 char *extract_res_from_ipp(ipp_attribute_t *, int index);
 char *extract_string_from_ipp(ipp_attribute_t *attr, int index);
 char *extract_orientation_from_ipp(ipp_attribute_t *attr, int index);
-char *extract_quality_from_ipp(ipp_attribute_t *attr, int index);
-char *extract_media_from_ipp(ipp_attribute_t *attr, int index, PrinterCUPS *p);
 void print_job(cups_job_t *j);
 GVariant *pack_cups_job(cups_job_t job);
 char *translate_job_state(ipp_jstate_t);
@@ -177,5 +213,5 @@ char *translate_job_state(ipp_jstate_t);
 
 /**error logging */
 void MSG_LOG(const char *msg, int msg_level);
-
+void free_string(char *);
 #endif

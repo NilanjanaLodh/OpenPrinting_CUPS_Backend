@@ -7,10 +7,9 @@ BackendObj *get_new_BackendObj()
 
     BackendObj *b = (BackendObj *)(malloc(sizeof(BackendObj)));
     b->dbus_connection = NULL;
-    b->dialog_printers = g_hash_table_new(g_str_hash, g_str_equal);
-    b->dialog_cancel = g_hash_table_new(g_str_hash, g_str_equal);
-    b->dialog_hide_remote = g_hash_table_new(g_str_hash, g_str_equal);
-    b->dialog_hide_temp = g_hash_table_new(g_str_hash, g_str_equal);
+    b->dialogs = g_hash_table_new_full(g_str_hash, g_str_equal,
+                                       (GDestroyNotify)free_string,
+                                       (GDestroyNotify)free_Dialog);
     b->num_frontends = 0;
     b->obj_path = NULL;
     b->default_printer = NULL;
@@ -73,39 +72,17 @@ void connect_to_dbus(BackendObj *b, char *obj_path)
     }
 }
 
-void add_frontend(BackendObj *b, const char *_dialog_name)
+void add_frontend(BackendObj *b, const char *dialog_name)
 {
-    char *dialog_name = get_string_copy(_dialog_name);
-    int *cancel = malloc(sizeof(int));
-    *cancel = 0;
-    g_hash_table_insert(b->dialog_cancel, dialog_name, cancel);
-
-    gboolean *hide_rem = malloc(sizeof(gboolean));
-    *hide_rem = FALSE;
-    g_hash_table_insert(b->dialog_hide_remote, dialog_name, hide_rem);
-
-    gboolean *hide_temp = malloc(sizeof(gboolean));
-    *hide_temp = FALSE;
-    g_hash_table_insert(b->dialog_hide_temp, dialog_name, hide_temp);
-
-    GHashTable *printers = g_hash_table_new(g_str_hash, g_str_equal);
-    g_hash_table_insert(b->dialog_printers, dialog_name, printers);
+    Dialog *d = get_new_Dialog();
+    g_hash_table_insert(b->dialogs, get_string_copy(dialog_name), d);
     b->num_frontends++;
 }
 
 void remove_frontend(BackendObj *b, const char *dialog_name)
 {
-    int *cancel = get_dialog_cancel(b, dialog_name);
-    g_hash_table_remove(b->dialog_cancel, dialog_name);
-    free(cancel);
-
-    gboolean *hide_rem = (gboolean *)(g_hash_table_lookup(b->dialog_hide_remote, dialog_name));
-    g_hash_table_remove(b->dialog_hide_remote, dialog_name);
-    free(hide_rem);
-
-    GHashTable *p = (GHashTable *)(g_hash_table_lookup(b->dialog_printers, dialog_name));
-    g_hash_table_remove(b->dialog_printers, dialog_name);
-    g_hash_table_destroy(p);
+    Dialog *d = (Dialog *)(g_hash_table_lookup(b->dialogs, dialog_name));
+    g_hash_table_remove(b->dialogs, dialog_name);
     b->num_frontends--;
 
     g_message("Removed Frontend entry for %s", dialog_name);
@@ -118,8 +95,8 @@ gboolean no_frontends(BackendObj *b)
 }
 int *get_dialog_cancel(BackendObj *b, const char *dialog_name)
 {
-    int *cancel = (int *)(g_hash_table_lookup(b->dialog_cancel, dialog_name));
-    return cancel;
+    Dialog *d = (Dialog *)(g_hash_table_lookup(b->dialogs, dialog_name));
+    return &d->cancel;
 }
 void set_dialog_cancel(BackendObj *b, const char *dialog_name)
 {
@@ -133,37 +110,37 @@ void reset_dialog_cancel(BackendObj *b, const char *dialog_name)
 }
 void set_hide_remote_printers(BackendObj *b, const char *dialog_name)
 {
-    gboolean *hide_rem = (gboolean *)(g_hash_table_lookup(b->dialog_hide_remote, dialog_name));
-    *hide_rem = TRUE;
+    Dialog *d = (Dialog *)(g_hash_table_lookup(b->dialogs, dialog_name));
+    d->hide_remote = TRUE;
 }
 void unset_hide_remote_printers(BackendObj *b, const char *dialog_name)
 {
-    gboolean *hide_rem = (gboolean *)(g_hash_table_lookup(b->dialog_hide_remote, dialog_name));
-    *hide_rem = FALSE;
+    Dialog *d = (Dialog *)(g_hash_table_lookup(b->dialogs, dialog_name));
+    d->hide_remote = FALSE;
 }
 void set_hide_temp_printers(BackendObj *b, const char *dialog_name)
 {
-    gboolean *hide_temp = (gboolean *)(g_hash_table_lookup(b->dialog_hide_temp, dialog_name));
-    *hide_temp = TRUE;
+    Dialog *d = (Dialog *)(g_hash_table_lookup(b->dialogs, dialog_name));
+    d->hide_temp = TRUE;
 }
 void unset_hide_temp_printers(BackendObj *b, const char *dialog_name)
 {
-    gboolean *hide_temp = (gboolean *)(g_hash_table_lookup(b->dialog_hide_temp, dialog_name));
-    *hide_temp = FALSE;
+    Dialog *d = (Dialog *)(g_hash_table_lookup(b->dialogs, dialog_name));
+    d->hide_temp = FALSE;
 }
 
 gboolean dialog_contains_printer(BackendObj *b, const char *dialog_name, const char *printer_name)
 {
-    GHashTable *printers = g_hash_table_lookup(b->dialog_printers, dialog_name);
+    Dialog *d = g_hash_table_lookup(b->dialogs, dialog_name);
 
-    if (printers == NULL)
+    if (d == NULL || d->printers == NULL)
     {
         char msg[512];
         sprintf(msg, "Can't retrieve printers for dialog %s.\n", dialog_name);
-        MSG_LOG(msg, WARN);
+        MSG_LOG(msg, ERR);
         return FALSE;
     }
-    if (g_hash_table_contains(printers, printer_name))
+    if (g_hash_table_contains(d->printers, printer_name))
         return TRUE;
     return FALSE;
 }
@@ -171,8 +148,8 @@ gboolean dialog_contains_printer(BackendObj *b, const char *dialog_name, const c
 PrinterCUPS *add_printer_to_dialog(BackendObj *b, const char *dialog_name, const cups_dest_t *dest)
 {
     char *printer_name = get_string_copy(dest->name);
-    GHashTable *printers = g_hash_table_lookup(b->dialog_printers, dialog_name);
-    if (printers == NULL)
+    Dialog *d = (Dialog *)g_hash_table_lookup(b->dialogs, dialog_name);
+    if (d == NULL)
     {
         char msg[512];
         sprintf(msg, "Invalid dialog name %s.\n", dialog_name);
@@ -180,39 +157,30 @@ PrinterCUPS *add_printer_to_dialog(BackendObj *b, const char *dialog_name, const
         return NULL;
     }
 
-    /** Make a copy of dest, because there are no guarantees 
-     * whether dest will always exist or if it will be freed**/
-    cups_dest_t *dest_copy = NULL;
-    cupsCopyDest((cups_dest_t *)dest, 0, &dest_copy);
-    if (dest_copy == NULL)
-    {
-        MSG_LOG("Error adding printer to dialog.", WARN);
-        return NULL;
-    }
-    PrinterCUPS *p = get_new_PrinterCUPS(dest_copy);
-    g_hash_table_insert(printers, printer_name, p);
+    PrinterCUPS *p = get_new_PrinterCUPS(dest);
+    g_hash_table_insert(d->printers, printer_name, p);
     return p;
 }
 
 void remove_printer_from_dialog(BackendObj *b, const char *dialog_name, const char *printer_name)
 {
-    GHashTable *printers = g_hash_table_lookup(b->dialog_printers, dialog_name);
-    if (printers == NULL)
+    Dialog *d = (Dialog *)g_hash_table_lookup(b->dialogs, dialog_name);
+    if (d == NULL)
     {
         char msg[512];
         sprintf(msg, "Unable to remove printer %s.\n", printer_name);
         MSG_LOG(msg, WARN);
         return;
     }
-    //to do: deallocate the memory occupied by the particular printer
-    g_hash_table_remove(printers, printer_name);
+    g_hash_table_remove(d->printers, printer_name);
 }
+
 void send_printer_added_signal(BackendObj *b, const char *dialog_name, cups_dest_t *dest)
 {
 
     if (dest == NULL)
     {
-        MSG_LOG("Failed to send printer added signal.\n" , ERR);
+        MSG_LOG("Failed to send printer added signal.\n", ERR);
         exit(EXIT_FAILURE);
     }
     char *printer_name = get_string_copy(dest->name);
@@ -252,14 +220,15 @@ void send_printer_removed_signal(BackendObj *b, const char *dialog_name, const c
 
 void notify_removed_printers(BackendObj *b, const char *dialog_name, GHashTable *new_table)
 {
-    GHashTable *prev = g_hash_table_lookup(b->dialog_printers, dialog_name);
+    Dialog *d = (Dialog *)g_hash_table_lookup(b->dialogs, dialog_name);
+
+    GHashTable *prev = d->printers;
     GList *prevlist = g_hash_table_get_keys(prev);
     printf("Notifying removed printers.\n");
     gpointer printer_name = NULL;
     while (prevlist)
     {
         printer_name = (char *)(prevlist->data);
-        //g_message("                                             .. %s ..\n", (gchar *)printer_name);
         if (!g_hash_table_contains(new_table, (gchar *)printer_name))
         {
             g_message("Printer %s removed\n", (char *)printer_name);
@@ -273,7 +242,8 @@ void notify_removed_printers(BackendObj *b, const char *dialog_name, GHashTable 
 void notify_added_printers(BackendObj *b, const char *dialog_name, GHashTable *new_table)
 {
     GHashTableIter iter;
-    GHashTable *prev = g_hash_table_lookup(b->dialog_printers, dialog_name);
+    Dialog *d = (Dialog *)g_hash_table_lookup(b->dialogs, dialog_name);
+    GHashTable *prev = d->printers;
     printf("Notifying added printers.\n");
     gpointer printer_name;
     gpointer value;
@@ -281,7 +251,6 @@ void notify_added_printers(BackendObj *b, const char *dialog_name, GHashTable *n
     g_hash_table_iter_init(&iter, new_table);
     while (g_hash_table_iter_next(&iter, &printer_name, &value))
     {
-        //g_message("                                             .. %s ..\n", (gchar *)printer_name);
         if (!g_hash_table_contains(prev, (gchar *)printer_name))
         {
             g_message("Printer %s added\n", (char *)printer_name);
@@ -292,20 +261,15 @@ void notify_added_printers(BackendObj *b, const char *dialog_name, GHashTable *n
     }
 }
 
-void replace_printers(BackendObj *b, const char *dialog_name, GHashTable *new_table)
-{
-    g_hash_table_replace(b->dialog_printers, (gpointer)dialog_name, new_table);
-}
-
 gboolean get_hide_remote(BackendObj *b, char *dialog_name)
 {
-    gboolean *hide_rem = (gboolean *)(g_hash_table_lookup(b->dialog_hide_remote, dialog_name));
-    return (*hide_rem);
+    Dialog *d = (Dialog *)g_hash_table_lookup(b->dialogs, dialog_name);
+    return d->hide_remote;
 }
 gboolean get_hide_temp(BackendObj *b, char *dialog_name)
 {
-    gboolean *hide_temp = (gboolean *)(g_hash_table_lookup(b->dialog_hide_temp, dialog_name));
-    return (*hide_temp);
+    Dialog *d = (Dialog *)g_hash_table_lookup(b->dialogs, dialog_name);
+    return d->hide_temp;
 }
 void refresh_printer_list(BackendObj *b, char *dialog_name)
 {
@@ -316,13 +280,13 @@ void refresh_printer_list(BackendObj *b, char *dialog_name)
 }
 GHashTable *get_dialog_printers(BackendObj *b, const char *dialog_name)
 {
-    GHashTable *printers = (g_hash_table_lookup(b->dialog_printers, dialog_name));
-    if (printers == NULL)
+    Dialog *d = (Dialog *)g_hash_table_lookup(b->dialogs, dialog_name);
+    if (d == NULL)
     {
-        printf("Invalid dialog name %s . Printers not found.\n", dialog_name);
-        exit(EXIT_FAILURE);
+        MSG_LOG("Invalid dialog name.\n", ERR);
+        return NULL;
     }
-    return printers;
+    return d->printers;
 }
 PrinterCUPS *get_printer_by_name(BackendObj *b, const char *dialog_name, const char *printer_name)
 {
@@ -400,16 +364,37 @@ GVariant *get_all_jobs(BackendObj *b, const char *dialog_name, int *num_jobs, gb
     return variant;
 }
 /***************************PrinterObj********************************/
-PrinterCUPS *get_new_PrinterCUPS(cups_dest_t *dest)
+PrinterCUPS *get_new_PrinterCUPS(const cups_dest_t *dest)
 {
     PrinterCUPS *p = (PrinterCUPS *)(malloc(sizeof(PrinterCUPS)));
-    p->dest = dest;
-    p->name = dest->name;
+
+    /** Make a copy of dest, because there are no guarantees 
+     * whether dest will always exist or if it will be freed**/
+    cups_dest_t *dest_copy = NULL;
+    cupsCopyDest((cups_dest_t *)dest, 0, &dest_copy);
+    if (dest_copy == NULL)
+    {
+        MSG_LOG("Error creating PrinterCUPS", WARN);
+        return NULL;
+    }
+    p->dest = dest_copy;
+    p->name = dest_copy->name;
     p->http = NULL;
     p->dinfo = NULL;
 
     return p;
 }
+
+void free_PrinterCUPS(PrinterCUPS *p)
+{
+    printf("Freeing printerCUPS \n");
+    cupsFreeDests(1, p->dest);
+    if (p->dinfo)
+    {
+        cupsFreeDestInfo(p->dinfo);
+    }
+}
+
 gboolean ensure_printer_connection(PrinterCUPS *p)
 {
     if (p->http)
@@ -441,24 +426,10 @@ int get_supported(PrinterCUPS *p, char ***supported_values, const char *option_n
 
     for (i = 0; i < count; i++)
     {
-        values[i] = extract_ipp_attribute(attrs, i, option_name, p);
+        values[i] = extract_ipp_attribute(attrs, i, option_name);
     }
     *supported_values = values;
     return count;
-}
-const char *get_media_default(PrinterCUPS *p)
-{
-    ensure_printer_connection(p);
-    cups_size_t size;
-    int x = cupsGetDestMediaDefault(p->http, p->dest, p->dinfo, 0, &size);
-    if (!x)
-    {
-        printf("failure getting media\n");
-        return get_string_copy("NA");
-    }
-    printf("media %s\n", size.media);
-    const char *media = get_string_copy(size.media);
-    return media;
 }
 char *get_orientation_default(PrinterCUPS *p)
 {
@@ -484,28 +455,7 @@ char *get_orientation_default(PrinterCUPS *p)
     printf("orient value=%d  , %s\n", ippGetInteger(attr, 0), str);
     if (strcmp("0", str) == 0)
         str = "automatic-rotation";
-    // to do(later) consult the orientation mapping and do the necessary translation
     return str;
-}
-
-const char *get_color_default(PrinterCUPS *p)
-{
-    /**first query user defaults**/
-    const char *def_value = cupsGetOption(CUPS_PRINT_COLOR_MODE, p->dest->num_options, p->dest->options);
-    if (def_value)
-    {
-        return def_value;
-    }
-    ensure_printer_connection(p);
-    ipp_attribute_t *def_attr = cupsFindDestDefault(p->http, p->dest, p->dinfo,
-                                                    CUPS_PRINT_COLOR_MODE);
-    if (def_attr)
-    {
-        def_value = ippGetString(def_attr, 0, NULL);
-        printf("%s\n", def_value);
-        return def_value;
-    }
-    return "NA";
 }
 
 int get_job_hold_until_supported(PrinterCUPS *p, char ***supported_values)
@@ -524,12 +474,13 @@ const char *get_default(PrinterCUPS *p, char *option_name)
     /** first take care of special cases**/
     if (strcmp(option_name, CUPS_ORIENTATION) == 0)
         return get_orientation_default(p);
-    if (strcmp(option_name, CUPS_MEDIA) == 0)
-        return get_media_default(p);
 
+    /** Generic cases next **/
     ensure_printer_connection(p);
     ipp_attribute_t *def_attr = cupsFindDestDefault(p->http, p->dest, p->dinfo, option_name);
     const char *def_value = cupsGetOption(option_name, p->dest->num_options, p->dest->options);
+
+    /** First check the option is already there in p->dest->options **/
     if (def_value)
     {
         if (!def_attr)
@@ -539,7 +490,7 @@ const char *get_default(PrinterCUPS *p, char *option_name)
     }
     if (def_attr)
     {
-        return extract_ipp_attribute(def_attr, 0, option_name, p);
+        return extract_ipp_attribute(def_attr, 0, option_name);
     }
     return get_string_copy("NA");
 }
@@ -630,7 +581,7 @@ int get_all_options(PrinterCUPS *p, Option **options)
         opts[i].supported_values = new_cstring_array(opts[i].num_supported);
         for (j = 0; j < opts[i].num_supported; j++)
         {
-            opts[i].supported_values[j] = extract_ipp_attribute(vals, j, option_names[i], p);
+            opts[i].supported_values[j] = extract_ipp_attribute(vals, j, option_names[i]);
             if (opts[i].supported_values[j] == NULL)
             {
                 opts[i].supported_values[j] = get_string_copy("NA");
@@ -825,6 +776,25 @@ void tryPPD(PrinterCUPS *p)
         group++;
     }
 }
+/**********Dialog related funtions ****************/
+Dialog *get_new_Dialog()
+{
+    Dialog *d = g_new(Dialog, 1);
+    d->cancel = 0;
+    d->hide_remote = FALSE;
+    d->hide_temp = FALSE;
+    d->printers = g_hash_table_new_full(g_str_hash, g_str_equal,
+                                        (GDestroyNotify)free_string,
+                                        (GDestroyNotify)free_PrinterCUPS);
+}
+
+void free_Dialog(Dialog *d)
+{
+    printf("freeing dialog..\n");
+    g_hash_table_destroy(d->printers);
+    free(d);
+}
+
 /*********Mappings********/
 Mappings *get_new_Mappings()
 {
@@ -972,14 +942,11 @@ gboolean cups_is_temporary(cups_dest_t *dest)
     return TRUE;
 }
 
-char *extract_ipp_attribute(ipp_attribute_t *attr, int index, const char *option_name, PrinterCUPS *p)
+char *extract_ipp_attribute(ipp_attribute_t *attr, int index, const char *option_name)
 {
     /** first deal with the totally unique cases **/
     if (strcmp(option_name, CUPS_ORIENTATION) == 0)
         return extract_orientation_from_ipp(attr, index);
-
-    // if (strcmp(option_name, CUPS_MEDIA) == 0)
-    //     return extract_media_from_ipp(attr, index, p);
 
     /** Then deal with the generic cases **/
     char *str;
@@ -1011,6 +978,7 @@ char *extract_ipp_attribute(ipp_attribute_t *attr, int index, const char *option
     free(str);
     return ans;
 }
+
 char *extract_res_from_ipp(ipp_attribute_t *attr, int index)
 {
     int xres, yres;
@@ -1040,23 +1008,6 @@ char *extract_orientation_from_ipp(ipp_attribute_t *attr, int index)
     return str;
 }
 
-char *extract_quality_from_ipp(ipp_attribute_t *attr, int index)
-{
-    return (char *)ippEnumString(CUPS_PRINT_QUALITY, ippGetInteger(attr, index));
-}
-
-char *extract_media_from_ipp(ipp_attribute_t *attr, int index, PrinterCUPS *p)
-{
-    char *media_name = extract_string_from_ipp(attr, index);
-    cups_size_t size;
-    int x = cupsGetDestMediaByName(p->http, p->dest, p->dinfo, media_name, 0, &size);
-    if (x == 0)
-        return media_name;
-    char *str = (char *)cupsLocalizeDestMedia(p->http, p->dest,
-                                              p->dinfo, 0,
-                                              &size);
-    return str;
-}
 void print_job(cups_job_t *j)
 {
     printf("title : %s\n", j->title);
@@ -1067,6 +1018,7 @@ void print_job(cups_job_t *j)
     char *state = translate_job_state(j->state);
     printf("state : %s\n", state);
 }
+
 char *translate_job_state(ipp_jstate_t state)
 {
     switch (state)
@@ -1087,6 +1039,7 @@ char *translate_job_state(ipp_jstate_t state)
         return JOB_STATE_COMPLETED;
     }
 }
+
 GVariant *pack_cups_job(cups_job_t job)
 {
     printf("%s\n", job.dest);
@@ -1111,5 +1064,13 @@ void MSG_LOG(const char *msg, int msg_level)
     {
         printf("%s\n", msg);
         fflush(stdout);
+    }
+}
+
+void free_string(char *str)
+{
+    if (str)
+    {
+        free(str);
     }
 }
