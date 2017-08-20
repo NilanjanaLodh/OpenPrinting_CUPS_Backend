@@ -457,10 +457,7 @@ const char *get_media_default(PrinterCUPS *p)
         return get_string_copy("NA");
     }
     printf("media %s\n", size.media);
-    const char *media = cupsLocalizeDestMedia(p->http, p->dest,
-                                              p->dinfo, 0,
-                                              &size);
-    //Later : consult media mappings and return the equivalent media , other wise retun the localized version
+    const char *media = get_string_copy(size.media);
     return media;
 }
 char *get_orientation_default(PrinterCUPS *p)
