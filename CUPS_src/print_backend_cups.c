@@ -10,36 +10,13 @@
 #define BUS_NAME "org.openprinting.Backend.CUPS"
 #define OBJECT_PATH "/"
 
+static void
+on_name_acquired(GDBusConnection *connection,
+                 const gchar *name,
+                 gpointer not_used);
 static void acquire_session_bus_name();
-static void on_name_acquired(GDBusConnection *connection,
-                             const gchar *name,
-                             gpointer not_used);
-static gboolean on_handle_activate_backend(PrintBackend *interface,
-                                           GDBusMethodInvocation *invocation,
-                                           gpointer not_used);
 gpointer list_printers(gpointer _dialog_name);
 int send_printer_added(void *_dialog_name, unsigned flags, cups_dest_t *dest);
-static void on_stop_backend(GDBusConnection *connection,
-                            const gchar *sender_name,
-                            const gchar *object_path,
-                            const gchar *interface_name,
-                            const gchar *signal_name,
-                            GVariant *parameters,
-                            gpointer not_used);
-static void on_refresh_backend(GDBusConnection *connection,
-                               const gchar *sender_name,
-                               const gchar *object_path,
-                               const gchar *interface_name,
-                               const gchar *signal_name,
-                               GVariant *parameters,
-                               gpointer not_used);
-static void on_hide_remote_printers(GDBusConnection *connection,
-                                    const gchar *sender_name,
-                                    const gchar *object_path,
-                                    const gchar *interface_name,
-                                    const gchar *signal_name,
-                                    GVariant *parameters,
-                                    gpointer not_used);
 void connect_to_signals();
 
 BackendObj *b;
@@ -74,6 +51,7 @@ on_name_acquired(GDBusConnection *connection,
     connect_to_signals();
     connect_to_dbus(b, OBJECT_PATH);
 }
+
 static gboolean on_handle_activate_backend(PrintBackend *interface,
                                            GDBusMethodInvocation *invocation,
                                            gpointer not_used)
@@ -103,6 +81,7 @@ gpointer list_printers(gpointer _dialog_name)
 
     g_message("Exiting thread for dialog at %s\n", dialog_name);
 }
+
 int send_printer_added(void *_dialog_name, unsigned flags, cups_dest_t *dest)
 {
 
@@ -120,10 +99,11 @@ int send_printer_added(void *_dialog_name, unsigned flags, cups_dest_t *dest)
     g_message("     Sent notification for printer %s\n", printer_name);
 
     /** dest will be automatically freed later. 
-     * If you want the details later, make a copy of dest , as add_printer_to_dialog() does
+     * Don't explicitly free it
      */
     return 1; //continue enumeration
 }
+
 static void on_stop_backend(GDBusConnection *connection,
                             const gchar *sender_name,
                             const gchar *object_path,
@@ -141,6 +121,7 @@ static void on_stop_backend(GDBusConnection *connection,
         exit(EXIT_SUCCESS);
     }
 }
+
 static void on_refresh_backend(GDBusConnection *connection,
                                const gchar *sender_name,
                                const gchar *object_path,
@@ -154,6 +135,7 @@ static void on_refresh_backend(GDBusConnection *connection,
     set_dialog_cancel(b, dialog_name); /// this stops the enumeration of printers
     refresh_printer_list(b, dialog_name);
 }
+
 static void on_hide_remote_printers(GDBusConnection *connection,
                                     const gchar *sender_name,
                                     const gchar *object_path,
@@ -171,6 +153,7 @@ static void on_hide_remote_printers(GDBusConnection *connection,
         refresh_printer_list(b, dialog_name);
     }
 }
+
 static void on_unhide_remote_printers(GDBusConnection *connection,
                                       const gchar *sender_name,
                                       const gchar *object_path,
@@ -188,6 +171,7 @@ static void on_unhide_remote_printers(GDBusConnection *connection,
         refresh_printer_list(b, dialog_name);
     }
 }
+
 static void on_hide_temp_printers(GDBusConnection *connection,
                                   const gchar *sender_name,
                                   const gchar *object_path,
@@ -205,6 +189,7 @@ static void on_hide_temp_printers(GDBusConnection *connection,
         refresh_printer_list(b, dialog_name);
     }
 }
+
 static void on_unhide_temp_printers(GDBusConnection *connection,
                                     const gchar *sender_name,
                                     const gchar *object_path,
@@ -228,7 +213,7 @@ static gboolean on_handle_is_accepting_jobs(PrintBackend *interface,
                                             const gchar *printer_name,
                                             gpointer user_data)
 {
-    const char *dialog_name = g_dbus_method_invocation_get_sender(invocation); /// potential risk
+    const char *dialog_name = g_dbus_method_invocation_get_sender(invocation);
     cups_dest_t *dest = get_dest_by_name(b, dialog_name, printer_name);
     g_assert_nonnull(dest);
     print_backend_complete_is_accepting_jobs(interface, invocation, cups_is_accepting_jobs(dest));
@@ -290,11 +275,6 @@ static gboolean on_handle_get_all_options(PrintBackend *interface,
     int count = get_all_options(p, &options);
     int i;
 
-    for (i = 0; i < count; i++)
-    {
-        print_option(&options[i]);
-    }
-
     GVariantBuilder *builder;
     GVariant *variant;
     builder = g_variant_builder_new(G_VARIANT_TYPE("a(ssia(s))"));
@@ -303,11 +283,11 @@ static gboolean on_handle_get_all_options(PrintBackend *interface,
     {
         GVariant *tuple = pack_option(&options[i]);
         g_variant_builder_add_value(builder, tuple);
+        //g_variant_unref(tuple);
     }
-
-    variant = g_variant_new("a(ssia(s))", builder);
-
+    variant = g_variant_builder_end(builder);
     print_backend_complete_get_all_options(interface, invocation, count, variant);
+    free_options(count, options);
     return TRUE;
 }
 

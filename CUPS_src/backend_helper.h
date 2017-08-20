@@ -67,10 +67,10 @@ typedef struct _BackendObj
  */
 typedef struct _Option
 {
-    const char *option_name;
+    char *option_name;
     int num_supported;
     char **supported_values;
-    const char *default_value;
+    char *default_value;
 } Option;
 
 /********Backend related functions*******************/
@@ -170,8 +170,9 @@ gboolean ensure_printer_connection(PrinterCUPS *p);
  */
 const char *get_printer_state(PrinterCUPS *p);
 char *get_orientation_default(PrinterCUPS *p);
-const char *get_default(PrinterCUPS *p, char *option_name);
+char *get_default(PrinterCUPS *p, char *option_name);
 int get_supported(PrinterCUPS *p, char ***supported_values, const char *option_name);
+int get_job_creation_attributes(PrinterCUPS *p, char ***values);
 
 int get_all_options(PrinterCUPS *p, Option **options);
 
@@ -182,11 +183,12 @@ gboolean cancel_job(PrinterCUPS *p, int jobid);
 
 void tryPPD(PrinterCUPS *p);
 /**********Dialog related funtions ****************/
-Dialog* get_new_Dialog();
+Dialog *get_new_Dialog();
 void free_Dialog(Dialog *);
 
 /*********Option related functions*****************/
 void print_option(const Option *opt);
+void free_options(int count, Option *opts);
 void unpack_option_array(GVariant *var, int num_options, Option **options);
 GVariant *pack_option(const Option *opt);
 /**********Mapping related functions*****************/
@@ -214,4 +216,5 @@ char *translate_job_state(ipp_jstate_t);
 /**error logging */
 void MSG_LOG(const char *msg, int msg_level);
 void free_string(char *);
+void free_string_array(int count, char **arr);
 #endif

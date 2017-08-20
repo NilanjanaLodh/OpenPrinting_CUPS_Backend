@@ -431,6 +431,7 @@ int get_supported(PrinterCUPS *p, char ***supported_values, const char *option_n
     *supported_values = values;
     return count;
 }
+
 char *get_orientation_default(PrinterCUPS *p)
 {
     const char *def_value = cupsGetOption(CUPS_ORIENTATION, p->dest->num_options, p->dest->options);
@@ -439,9 +440,9 @@ char *get_orientation_default(PrinterCUPS *p)
         switch (def_value[0])
         {
         case '0':
-            return "automatic-rotation";
+            return get_string_copy("automatic-rotation");
         default:
-            return ippEnumString(CUPS_ORIENTATION, atoi(def_value));
+            return get_string_copy(ippEnumString(CUPS_ORIENTATION, atoi(def_value)));
         }
     }
     ensure_printer_connection(p);
@@ -452,24 +453,17 @@ char *get_orientation_default(PrinterCUPS *p)
         return get_string_copy("NA");
 
     const char *str = ippEnumString(CUPS_ORIENTATION, ippGetInteger(attr, 0));
-    printf("orient value=%d  , %s\n", ippGetInteger(attr, 0), str);
     if (strcmp("0", str) == 0)
         str = "automatic-rotation";
-    return str;
-}
-
-int get_job_hold_until_supported(PrinterCUPS *p, char ***supported_values)
-{
-    return get_supported(p, supported_values, "job-hold-until");
+    return get_string_copy(str);
 }
 
 int get_job_creation_attributes(PrinterCUPS *p, char ***values)
 {
-
-    int count = get_supported(p, values, "job-creation-attributes");
+    return get_supported(p, values, "job-creation-attributes");
 }
 
-const char *get_default(PrinterCUPS *p, char *option_name)
+char *get_default(PrinterCUPS *p, char *option_name)
 {
     /** first take care of special cases**/
     if (strcmp(option_name, CUPS_ORIENTATION) == 0)
@@ -483,10 +477,10 @@ const char *get_default(PrinterCUPS *p, char *option_name)
     /** First check the option is already there in p->dest->options **/
     if (def_value)
     {
-        if (!def_attr)
-            return def_value;
-        if (ippGetValueTag(def_attr) == IPP_TAG_ENUM)
-            return ippEnumString(option_name, atoi(def_value));
+        if (def_attr && (ippGetValueTag(def_attr) == IPP_TAG_ENUM))
+            return get_string_copy(ippEnumString(option_name, atoi(def_value)));
+
+        return get_string_copy(def_value);
     }
     if (def_attr)
     {
@@ -515,6 +509,21 @@ void print_option(const Option *opt)
         printf(" %s\n", opt->supported_values[i]);
     }
     printf("****DEFAULT: %s\n", opt->default_value);
+}
+void free_options(int count, Option *opts)
+{
+    int i, j; /**Looping variables */
+    for (i = 0; i < count; i++)
+    {
+        free(opts[i].option_name);
+        for (j = 0; j < opts[i].num_supported; j++)
+        {
+            free(opts[i].supported_values[j]);
+        }
+        free(opts[i].supported_values);
+        free(opts[i].default_value);
+    }
+    free(opts);
 }
 void unpack_option_array(GVariant *var, int num_options, Option **options)
 {
@@ -1002,9 +1011,9 @@ char *extract_string_from_ipp(ipp_attribute_t *attr, int index)
 
 char *extract_orientation_from_ipp(ipp_attribute_t *attr, int index)
 {
-    char *str = (char *)ippEnumString(CUPS_ORIENTATION, ippGetInteger(attr, index));
+    char *str = get_string_copy(ippEnumString(CUPS_ORIENTATION, ippGetInteger(attr, index)));
     if (strcmp("0", str) == 0)
-        str = "automatic-rotation";
+        str = get_string_copy("automatic-rotation");
     return str;
 }
 

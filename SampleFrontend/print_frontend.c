@@ -161,7 +161,7 @@ gpointer parse_commands(gpointer user_data)
             char backend_name[100];
             scanf("%s%s", printer_id, backend_name);
             PrinterObj *p = find_PrinterObj(f, printer_id, backend_name);
-            printf("Accepting jobs ? : %d ", is_accepting_jobs(p));
+            printf("Accepting jobs ? : %d \n", is_accepting_jobs(p));
         }
         else if (strcmp(buf, "help") == 0)
         {
