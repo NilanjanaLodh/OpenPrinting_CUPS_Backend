@@ -17,6 +17,11 @@ static void on_printer_added(GDBusConnection *connection,
 {
     FrontendObj *f = (FrontendObj *)user_data;
     PrinterObj *p = get_new_PrinterObj();
+    /** If some previously saved settings were retrieved, use them in this new PrinterObj **/
+    if (f->last_saved_settings != NULL)
+    {
+        copy_settings(f->last_saved_settings, p->settings);
+    }
     fill_basic_options(p, parameters);
     add_printer(f, p);
     f->add_cb(p);
@@ -98,7 +103,7 @@ FrontendObj *get_new_FrontendObj(char *instance_name, event_callback add_cb, eve
     f->backend = g_hash_table_new(g_str_hash, g_str_equal);
     f->num_printers = 0;
     f->printer = g_hash_table_new(g_str_hash, g_str_equal);
-    f->last_saved = read_settings_from_disk();
+    f->last_saved_settings = read_settings_from_disk();
     return f;
 }
 
@@ -178,6 +183,14 @@ PrintBackend *create_backend_from_file(const char *backend_file_name)
         DBG_LOG(msg, ERR);
     }
     return proxy;
+}
+
+void ignore_last_saved_settings(FrontendObj *f)
+{
+    DBG_LOG("Ignoring previous settings", INFO);
+    Settings *s = f->last_saved_settings;
+    f->last_saved_settings = NULL;
+    delete_Settings(s);
 }
 
 gboolean add_printer(FrontendObj *f, PrinterObj *p)
@@ -304,7 +317,6 @@ PrinterObj *get_new_PrinterObj()
 {
     PrinterObj *p = malloc(sizeof(PrinterObj));
     p->options = NULL;
-    /**change here */
     p->settings = get_new_Settings();
     return p;
 }
@@ -427,7 +439,7 @@ char *print_file(PrinterObj *p, char *file_path)
     char *absolute_file_path = get_absolute_path(file_path);
     print_backend_call_print_file_sync(p->backend_proxy, p->id, absolute_file_path,
                                        p->settings->count,
-                                       serialize_Settings(p->settings),
+                                       serialize_to_gvariant(p->settings),
                                        &jobid, NULL, NULL);
     free(absolute_file_path);
     if (jobid && jobid[0] != '0')
@@ -465,6 +477,17 @@ Settings *get_new_Settings()
     return s;
 }
 
+void copy_settings(const Settings *source, Settings *dest)
+{
+    dest->count = source->count;
+    GHashTableIter iter;
+    g_hash_table_iter_init(&iter, source->table);
+    gpointer key, value;
+    while (g_hash_table_iter_next(&iter, &key, &value))
+    {
+        add_setting(dest, (char *)key, (char *)value);
+    }
+}
 void add_setting(Settings *s, const char *name, const char *val)
 {
     char *prev = g_hash_table_lookup(s->table, name);
@@ -497,7 +520,7 @@ gboolean clear_setting(Settings *s, char *name)
     }
 }
 
-GVariant *serialize_Settings(Settings *s)
+GVariant *serialize_to_gvariant(Settings *s)
 {
     GVariantBuilder *builder;
     GVariant *variant;
@@ -565,6 +588,13 @@ Settings *read_settings_from_disk()
     fclose(fp);
     free(path);
     return s;
+}
+
+void delete_Settings(Settings *s)
+{
+    GHashTable *h = s->table;
+    free(s);
+    g_hash_table_destroy(h);
 }
 /**
 ________________________________________________ Options __________________________________________

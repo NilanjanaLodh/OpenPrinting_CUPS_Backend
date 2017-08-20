@@ -31,6 +31,8 @@ int main(int argc, char **argv)
     else
         f = get_new_FrontendObj(NULL, add_cb, rem_cb);
 
+    /** Uncomment the line below if you don't want to use the previously saved settings**/
+    //ignore_last_saved_settings(f);
     g_thread_new("parse_commands_thread", parse_commands, NULL);
     connect_to_dbus(f);
     GMainLoop *loop = g_main_loop_new(NULL, FALSE);

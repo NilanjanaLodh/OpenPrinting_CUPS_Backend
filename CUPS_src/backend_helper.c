@@ -177,7 +177,7 @@ PrinterCUPS *add_printer_to_dialog(BackendObj *b, const char *dialog_name, const
         char msg[512];
         sprintf(msg, "Invalid dialog name %s.\n", dialog_name);
         MSG_LOG(msg, ERR);
-        return;
+        return NULL;
     }
 
     /** Make a copy of dest, because there are no guarantees 

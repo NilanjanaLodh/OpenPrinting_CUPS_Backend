@@ -56,7 +56,7 @@ struct _FrontendObj
     int num_printers;
     GHashTable *printer; /**[printer name] --> [PrinterObj] **/
 
-    Settings *last_saved; /** The last saved settings to disk */
+    Settings *last_saved_settings; /** The last saved settings to disk */
 };
 
 /**
@@ -326,7 +326,12 @@ struct _Settings
  */
 Settings *get_new_Settings();
 
-Settings *get_copy(const Settings *);
+/**
+ * Copy settings from source to dest;
+ * 
+ * The previous values in dest will be overwritten
+ */
+void copy_settings(const Settings *source, Settings *dest);
 
 /**
  * Add the particular 'setting' to the Settings struct
@@ -349,7 +354,7 @@ gboolean clear_setting(Settings *, char *name);
  * Serialize the Settings struct into a GVariant of type a(ss)
  * so that it can be sent as an argument over D-Bus
  */
-GVariant *serialize_Settings(Settings *s);
+GVariant *serialize_to_gvariant(Settings *s);
 
 /**
  * Save the settings to disk ,
@@ -364,6 +369,8 @@ void save_to_disk(Settings *s);
  * The caller is responsible for freeing the returned Settings*
  */
 Settings *read_settings_from_disk();
+
+void delete_Settings(Settings *);
 
 /************************************************************************************************/
 /**
