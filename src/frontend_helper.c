@@ -479,7 +479,6 @@ Settings *get_new_Settings()
 
 void copy_settings(const Settings *source, Settings *dest)
 {
-    dest->count = source->count;
     GHashTableIter iter;
     g_hash_table_iter_init(&iter, source->table);
     gpointer key, value;
@@ -573,7 +572,8 @@ Settings *read_settings_from_disk()
     Settings *s = get_new_Settings();
     int count;
     fscanf(fp, "%d\n", &count);
-    s->count = count;
+
+    printf("Retrieved %d settings from disk.\n", count);
     char line[1024];
 
     char *name, *value;
