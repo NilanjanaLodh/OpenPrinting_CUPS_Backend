@@ -1,6 +1,7 @@
 DIR=$(shell pwd)
 #these are the glib headers and libraries required by all the files
 GLIB_FLAGS=$(shell pkg-config --cflags --libs gio-2.0 gio-unix-2.0 glib-2.0)
+CUPS_FLAGS=$(shell cups-config --cflags --libs)
 
 ##Installation paths (Where to install the library??)
 INSTALL_PATH?=/usr
@@ -45,6 +46,9 @@ src/backend_interface.c:interface/org.openprinting.Backend.xml
 clean-gen:
 	rm -f src/*_interface.*
 
+src/frontend_helper.o:src/frontend_helper.c
+	gcc -g -fPIC -c -o $@ $^ -I$(DIR)/src $(GLIB_FLAGS) $(CUPS_FLAGS)
+
 src/%.o: src/%.c
 	gcc -g -fPIC -c -o $@ $^ -I$(DIR)/src $(GLIB_FLAGS) 
 
@@ -55,7 +59,7 @@ src/libCPDBackend.so: src/backend_interface.o src/frontend_interface.o src/commo
 	gcc -shared -o $@ $^ $(GLIB_FLAGS)
 
 src/libCPDFrontend.so: src/backend_interface.o src/frontend_interface.o src/common_helper.o src/frontend_helper.o 
-	gcc -shared -o $@ $^ $(GLIB_FLAGS)
+	gcc -shared -o $@ $^ $(GLIB_FLAGS) $(CUPS_FLAGS)
 
 #install the compiled libraries and their headers
 install-lib: src/libCPDBackend.so src/libCPDFrontend.so
@@ -67,7 +71,6 @@ install-lib: src/libCPDBackend.so src/libCPDFrontend.so
 	cp src/*.pc $(PKGCONFIG_PATH)
 
 #compile the cups print backend
-CUPS_FLAGS=$(shell cups-config --cflags --libs)
 print_backend_cups: CUPS_src/print_backend_cups.c  CUPS_src/backend_helper.c
 	gcc -g -pg -o $@ $^ $(CPD_BACK_FLAGS) $(GLIB_FLAGS) $(CUPS_FLAGS)
 

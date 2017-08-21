@@ -610,11 +610,20 @@ Options *get_new_Options()
 /**************Option************************************/
 void print_option(const Option *opt)
 {
+    gboolean ismedia = FALSE;
+    if (strcmp(opt->option_name, "media") == 0)
+        ismedia = TRUE;
+
     g_message("%s", opt->option_name);
     int i;
     for (i = 0; i < opt->num_supported; i++)
     {
-        printf(" %s\n", opt->supported_values[i]);
+        if (ismedia)
+        {
+            printf(" %s\n", pwg_to_readable(opt->supported_values[i]));
+        }
+        else
+            printf(" %s\n", opt->supported_values[i]);
     }
     printf("****DEFAULT: %s\n", opt->default_value);
 }
@@ -664,6 +673,20 @@ char *concat(char *printer_id, char *backend_name)
     return get_string_copy(str);
 }
 
+const char *pwg_to_readable(const char *pwg_media_name)
+{
+    pwg_media_t *media = pwgMediaForPWG(pwg_media_name);
+    if (media == NULL || media->ppd == NULL)
+        return pwg_media_name;
+    return media->ppd;
+}
+const char *readable_to_pwg(const char *readable_media_name)
+{
+    pwg_media_t *media = pwgMediaForPPD(readable_media_name);
+    if (media == NULL || media->pwg == NULL)
+        return readable_media_name;
+    return media->pwg;
+}
 void unpack_options(GVariant *var, int num_options, Options *options)
 {
     options->count = num_options;

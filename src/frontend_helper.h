@@ -13,6 +13,7 @@ extern "C" {
 #include "common_helper.h"
 #include "backend_interface.h"
 #include "frontend_interface.h"
+#include <cups/cups.h>
 
 #define INFO 3
 #define WARN 2
@@ -425,7 +426,8 @@ void unpack_job_array(GVariant *var, int num_jobs, Job *jobs, char *backend_name
 
 void DBG_LOG(const char *msg, int msg_level);
 char *concat(char *printer_id, char *backend_name);
-
+const char *pwg_to_readable(const char *pwg_media_name);
+const char *readable_to_pwg(const char* readable_media_name);
 /**
  * 'Unpack' (Deserialize) the GVariant returned in get_all_options
  * and fill the Options structure approriately
