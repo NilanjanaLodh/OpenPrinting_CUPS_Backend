@@ -360,9 +360,25 @@ static gboolean on_handle_keep_alive(PrintBackend *interface,
     const char *dialog_name = g_dbus_method_invocation_get_sender(invocation);
     Dialog *d = find_dialog(b, dialog_name);
     d->keep_alive = TRUE;
+    print_backend_complete_keep_alive(interface, invocation);
     return TRUE;
 }
-
+static gboolean on_handle_replace(PrintBackend *interface,
+                                  GDBusMethodInvocation *invocation,
+                                  const gchar *previous_name,
+                                  gpointer user_data)
+{
+    const char *dialog_name = g_dbus_method_invocation_get_sender(invocation);
+    Dialog *d = find_dialog(b, previous_name);
+    if (d != NULL)
+    {
+        g_hash_table_steal(b->dialogs, previous_name);
+        g_hash_table_insert(b->dialogs, get_string_copy(dialog_name), d);
+        g_message("Replaced %s --> %s\n", previous_name , dialog_name); 
+    }
+    print_backend_complete_replace(interface, invocation);
+    return TRUE;
+}
 void connect_to_signals()
 {
     PrintBackend *skeleton = b->skeleton;
@@ -410,9 +426,10 @@ void connect_to_signals()
                      "handle-keep-alive",              //signal name
                      G_CALLBACK(on_handle_keep_alive), //callback
                      NULL);
-    /**
-     * To do: comment which signals are compulsory and which aren't
-     */
+    g_signal_connect(skeleton,                      //instance
+                     "handle-replace",              //signal name
+                     G_CALLBACK(on_handle_replace), //callback
+                     NULL);
     g_dbus_connection_signal_subscribe(b->dbus_connection,
                                        NULL,                             //Sender name
                                        "org.openprinting.PrintFrontend", //Sender interface
