@@ -93,6 +93,11 @@ gboolean no_frontends(BackendObj *b)
         return TRUE;
     return FALSE;
 }
+Dialog *find_dialog(BackendObj *b , const char* dialog_name)
+{
+    Dialog *d = (Dialog *)(g_hash_table_lookup(b->dialogs, dialog_name));
+    return d;
+}
 int *get_dialog_cancel(BackendObj *b, const char *dialog_name)
 {
     Dialog *d = (Dialog *)(g_hash_table_lookup(b->dialogs, dialog_name));
@@ -792,6 +797,7 @@ Dialog *get_new_Dialog()
     d->cancel = 0;
     d->hide_remote = FALSE;
     d->hide_temp = FALSE;
+    d->keep_alive = FALSE;
     d->printers = g_hash_table_new_full(g_str_hash, g_str_equal,
                                         (GDestroyNotify)free_string,
                                         (GDestroyNotify)free_PrinterCUPS);

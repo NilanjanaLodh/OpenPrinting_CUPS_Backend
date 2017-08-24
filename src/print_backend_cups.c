@@ -113,6 +113,13 @@ static void on_stop_backend(GDBusConnection *connection,
                             gpointer not_used)
 {
     g_message("Stop backend signal from %s\n", sender_name);
+    /**
+     * Ignore this signal if the dialog's keep_alive variable is set
+     */
+    Dialog *d = find_dialog(b, sender_name);
+    if (d->keep_alive)
+        return;
+
     set_dialog_cancel(b, sender_name);
     remove_frontend(b, sender_name);
     if (no_frontends(b))
@@ -262,7 +269,6 @@ static gboolean on_handle_print_file(PrintBackend *interface,
     sprintf(jobid_string, "%d", job_id);
     print_backend_complete_print_file(interface, invocation, jobid_string);
 
-
     /**
      * Printing will always be the last operation, so remove that frontend
      */
@@ -347,6 +353,16 @@ static gboolean on_handle_get_default_printer(PrintBackend *interface,
     return TRUE;
 }
 
+static gboolean on_handle_keep_alive(PrintBackend *interface,
+                                     GDBusMethodInvocation *invocation,
+                                     gpointer user_data)
+{
+    const char *dialog_name = g_dbus_method_invocation_get_sender(invocation);
+    Dialog *d = find_dialog(b, dialog_name);
+    d->keep_alive = TRUE;
+    return TRUE;
+}
+
 void connect_to_signals()
 {
     PrintBackend *skeleton = b->skeleton;
@@ -389,6 +405,10 @@ void connect_to_signals()
     g_signal_connect(skeleton,                         //instance
                      "handle-cancel-job",              //signal name
                      G_CALLBACK(on_handle_cancel_job), //callback
+                     NULL);
+    g_signal_connect(skeleton,                         //instance
+                     "handle-keep-alive",              //signal name
+                     G_CALLBACK(on_handle_keep_alive), //callback
                      NULL);
     /**
      * To do: comment which signals are compulsory and which aren't

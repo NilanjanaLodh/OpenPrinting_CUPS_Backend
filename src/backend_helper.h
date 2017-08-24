@@ -35,6 +35,7 @@ typedef struct _Dialog
     gboolean hide_remote;
     gboolean hide_temp;
     GHashTable *printers;
+    gboolean keep_alive;
 } Dialog;
 
 typedef struct _Mappings
@@ -94,6 +95,11 @@ void remove_frontend(BackendObj *, const char *dialog_name);
 
 /** Checks if the backend isn't associated with any frontend **/
 gboolean no_frontends(BackendObj *);
+
+/**
+ * Find the dialog with the specified name
+ */
+Dialog* find_dialog(BackendObj * , const char* dialog_name);
 
 /** Get the variable which controls the cancellation of the enumeration thread for
  * that particular dialog 
