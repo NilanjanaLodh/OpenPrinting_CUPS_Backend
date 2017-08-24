@@ -261,7 +261,18 @@ static gboolean on_handle_print_file(PrintBackend *interface,
     char jobid_string[64];
     sprintf(jobid_string, "%d", job_id);
     print_backend_complete_print_file(interface, invocation, jobid_string);
-    return TRUE;
+
+
+    /**
+     * Printing will always be the last operation, so remove that frontend
+     */
+    set_dialog_cancel(b, dialog_name);
+    remove_frontend(b, dialog_name);
+    if (no_frontends(b))
+    {
+        g_message("No frontends connected .. exiting backend.\n");
+        exit(EXIT_SUCCESS);
+    }
 }
 
 static gboolean on_handle_get_all_options(PrintBackend *interface,
