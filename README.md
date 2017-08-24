@@ -1,67 +1,46 @@
-# PrintDialog_Backend
+# CUPS, IPP Backend for Common Print Dialog
 
-Contains the project I'm pursuing as a part of GSOC'17.<br/>
-This project basically has two major components
-- implementation of the CUPS and IPP Backends for the Common Printing Dialog Project(/CUPS_src)
-- the frontend and backend CPD interface libraries (/src).<br/>
-<br/>
-This README just contains information on building and running the project. For more details see [Project Wiki](https://github.com/NilanjanaLodh/PrintDialog_Backend/wiki  "Project Wiki")
+This repository contains one of the two components of my Google Summer of Code'17 project with The Linux Foundation, i.e the CUPS Backend. The other component can be found [here](https://github.com/NilanjanaLodh/OpenPrinting_CPD_Libraries).
 
-### Note on cloning this repo:
+##Background 
 
-First time:<br/>
-use `git clone --recursive` to clone this repository. <br/>
-For pulling changes, use `git pull --recurse-submodules && git submodule update --recursive`.
-Otherwise, the interface/ folder would not get updated.
+**The Problem :**
+Printing out of desktop applications is managed by many very different dialogs, mostly depending on which GUI toolkit is used for an application. Some applications like even have their own dialogs, which expose different kind of printing options. This is confuses users a lot, having them to do the printing operation in many different ways. In addition, many dialogs are missing important features.
+
+**The solution : **
+The [Common Printing Dialog](https://wiki.ubuntu.com/CommonPrintingDialog) project aims to solve these problems provide a uniform printing experience on Linux Desktop Environments.
+
+**My contributions :**
+I specifically have contributed to the project in the following two ways :
+
+ - Developed backend frontend  libraries which provides allows the frontend and backend to communicate to each other over the D-Bus. Available [here](https://github.com/NilanjanaLodh/OpenPrinting_CPD_Libraries).
+ - Developed the CUPS Backend, i,e. the repository you are looking at now.
 
 
-Build and installation
-----
-The following command will compile and install libraries, followed by the cups backend.<br/>
-`sudo make super`<br/>
-That's it! It will set up everything for you.<br/>
+##Dependencies
 
-However, if you wish to compile and install each component separately, please follow these steps:<br/>
-You first need to compile and install the CPD Library; This is one of the dependencies of the backends and the frotend client.<br/>
-- `make lib`   _(Compiles the libraries)_
-- `sudo make install-lib` _(Installs the libraries)_
+ - The [Common Printing Library](https://github.com/NilanjanaLodh/OpenPrinting_CPD_Libraries) develped by me as a part of   GSOC'17. Follow the README at the given link for installation procedure of the library.
+ - [CUPS](https://github.com/apple/cups/releases) : Version >= 2.2 
+ Installing bleeding edge release from [here](https://github.com/apple/cups/releases).
+ OR
+`sudo apt install cups libcups2-dev`
 
-Then, you can build the rest of the project:  <br/>
-- `make` _(Compiles the cups backend and the sample frontend client)_
-- `sudo make install` _(Installs the backends)_
+ - GLIB 2.0 :
+`sudo apt install libglib2.0-dev`
 
-Also, the __(make release)__ command places all the library files into a separate /release folder.
+ 
+## Build and installation
+
+
+    $ make
+    $ sudo make install
 
 
 Running
 ----
-The backend is auto activated on running the frontend, and automatically exits when no frontend is running.
-Simply run the frontend:
-$ ./print_frontend
+The backend is auto-activated when a frontend runs; So no need to run it explicitly.
+However, if you wish to see the debug statements at the backend, you can run the `print_backend_cups` executable generated  after `make`.
 
-The list of printers discovered should start appearing automatically.
+For a sample command line frontend client , look at [my other repository](https://github.com/NilanjanaLodh/OpenPrinting_CPD_Libraries).
 
-type __help__ to get a list of available commands at the backend.
-
-
-To run multiple frontends simultaneously, supply an extra argument denoting the instance number. For example:
--  ./print_frontend 1
-
-In another terminal: 
--  ./print_frontend 2
-
-
-**NOTE** : 
-- Make sure you exit all the frontends using the __stop__ command only; otherwise the backend doesn't get notified and keeps running in the background, hogging resources.
-- Apart from the autoactivating method, you can also run the backend first in one terminal and then run the frontend in another. Doing this will allow you to see the debug statements at the backend.
-
-Using the frontend and backend libraries
-----
-To develop a frontend client you need to use the CPDFrontend library.
-<br/>It has pkg-config support: `pkg-config --cflags --libs CPDFrontend`
-Include `CPDFrontend.h` in your code.
-<br/><br/>
-Similarly, to develop a backend you need to use the CPDBackend library.
-<br/>It has pkg-config support: `pkg-config --cflags --libs CPDBackend`
-Include `CPDBackend.h` in your code.
 
