@@ -13,6 +13,7 @@ BackendObj *get_new_BackendObj()
     b->num_frontends = 0;
     b->obj_path = NULL;
     b->default_printer = NULL;
+    return b;
 }
 
 /** Don't free the returned value; it is owned by BackendObj */
@@ -82,9 +83,11 @@ void add_frontend(BackendObj *b, const char *dialog_name)
 void remove_frontend(BackendObj *b, const char *dialog_name)
 {
     Dialog *d = (Dialog *)(g_hash_table_lookup(b->dialogs, dialog_name));
-    g_hash_table_remove(b->dialogs, dialog_name);
-    b->num_frontends--;
-
+    if (d)
+    {
+        g_hash_table_remove(b->dialogs, dialog_name);
+        b->num_frontends--;
+    }
     g_message("Removed Frontend entry for %s", dialog_name);
 }
 gboolean no_frontends(BackendObj *b)
@@ -93,7 +96,7 @@ gboolean no_frontends(BackendObj *b)
         return TRUE;
     return FALSE;
 }
-Dialog *find_dialog(BackendObj *b , const char* dialog_name)
+Dialog *find_dialog(BackendObj *b, const char *dialog_name)
 {
     Dialog *d = (Dialog *)(g_hash_table_lookup(b->dialogs, dialog_name));
     return d;
@@ -673,10 +676,9 @@ int print_file(PrinterCUPS *p, const char *file_path, int num_settings, GVariant
         num_options = cupsAddOption(option_name, option_value, num_options, &options);
     }
     char *file_name = extract_file_name(file_path);
-    ipp_status_t job_status;
     int job_id = 0;
-    job_status = cupsCreateDestJob(p->http, p->dest, p->dinfo,
-                                   &job_id, file_name, num_options, options);
+    cupsCreateDestJob(p->http, p->dest, p->dinfo,
+                      &job_id, file_name, num_options, options);
     if (job_id)
     {
         /** job creation was successful , 
@@ -801,6 +803,7 @@ Dialog *get_new_Dialog()
     d->printers = g_hash_table_new_full(g_str_hash, g_str_equal,
                                         (GDestroyNotify)free_string,
                                         (GDestroyNotify)free_PrinterCUPS);
+    return d;
 }
 
 void free_Dialog(Dialog *d)
@@ -1052,6 +1055,8 @@ char *translate_job_state(ipp_jstate_t state)
         return JOB_STATE_STOPPED;
     case IPP_JSTATE_COMPLETED:
         return JOB_STATE_COMPLETED;
+    default:
+        return "NA";
     }
 }
 

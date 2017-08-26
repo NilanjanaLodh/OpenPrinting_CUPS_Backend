@@ -80,6 +80,7 @@ gpointer list_printers(gpointer _dialog_name)
                   _dialog_name);
 
     g_message("Exiting thread for dialog at %s\n", dialog_name);
+    return NULL;
 }
 
 int send_printer_added(void *_dialog_name, unsigned flags, cups_dest_t *dest)
@@ -279,6 +280,7 @@ static gboolean on_handle_print_file(PrintBackend *interface,
         g_message("No frontends connected .. exiting backend.\n");
         exit(EXIT_SUCCESS);
     }
+    return TRUE;
 }
 
 static gboolean on_handle_get_all_options(PrintBackend *interface,
@@ -290,8 +292,6 @@ static gboolean on_handle_get_all_options(PrintBackend *interface,
     PrinterCUPS *p = get_printer_by_name(b, dialog_name, printer_name);
     Option *options;
     int count = get_all_options(p, &options);
-    int i;
-
     GVariantBuilder *builder;
     GVariant *variant;
     builder = g_variant_builder_new(G_VARIANT_TYPE("a(ssia(s))"));
@@ -374,7 +374,7 @@ static gboolean on_handle_replace(PrintBackend *interface,
     {
         g_hash_table_steal(b->dialogs, previous_name);
         g_hash_table_insert(b->dialogs, get_string_copy(dialog_name), d);
-        g_message("Replaced %s --> %s\n", previous_name , dialog_name); 
+        g_message("Replaced %s --> %s\n", previous_name, dialog_name);
     }
     print_backend_complete_replace(interface, invocation);
     return TRUE;
