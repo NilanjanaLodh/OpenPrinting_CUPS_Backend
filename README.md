@@ -32,6 +32,8 @@ I specifically have contributed to the project in the following two ways :
 
 ## Build and installation
 
+    $ ./autogen.sh
+    $ ./configure
     $ make
     $ sudo make install
 
@@ -39,6 +41,6 @@ I specifically have contributed to the project in the following two ways :
 ## Running
 
 The backend is auto-activated when a frontend runs; So no need to run it explicitly.
-However, if you wish to see the debug statements at the backend, you can run the `print_backend_cups` executable generated  after `make`.
+However, if you wish to see the debug statements at the backend, you can run  `print_backend_cups`. 
 
 For a sample command line frontend client , look at [my other repository](https://github.com/NilanjanaLodh/OpenPrinting_CPD_Libraries).
