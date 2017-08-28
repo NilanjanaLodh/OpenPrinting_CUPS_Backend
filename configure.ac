@@ -5,7 +5,8 @@ AC_PREREQ([2.69])
 AC_INIT([COMMON-PRINT-BACKEND-CUPS],[1.0],[nilanjanalodh@gmail.com]) 
 AM_INIT_AUTOMAKE([-Wall foreign]) 
 AC_CONFIG_SRCDIR([src/print_backend_cups.c]) 
- 
+
+: ${CFLAGS=""}
 # Check for a C compiler 
 AC_PROG_CC 
  
